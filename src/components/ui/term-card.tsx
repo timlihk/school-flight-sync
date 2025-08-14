@@ -158,11 +158,21 @@ export function TermCard({
         
         <CardContent className="pt-0 space-y-3">
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" className="justify-start gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="justify-start gap-2"
+              onClick={() => onAddFlight(term.id)}
+            >
               <Plane className="h-4 w-4" />
               Add Flight
             </Button>
-            <Button variant="outline" size="sm" className="justify-start gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="justify-start gap-2"
+              onClick={() => onAddTransport(term.id)}
+            >
               <Car className="h-4 w-4" />
               Add Transport
             </Button>
