@@ -181,6 +181,11 @@ export function TermCard({
                   <div className="text-xs text-muted-foreground">
                     {flight.departure.airport} → {flight.arrival.airport}
                   </div>
+                  {flight.confirmationCode && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Confirmation: {flight.confirmationCode}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -199,6 +204,11 @@ export function TermCard({
                   <div className="text-xs text-muted-foreground">
                     {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
                   </div>
+                  {transportItem.notes && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Notes: {transportItem.notes}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
