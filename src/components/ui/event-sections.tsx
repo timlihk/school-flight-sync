@@ -1,9 +1,10 @@
 import React from "react";
 import { format } from "date-fns";
-import { Calendar, ChevronDown, Clock } from "lucide-react";
+import { Calendar, ChevronDown, Plane, Car, ArrowRight } from "lucide-react";
 import { Term } from "@/types/school";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
@@ -14,21 +15,24 @@ interface EventSectionsProps {
 }
 
 export function EventSections({ terms, school, className }: EventSectionsProps) {
-  const [isExeatOpen, setIsExeatOpen] = React.useState(false);
-  const [isHalfTermOpen, setIsHalfTermOpen] = React.useState(false);
+  const [openEvents, setOpenEvents] = React.useState<Set<string>>(new Set());
 
-  // Filter events by type
-  const exeatEvents = terms.filter(term => 
+  // Filter events by type (exeat/half-term for Benenden, short-leave/long-leave for Wycombe)
+  const breakEvents = terms.filter(term => 
     school === 'benenden' 
-      ? term.type === 'exeat' 
-      : term.type === 'short-leave'
+      ? ['exeat', 'half-term'].includes(term.type)
+      : ['short-leave', 'long-leave'].includes(term.type)
   );
 
-  const halfTermEvents = terms.filter(term => 
-    school === 'benenden' 
-      ? term.type === 'half-term' 
-      : term.type === 'long-leave'
-  );
+  const toggleEvent = (eventId: string) => {
+    const newOpenEvents = new Set(openEvents);
+    if (newOpenEvents.has(eventId)) {
+      newOpenEvents.delete(eventId);
+    } else {
+      newOpenEvents.add(eventId);
+    }
+    setOpenEvents(newOpenEvents);
+  };
 
   const getEventBadgeColor = (type: Term['type']) => {
     switch (type) {
@@ -43,121 +47,143 @@ export function EventSections({ terms, school, className }: EventSectionsProps) 
     }
   };
 
-  const getEventTitle = (school: string) => {
-    return school === 'benenden' 
-      ? { exeat: 'Fixed Exeat', halfTerm: 'Half Term' }
-      : { exeat: 'Short Leave', halfTerm: 'Long Leave' };
+  const getEventTypeName = (type: Term['type']) => {
+    switch (type) {
+      case 'exeat':
+        return 'Fixed Exeat';
+      case 'short-leave':
+        return 'Short Leave';
+      case 'half-term':
+        return 'Half Term';
+      case 'long-leave':
+        return 'Long Leave';
+      default:
+        return type;
+    }
   };
 
-  const titles = getEventTitle(school);
-
-  const renderEventCard = (event: Term) => {
-    const duration = Math.ceil((event.endDate.getTime() - event.startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const renderTravelCard = (event: Term, direction: 'start' | 'end') => {
+    const isStart = direction === 'start';
+    const date = isStart ? event.startDate : event.endDate;
+    const title = isStart ? 'Travel from School' : 'Return to School';
+    const icon = isStart ? ArrowRight : ArrowRight;
     
     return (
-      <div key={event.id} className="border border-border rounded-lg p-4 bg-card">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h4 className="font-medium text-card-foreground">{event.name}</h4>
+      <Card className="border border-border">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={cn(
+                "p-2 rounded-full",
+                isStart ? "bg-red-100 dark:bg-red-900" : "bg-green-100 dark:bg-green-900"
+              )}>
+                {React.createElement(icon, { 
+                  className: cn(
+                    "h-4 w-4",
+                    isStart ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
+                  )
+                })}
+              </div>
+              <div>
+                <h4 className="font-medium text-sm">{title}</h4>
+                <p className="text-xs text-muted-foreground">
+                  {format(date, 'EEE, MMM dd yyyy')}
+                </p>
+              </div>
+            </div>
             <Badge 
-              variant="secondary" 
-              className={cn("mt-1", getEventBadgeColor(event.type))}
+              variant="outline" 
+              className={cn(
+                "text-xs",
+                isStart ? "border-red-200 text-red-700" : "border-green-200 text-green-700"
+              )}
             >
-              {event.type === 'exeat' ? 'Fixed Exeat' : 
-               event.type === 'short-leave' ? 'Short Leave' :
-               event.type === 'half-term' ? 'Half Term' : 'Long Leave'}
+              {isStart ? 'Departure' : 'Return'}
             </Badge>
           </div>
-        </div>
+        </CardHeader>
         
-        <div className="flex items-center text-sm text-muted-foreground gap-2">
-          <Calendar className="h-4 w-4" />
-          <span>
-            {`${format(event.startDate, 'MMM dd')} - ${format(event.endDate, 'MMM dd, yyyy')}`}
-          </span>
-          <span className="text-xs">({duration} days)</span>
-        </div>
-      </div>
+        <CardContent className="pt-0 space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" size="sm" className="justify-start gap-2">
+              <Plane className="h-4 w-4" />
+              Add Flight
+            </Button>
+            <Button variant="outline" size="sm" className="justify-start gap-2">
+              <Car className="h-4 w-4" />
+              Add Transport
+            </Button>
+          </div>
+          
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>• No flights booked</p>
+            <p>• No transport arranged</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
-  if (exeatEvents.length === 0 && halfTermEvents.length === 0) {
+  if (breakEvents.length === 0) {
     return null;
   }
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Fixed Exeat / Short Leave Section */}
-      {exeatEvents.length > 0 && (
-        <Card>
-          <Collapsible open={isExeatOpen} onOpenChange={setIsExeatOpen}>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">
-                    {titles.exeat} Events
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                      {exeatEvents.length} events
-                    </Badge>
-                    <ChevronDown 
-                      className={cn(
-                        "h-4 w-4 transition-transform duration-200",
-                        isExeatOpen && "rotate-180"
-                      )} 
-                    />
+      {breakEvents.map((event) => {
+        const duration = Math.ceil((event.endDate.getTime() - event.startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const isOpen = openEvents.has(event.id);
+        
+        return (
+          <Card key={event.id} className="overflow-hidden">
+            <Collapsible open={isOpen} onOpenChange={() => toggleEvent(event.id)}>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <CardTitle className="text-base font-semibold">
+                            {event.name}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            {`${format(event.startDate, 'MMM dd')} - ${format(event.endDate, 'MMM dd, yyyy')}`} ({duration} days)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant="secondary" 
+                        className={cn("text-xs", getEventBadgeColor(event.type))}
+                      >
+                        {getEventTypeName(event.type)}
+                      </Badge>
+                      <ChevronDown 
+                        className={cn(
+                          "h-4 w-4 transition-transform duration-200",
+                          isOpen && "rotate-180"
+                        )} 
+                      />
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            
-            <CollapsibleContent>
-              <CardContent className="pt-0">
-                <div className="space-y-3">
-                  {exeatEvents.map(renderEventCard)}
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-      )}
-
-      {/* Half Term / Long Leave Section */}
-      {halfTermEvents.length > 0 && (
-        <Card>
-          <Collapsible open={isHalfTermOpen} onOpenChange={setIsHalfTermOpen}>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">
-                    {titles.halfTerm} Events
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      {halfTermEvents.length} events
-                    </Badge>
-                    <ChevronDown 
-                      className={cn(
-                        "h-4 w-4 transition-transform duration-200",
-                        isHalfTermOpen && "rotate-180"
-                      )} 
-                    />
+                </CardHeader>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent>
+                <CardContent className="pt-0">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {renderTravelCard(event, 'start')}
+                    {renderTravelCard(event, 'end')}
                   </div>
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            
-            <CollapsibleContent>
-              <CardContent className="pt-0">
-                <div className="space-y-3">
-                  {halfTermEvents.map(renderEventCard)}
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-      )}
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        );
+      })}
     </div>
   );
 }
