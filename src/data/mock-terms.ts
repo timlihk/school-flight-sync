@@ -5,7 +5,7 @@ export const mockTerms: Term[] = [
   // Benenden School Terms 2025-2026
   {
     id: "ben-autumn-2025",
-    name: "Autumn Term Start - Sep 2",
+    name: "Autumn Term Start",
     startDate: new Date("2025-09-02"),
     endDate: new Date("2025-12-10"),
     type: "term",
@@ -45,7 +45,7 @@ export const mockTerms: Term[] = [
   },
   {
     id: "ben-spring-2026",
-    name: "Spring Term Start - Jan 5",
+    name: "Spring Term Start",
     startDate: new Date("2026-01-05"),
     endDate: new Date("2026-03-27"),
     type: "term",
@@ -85,7 +85,7 @@ export const mockTerms: Term[] = [
   },
   {
     id: "ben-summer-2026",
-    name: "Summer Term Start - Apr 20",
+    name: "Summer Term Start",
     startDate: new Date("2026-04-20"),
     endDate: new Date("2026-07-04"),
     type: "term",
@@ -127,7 +127,7 @@ export const mockTerms: Term[] = [
   // Wycombe Abbey School Terms 2025-2026
   {
     id: "wyc-autumn-2025",
-    name: "Autumn Term Start - Sep 1",
+    name: "Autumn Term Start",
     startDate: new Date("2025-09-01"),
     endDate: new Date("2025-12-10"),
     type: "term",
@@ -167,7 +167,7 @@ export const mockTerms: Term[] = [
   },
   {
     id: "wyc-spring-2026",
-    name: "Spring Term Start - Jan 6",
+    name: "Spring Term Start",
     startDate: new Date("2026-01-06"),
     endDate: new Date("2026-03-26"),
     type: "term",
@@ -207,7 +207,7 @@ export const mockTerms: Term[] = [
   },
   {
     id: "wyc-summer-2026",
-    name: "Summer Term Start - Apr 21",
+    name: "Summer Term Start",
     startDate: new Date("2026-04-21"),
     endDate: new Date("2026-06-26"),
     type: "term",

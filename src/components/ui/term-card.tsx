@@ -33,8 +33,8 @@ export function TermCard({
   const isLongLeave = term.type === 'long-leave';
   const hasFlights = flights.length > 0;
 
-  // Show flight options for holidays, half terms, exeats, and leaves
-  const shouldShowFlights = isHoliday || isHalfTerm || isExeat || isShortLeave || isLongLeave;
+  // Show flight options for holidays, half terms, exeats, leaves, and term starts
+  const shouldShowFlights = isHoliday || isHalfTerm || isExeat || isShortLeave || isLongLeave || term.type === 'term';
 
   const getTermTypeColor = () => {
     switch (term.type) {
@@ -92,9 +92,12 @@ export function TermCard({
           <div className="flex items-center text-sm text-muted-foreground gap-2">
             <Calendar className="h-4 w-4" />
             <span>
-              {format(term.startDate, 'MMM dd')} - {format(term.endDate, 'MMM dd, yyyy')}
+              {term.type === 'term' 
+                ? format(term.startDate, 'MMM dd yyyy')
+                : `${format(term.startDate, 'MMM dd')} - ${format(term.endDate, 'MMM dd, yyyy')}`
+              }
             </span>
-            <span className="text-xs">({duration} days)</span>
+            {term.type !== 'term' && <span className="text-xs">({duration} days)</span>}
           </div>
         </CardHeader>
         
