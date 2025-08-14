@@ -229,65 +229,62 @@ export function TermCard({
               ))}
             </div>
           )}
-          
+           
+          {/* Flight and Transport buttons - inline layout */}
           <div className="space-y-2">
-            {/* Flight buttons */}
-            <div className="flex gap-2">
-              {notTravellingStatus?.noFlights ? (
-                <Badge variant="secondary" className="text-xs">
-                  Not travelling (flights)
-                </Badge>
-              ) : relevantFlights.length === 0 && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start gap-2 flex-1"
-                    onClick={() => onAddFlight(term.id)}
-                  >
-                    <Plane className="h-4 w-4" />
-                    Add Flight
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => onSetNotTravelling(term.id, 'flights')}
-                    className="text-xs text-muted-foreground"
-                  >
-                    Not travelling
-                  </Button>
-                </>
-              )}
-            </div>
+            {/* Flight section */}
+            {notTravellingStatus?.noFlights ? (
+              <Badge variant="secondary" className="text-xs">
+                Not travelling (flights)
+              </Badge>
+            ) : relevantFlights.length === 0 && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="justify-start gap-2 flex-1"
+                  onClick={() => onAddFlight(term.id)}
+                >
+                  <Plane className="h-4 w-4" />
+                  Add Flight
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onSetNotTravelling(term.id, 'flights')}
+                  className="text-xs text-muted-foreground shrink-0"
+                >
+                  Not travelling
+                </Button>
+              </div>
+            )}
             
-            {/* Transport buttons */}
-            <div className="flex gap-2">
-              {notTravellingStatus?.noTransport ? (
-                <Badge variant="secondary" className="text-xs">
-                  Not travelling (transport)
-                </Badge>
-              ) : relevantTransport.length === 0 && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start gap-2 flex-1"
-                    onClick={() => onAddTransport(term.id)}
-                  >
-                    <Car className="h-4 w-4" />
-                    Add Transport
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => onSetNotTravelling(term.id, 'transport')}
-                    className="text-xs text-muted-foreground"
-                  >
-                    Not travelling
-                  </Button>
-                </>
-              )}
-            </div>
+            {/* Transport section */}
+            {notTravellingStatus?.noTransport ? (
+              <Badge variant="secondary" className="text-xs">
+                Not travelling (transport)
+              </Badge>
+            ) : relevantTransport.length === 0 && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="justify-start gap-2 flex-1"
+                  onClick={() => onAddTransport(term.id)}
+                >
+                  <Car className="h-4 w-4" />
+                  Add Transport
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onSetNotTravelling(term.id, 'transport')}
+                  className="text-xs text-muted-foreground shrink-0"
+                >
+                  Not travelling
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
