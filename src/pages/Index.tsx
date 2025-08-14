@@ -181,11 +181,21 @@ export default function Index() {
           <div 
             className="inline-flex items-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg cursor-pointer hover:bg-card transition-colors"
             onClick={() => {
+              console.log('Academic year clicked!');
+              console.log('Selected academic year:', selectedAcademicYear);
+              console.log('Filtered terms:', filteredTerms.length);
+              
               // Create a dummy term with the selected academic year for the dialog
               const yearTerms = filteredTerms.filter(t => selectedAcademicYear === 'all' || t.academicYear === selectedAcademicYear);
+              console.log('Year terms found:', yearTerms.length);
+              
               if (yearTerms.length > 0) {
+                console.log('Setting selected term:', yearTerms[0]);
                 setSelectedTerm(yearTerms[0]); // Use the first term as representative
                 setShowTermDetailsDialog(true);
+                console.log('Opening dialog');
+              } else {
+                console.log('No terms found for this academic year');
               }
             }}
           >
