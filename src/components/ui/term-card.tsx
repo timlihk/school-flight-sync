@@ -39,6 +39,7 @@ export function TermCard({
   const isLongLeave = term.type === 'long-leave';
   const hasFlights = flights.length > 0;
   const hasTransport = transport.length > 0;
+  const isAutumnTermStart = term.type === 'term' && term.name.toLowerCase().includes('autumn');
 
   // Show flight options for holidays, half terms, exeats, leaves, and term starts
   const shouldShowFlights = isHoliday || isHalfTerm || isExeat || isShortLeave || isLongLeave || term.type === 'term';
@@ -163,20 +164,22 @@ export function TermCard({
                     </div>
                   )}
                   
-                  <div className="flex justify-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewFlights(term.id);
-                      }}
-                      className="h-7 text-xs hover:bg-background/80"
-                    >
-                      <Plane className="h-3 w-3 mr-1" />
-                      View Flights
-                    </Button>
-                  </div>
+                  {!isAutumnTermStart && (
+                    <div className="flex justify-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewFlights(term.id);
+                        }}
+                        className="h-7 text-xs hover:bg-background/80"
+                      >
+                        <Plane className="h-3 w-3 mr-1" />
+                        View Flights
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
@@ -191,10 +194,9 @@ export function TermCard({
                       e.stopPropagation();
                       onAddFlight(term.id);
                     }}
-                    className="h-7 text-xs hover:bg-background/80"
+                    className="h-8 w-8 p-0 hover:bg-background/80"
                   >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Flight
+                    <Plane className="h-4 w-4" />
                   </Button>
                 </div>
               )}
@@ -264,10 +266,9 @@ export function TermCard({
                         e.stopPropagation();
                         onViewTransport(term.id);
                       }}
-                      className="h-7 text-xs hover:bg-background/80"
+                      className="h-8 w-8 p-0 hover:bg-background/80"
                     >
-                      <Car className="h-3 w-3 mr-1" />
-                      View Transport
+                      <Car className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -284,10 +285,9 @@ export function TermCard({
                       e.stopPropagation();
                       onAddTransport(term.id);
                     }}
-                    className="h-7 text-xs hover:bg-background/80"
+                    className="h-8 w-8 p-0 hover:bg-background/80"
                   >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Transport
+                    <Car className="h-4 w-4" />
                   </Button>
                 </div>
               )}
