@@ -1,10 +1,29 @@
+export type SchoolType = 'benenden' | 'wycombe';
+
+export type TermType = 
+  | 'term' 
+  | 'half-term' 
+  | 'holiday' 
+  | 'exeat' 
+  | 'short-leave' 
+  | 'long-leave';
+
+export interface ScheduleDetail {
+  date: string;
+  time: string;
+  event: string;
+}
+
 export interface Term {
   id: string;
+  school: SchoolType;
   name: string;
+  type: TermType;
   startDate: Date;
   endDate: Date;
-  type: 'term' | 'half-term' | 'holiday' | 'exeat' | 'short-leave' | 'long-leave';
-  school: 'benenden' | 'wycombe';
+  academicYear: string;
+  description?: string;
+  scheduleDetails?: ScheduleDetail[];
 }
 
 export interface FlightDetails {

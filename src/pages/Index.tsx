@@ -7,8 +7,11 @@ import { TransportDialog } from "@/components/ui/transport-dialog";
 import { ToDoDialog } from "@/components/ui/todo-dialog";
 import { SchoolHeader } from "@/components/school-header";
 import { EventSections } from "@/components/ui/event-sections";
-import { mockTerms } from "@/data/mock-terms";
+import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
+import { useTransport } from "@/hooks/use-transport";
+import { Term, NotTravellingStatus } from "@/types/school";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTransport } from "@/hooks/use-transport";
 import { Term, NotTravellingStatus } from "@/types/school";
 
@@ -20,15 +23,20 @@ export default function Index() {
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [showFlightsOnly, setShowFlightsOnly] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('all');
   
   const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
 
-  // Separate terms by school and sort chronologically
-  const benendenTerms = mockTerms
+  // Filter by academic year first, then separate by school and sort chronologically
+  const filteredTerms = selectedAcademicYear === 'all' 
+    ? mockTerms 
+    : mockTerms.filter(term => term.academicYear === selectedAcademicYear);
+    
+  const benendenTerms = filteredTerms
     .filter(term => term.school === 'benenden')
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-  const wycombeTerms = mockTerms
+  const wycombeTerms = filteredTerms
     .filter(term => term.school === 'wycombe')
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
@@ -179,6 +187,17 @@ export default function Index() {
       {/* Filter Controls */}
       <div className="container mx-auto px-6 py-4">
         <div className="flex flex-wrap justify-center gap-3">
+          <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Academic Year" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Academic Years</SelectItem>
+              {getAcademicYears().map(year => (
+                <SelectItem key={year} value={year}>{year}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             size="sm"
@@ -207,7 +226,7 @@ export default function Index() {
             {showFlightsOnly ? "Show All Cards" : "Show Cards with Flights to Book"}
           </Button>
           <ToDoDialog 
-            terms={mockTerms}
+            terms={filteredTerms}
             flights={flights}
             transport={transport}
             notTravelling={notTravelling}
