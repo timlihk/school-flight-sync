@@ -143,6 +143,15 @@ export default function Index() {
     }
   };
 
+  const handleShowScheduleForSchool = (school: 'benenden' | 'wycombe') => {
+    // Find the first term for this school in the current academic year
+    const schoolTerms = filteredTerms.filter(t => t.school === school);
+    if (schoolTerms.length > 0) {
+      setSelectedTerm(schoolTerms[0]);
+      setShowTermDetailsDialog(true);
+    }
+  };
+
   if (loading || isTransportLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
@@ -175,38 +184,6 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Academic Year Header with Detailed Schedule */}
-      <div className="container mx-auto px-6 py-4">
-        <div className="text-center">
-          <div 
-            className="inline-flex items-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg cursor-pointer hover:bg-card transition-colors"
-            onClick={() => {
-              console.log('Academic year clicked!');
-              console.log('Selected academic year:', selectedAcademicYear);
-              console.log('Filtered terms:', filteredTerms.length);
-              
-              // Create a dummy term with the selected academic year for the dialog
-              const yearTerms = filteredTerms.filter(t => selectedAcademicYear === 'all' || t.academicYear === selectedAcademicYear);
-              console.log('Year terms found:', yearTerms.length);
-              
-              if (yearTerms.length > 0) {
-                console.log('Setting selected term:', yearTerms[0]);
-                setSelectedTerm(yearTerms[0]); // Use the first term as representative
-                setShowTermDetailsDialog(true);
-                console.log('Opening dialog');
-              } else {
-                console.log('No terms found for this academic year');
-              }
-            }}
-          >
-            <Calendar className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">
-              {selectedAcademicYear === 'all' ? 'All Academic Years' : `Academic Year ${selectedAcademicYear}`}
-            </span>
-            <span className="text-xs text-muted-foreground">- Click for detailed schedule</span>
-          </div>
-        </div>
-      </div>
 
       {/* Filter Controls */}
       <div className="container mx-auto px-6 py-4">
@@ -269,6 +246,8 @@ export default function Index() {
               schoolName="Benenden School"
               termCount={benendenTerms.length}
               variant="benenden"
+              academicYear={selectedAcademicYear === 'all' ? '2025-2026' : selectedAcademicYear}
+              onAcademicYearClick={() => handleShowScheduleForSchool('benenden')}
             />
             
             <div className="space-y-4">
@@ -308,6 +287,8 @@ export default function Index() {
               schoolName="Wycombe Abbey School"
               termCount={wycombeTerms.length}
               variant="wycombe"
+              academicYear={selectedAcademicYear === 'all' ? '2025-2026' : selectedAcademicYear}
+              onAcademicYearClick={() => handleShowScheduleForSchool('wycombe')}
             />
             
             <div className="space-y-4">

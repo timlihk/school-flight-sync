@@ -7,9 +7,11 @@ interface SchoolHeaderProps {
   schoolName: string;
   termCount: number;
   variant: 'benenden' | 'wycombe';
+  academicYear?: string;
+  onAcademicYearClick?: () => void;
 }
 
-export function SchoolHeader({ schoolName, termCount, variant }: SchoolHeaderProps) {
+export function SchoolHeader({ schoolName, termCount, variant, academicYear = "2025-2026", onAcademicYearClick }: SchoolHeaderProps) {
   const getBadgeVariant = () => {
     return variant === 'benenden' ? 'default' : 'secondary';
   };
@@ -31,8 +33,12 @@ export function SchoolHeader({ schoolName, termCount, variant }: SchoolHeaderPro
       
       <div className="flex items-center justify-center gap-2">
         <Calendar className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">
-          Academic Year 2025-2026
+        <span 
+          className={`text-sm ${onAcademicYearClick ? 'text-primary cursor-pointer hover:underline' : 'text-muted-foreground'}`}
+          onClick={onAcademicYearClick}
+        >
+          Academic Year {academicYear}
+          {onAcademicYearClick && <span className="ml-1 text-xs text-muted-foreground">- Click for detailed schedule</span>}
         </span>
         <Badge variant={getBadgeVariant() as any} className="text-xs">
           {termCount} terms
