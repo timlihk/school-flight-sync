@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TermCard } from "@/components/ui/term-card";
 import { FlightDialog } from "@/components/ui/flight-dialog";
 import { TransportDialog } from "@/components/ui/transport-dialog";
+import { ToDoDialog } from "@/components/ui/todo-dialog";
 import { SchoolHeader } from "@/components/school-header";
 import { EventSections } from "@/components/ui/event-sections";
 import { mockTerms } from "@/data/mock-terms";
@@ -143,6 +144,17 @@ export default function Index() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* To Do Button */}
+        <div className="mt-12 flex justify-center">
+          <ToDoDialog
+            terms={mockTerms}
+            flights={flights}
+            transport={transport}
+            onAddFlight={handleAddFlight}
+            onAddTransport={handleAddTransport}
+          />
         </div>
 
         {selectedTerm && (
