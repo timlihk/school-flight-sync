@@ -6,7 +6,6 @@ import { FlightDialog } from "@/components/ui/flight-dialog";
 import { TransportDialog } from "@/components/ui/transport-dialog";
 import { ToDoDialog } from "@/components/ui/todo-dialog";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
-import { ExportDialog } from "@/components/ui/export-dialog";
 import { SchoolHeader } from "@/components/school-header";
 import { EventSections } from "@/components/ui/event-sections";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
@@ -16,8 +15,6 @@ import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term, NotTravellingStatus } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { generateExactPDF } from "@/services/pdf-export-exact";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -34,7 +31,6 @@ export default function Index() {
   const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus } = useNotTravelling();
-  const { toast } = useToast();
 
   // Filter by academic year first, then separate by school and sort chronologically
   const filteredTerms = selectedAcademicYear === 'all' 
@@ -125,39 +121,6 @@ export default function Index() {
     }
   };
 
-  const handleExportPDF = (school: 'both' | 'benenden' | 'wycombe', academicYear: string) => {
-    try {
-      // Filter terms based on user selection
-      let termsToExport = academicYear === 'all' 
-        ? mockTerms 
-        : mockTerms.filter(term => term.academicYear === academicYear);
-      
-      // Filter by school
-      if (school !== 'both') {
-        termsToExport = termsToExport.filter(term => term.school === school);
-      }
-      
-      generateExactPDF({
-        terms: termsToExport,
-        flights,
-        transport,
-        notTravelling,
-        selectedAcademicYear: academicYear
-      });
-      
-      toast({
-        title: "PDF Export Successful",
-        description: "Your travel agenda has been downloaded successfully.",
-      });
-    } catch (error) {
-      console.error('PDF export error:', error);
-      toast({
-        title: "Export Failed",
-        description: "There was an error generating your PDF. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
@@ -242,7 +205,6 @@ export default function Index() {
             onAddTransport={handleAddTransport}
             onShowTerm={handleShowTerm}
           />
-          <ExportDialog onExport={handleExportPDF} />
         </div>
       </div>
 
