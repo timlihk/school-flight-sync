@@ -39,7 +39,7 @@ export function useFlights() {
           date: new Date(flight.arrival_date),
           time: flight.arrival_time,
         },
-        confirmationCode: flight.confirmation_code || undefined,
+        confirmationCode: (flight as any).confirmation_code || undefined,
         notes: flight.notes || undefined,
       })) || [];
 
@@ -99,7 +99,7 @@ export function useFlights() {
           date: new Date(data.arrival_date),
           time: data.arrival_time,
         },
-        confirmationCode: data.confirmation_code || undefined,
+        confirmationCode: (data as any).confirmation_code || undefined,
         notes: data.notes || undefined,
       };
 
@@ -163,7 +163,7 @@ export function useFlights() {
           date: new Date(data.arrival_date),
           time: data.arrival_time,
         },
-        confirmationCode: data.confirmation_code || undefined,
+        confirmationCode: (data as any).confirmation_code || undefined,
         notes: data.notes || undefined,
       };
 
