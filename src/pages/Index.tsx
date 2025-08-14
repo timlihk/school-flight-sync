@@ -11,6 +11,7 @@ import { EventSections } from "@/components/ui/event-sections";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
+import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term, NotTravellingStatus } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -19,7 +20,6 @@ export default function Index() {
   const [showFlightDialog, setShowFlightDialog] = useState(false);
   const [showTransportDialog, setShowTransportDialog] = useState(false);
   const [showTermDetailsDialog, setShowTermDetailsDialog] = useState(false);
-  const [notTravelling, setNotTravelling] = useState<NotTravellingStatus[]>([]);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [showFlightsOnly, setShowFlightsOnly] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
@@ -27,6 +27,7 @@ export default function Index() {
   
   const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
+  const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus } = useNotTravelling();
 
   // Filter by academic year first, then separate by school and sort chronologically
   const filteredTerms = selectedAcademicYear === 'all' 
@@ -107,24 +108,7 @@ export default function Index() {
   };
 
   const handleSetNotTravelling = (termId: string, type: 'flights' | 'transport') => {
-    setNotTravelling(prev => {
-      const existing = prev.find(nt => nt.termId === termId);
-      if (existing) {
-        return prev.map(nt => 
-          nt.termId === termId 
-            ? { 
-                ...nt, 
-                ...(type === 'flights' ? { noFlights: true } : { noTransport: true })
-              }
-            : nt
-        );
-      } else {
-        return [...prev, { 
-          termId, 
-          ...(type === 'flights' ? { noFlights: true } : { noTransport: true })
-        }];
-      }
-    });
+    setNotTravellingStatus(termId, type);
   };
 
   const handleAddTransport = (termId: string) => {
@@ -153,7 +137,7 @@ export default function Index() {
     window.open(urls[school], '_blank');
   };
 
-  if (loading || isTransportLoading) {
+  if (loading || isTransportLoading || notTravellingLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="text-center space-y-4">

@@ -68,6 +68,33 @@ export type Database = {
         }
         Relationships: []
       }
+      not_travelling: {
+        Row: {
+          created_at: string
+          id: string
+          no_flights: boolean | null
+          no_transport: boolean | null
+          term_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          no_flights?: boolean | null
+          no_transport?: boolean | null
+          term_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          no_flights?: boolean | null
+          no_transport?: boolean | null
+          term_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transport: {
         Row: {
           created_at: string
