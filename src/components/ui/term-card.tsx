@@ -178,7 +178,10 @@ export function TermCard({
         <CardContent className="pt-0 space-y-3">
           {/* Show existing flights */}
           {relevantFlights.length > 0 && (
-            <div className="space-y-2">
+            <div 
+              className="space-y-2 cursor-pointer hover:bg-muted/10 p-2 rounded-md -m-2 transition-colors"
+              onClick={() => onViewFlights(term.id)}
+            >
               <h5 className="text-xs font-medium text-foreground">Flights</h5>
               {relevantFlights.map((flight) => (
                 <div key={flight.id} className="p-2 bg-muted/30 rounded-md">
@@ -201,7 +204,10 @@ export function TermCard({
           
           {/* Show existing transport */}
           {relevantTransport.length > 0 && (
-            <div className="space-y-2">
+            <div 
+              className="space-y-2 cursor-pointer hover:bg-muted/10 p-2 rounded-md -m-2 transition-colors"
+              onClick={() => onViewTransport(term.id)}
+            >
               <h5 className="text-xs font-medium text-foreground">Transport</h5>
               {relevantTransport.map((transportItem) => (
                 <div key={transportItem.id} className="p-2 bg-muted/20 rounded-md">
@@ -229,17 +235,7 @@ export function TermCard({
                 <Badge variant="secondary" className="text-xs">
                   Not travelling (flights)
                 </Badge>
-              ) : relevantFlights.length > 0 ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="justify-start gap-2 flex-1"
-                  onClick={() => onViewFlights(term.id)}
-                >
-                  <Plane className="h-4 w-4" />
-                  View Flight
-                </Button>
-              ) : (
+              ) : relevantFlights.length === 0 && (
                 <>
                   <Button 
                     variant="outline" 
@@ -268,17 +264,7 @@ export function TermCard({
                 <Badge variant="secondary" className="text-xs">
                   Not travelling (transport)
                 </Badge>
-              ) : relevantTransport.length > 0 ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="justify-start gap-2 flex-1"
-                  onClick={() => onViewTransport(term.id)}
-                >
-                  <Car className="h-4 w-4" />
-                  View Transport
-                </Button>
-              ) : (
+              ) : relevantTransport.length === 0 && (
                 <>
                   <Button 
                     variant="outline" 
@@ -301,13 +287,6 @@ export function TermCard({
               )}
             </div>
           </div>
-          
-          {relevantFlights.length === 0 && relevantTransport.length === 0 && (
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>• No flights booked</p>
-              <p>• No transport arranged</p>
-            </div>
-          )}
         </CardContent>
       </Card>
     );
