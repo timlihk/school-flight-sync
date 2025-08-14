@@ -34,8 +34,7 @@ export function TermCard({
   onCardClick
 }: TermCardProps) {
   const [showDetails, setShowDetails] = useState(false);
-  // Open first few cards by default to show the content
-  const [isOpen, setIsOpen] = useState(term.type === 'term' || term.type === 'exeat' || term.type === 'half-term');
+  const [isOpen, setIsOpen] = useState(false);
   const isHoliday = term.type === 'holiday';
   const isHalfTerm = term.type === 'half-term';
   const isExeat = term.type === 'exeat';
