@@ -1,46 +1,17 @@
-import { useState } from "react";
 import { Calendar, Plane, Users, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TermCard } from "@/components/ui/term-card";
 import { FlightDialog } from "@/components/ui/flight-dialog";
+import { CalendarEvents } from "@/components/ui/calendar-events";
 import { SchoolHeader } from "@/components/school-header";
 import { mockTerms } from "@/data/mock-terms";
-import { FlightDetails } from "@/types/school";
-import { useToast } from "@/hooks/use-toast";
+import { useFlights } from "@/hooks/use-flights";
 
 const Index = () => {
-  const [flights, setFlights] = useState<FlightDetails[]>([]);
-  const { toast } = useToast();
+  const { flights, loading, addFlight, removeFlight, getFlightsForTerm } = useFlights();
 
   const benendenTerms = mockTerms.filter(term => term.school === 'benenden');
   const wycombeTerms = mockTerms.filter(term => term.school === 'wycombe');
-
-  const addFlight = (newFlight: Omit<FlightDetails, 'id'>) => {
-    const flight: FlightDetails = {
-      ...newFlight,
-      id: `flight-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    };
-    setFlights(prev => [...prev, flight]);
-    
-    toast({
-      title: "Flight Added",
-      description: `${flight.type === 'outbound' ? 'Outbound' : 'Return'} flight ${flight.flightNumber} has been added successfully.`,
-    });
-  };
-
-  const removeFlight = (flightId: string) => {
-    setFlights(prev => prev.filter(f => f.id !== flightId));
-    
-    toast({
-      title: "Flight Removed",
-      description: "Flight has been removed from your schedule.",
-      variant: "destructive",
-    });
-  };
-
-  const getFlightsForTerm = (termId: string) => {
-    return flights.filter(flight => flight.termId === termId);
-  };
 
   const handleAddFlight = (termId: string) => {
     // This will be handled by the FlightDialog component
@@ -125,27 +96,33 @@ const Index = () => {
               variant="benenden"
             />
             
-            <div className="space-y-4">
-              {benendenTerms.map((term) => (
-                <FlightDialog
-                  key={term.id}
-                  term={term}
-                  flights={getFlightsForTerm(term.id)}
-                  onAddFlight={addFlight}
-                  onRemoveFlight={removeFlight}
-                >
-                  <div className="cursor-pointer">
-                    <TermCard
-                      term={term}
-                      flights={getFlightsForTerm(term.id)}
-                      onAddFlight={handleAddFlight}
-                      onViewFlights={handleViewFlights}
-                      className="hover:shadow-elegant transition-all duration-300"
-                    />
-                  </div>
-                </FlightDialog>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading flights...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {benendenTerms.map((term) => (
+                  <FlightDialog
+                    key={term.id}
+                    term={term}
+                    flights={getFlightsForTerm(term.id)}
+                    onAddFlight={addFlight}
+                    onRemoveFlight={removeFlight}
+                  >
+                    <div className="cursor-pointer">
+                      <TermCard
+                        term={term}
+                        flights={getFlightsForTerm(term.id)}
+                        onAddFlight={handleAddFlight}
+                        onViewFlights={handleViewFlights}
+                        className="hover:shadow-elegant transition-all duration-300"
+                      />
+                    </div>
+                  </FlightDialog>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Wycombe Abbey School */}
@@ -156,39 +133,52 @@ const Index = () => {
               variant="wycombe"
             />
             
-            <div className="space-y-4">
-              {wycombeTerms.map((term) => (
-                <FlightDialog
-                  key={term.id}
-                  term={term}
-                  flights={getFlightsForTerm(term.id)}
-                  onAddFlight={addFlight}
-                  onRemoveFlight={removeFlight}
-                >
-                  <div className="cursor-pointer">
-                    <TermCard
-                      term={term}
-                      flights={getFlightsForTerm(term.id)}
-                      onAddFlight={handleAddFlight}
-                      onViewFlights={handleViewFlights}
-                      className="hover:shadow-elegant transition-all duration-300"
-                    />
-                  </div>
-                </FlightDialog>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading flights...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {wycombeTerms.map((term) => (
+                  <FlightDialog
+                    key={term.id}
+                    term={term}
+                    flights={getFlightsForTerm(term.id)}
+                    onAddFlight={addFlight}
+                    onRemoveFlight={removeFlight}
+                  >
+                    <div className="cursor-pointer">
+                      <TermCard
+                        term={term}
+                        flights={getFlightsForTerm(term.id)}
+                        onAddFlight={handleAddFlight}
+                        onViewFlights={handleViewFlights}
+                        className="hover:shadow-elegant transition-all duration-300"
+                      />
+                    </div>
+                  </FlightDialog>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Summary Section */}
-        <div className="mt-12 text-center">
-          <div className="inline-flex items-center gap-4 px-6 py-3 bg-card rounded-full shadow-soft border border-border">
-            <span className="text-sm text-muted-foreground">
-              Total flights tracked:
-            </span>
-            <span className="font-semibold text-flight text-lg">
-              {flights.length}
-            </span>
+        {/* Calendar Events & Summary Section */}
+        <div className="mt-12 space-y-8">
+          <CalendarEvents 
+            terms={mockTerms} 
+            className="max-w-4xl mx-auto"
+          />
+          
+          <div className="text-center">
+            <div className="inline-flex items-center gap-4 px-6 py-3 bg-card rounded-full shadow-soft border border-border">
+              <span className="text-sm text-muted-foreground">
+                Total flights tracked:
+              </span>
+              <span className="font-semibold text-flight text-lg">
+                {flights.length}
+              </span>
+            </div>
           </div>
         </div>
       </main>
