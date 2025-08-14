@@ -99,9 +99,32 @@ export function TermCard({
         </CardHeader>
         
         <CardContent className="pt-0">
-          <div className="text-center py-4">
-            <div className="text-sm text-muted-foreground">
-              Click to view detailed schedule
+          {shouldShowFlights && (
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <Plane className="h-4 w-4" />
+                {hasFlights ? `${flights.length} flight${flights.length !== 1 ? 's' : ''} planned` : 'No flights yet'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (hasFlights) {
+                    onViewFlights(term.id);
+                  } else {
+                    onAddFlight(term.id);
+                  }
+                }}
+                className="h-8 w-8 p-0 hover:bg-background/80"
+              >
+                <Plane className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <div className="text-center py-2">
+            <div className="text-xs text-muted-foreground">
+              Click for detailed schedule
             </div>
           </div>
         </CardContent>

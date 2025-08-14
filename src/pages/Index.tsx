@@ -6,6 +6,7 @@ import { CalendarEvents } from "@/components/ui/calendar-events";
 import { SchoolHeader } from "@/components/school-header";
 import { mockTerms } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
+import { useState } from "react";
 
 const Index = () => {
   const { flights, loading, addFlight, removeFlight, getFlightsForTerm } = useFlights();
@@ -13,14 +14,23 @@ const Index = () => {
   const benendenTerms = mockTerms.filter(term => term.school === 'benenden');
   const wycombeTerms = mockTerms.filter(term => term.school === 'wycombe');
 
+  const [selectedTerm, setSelectedTerm] = useState<any>(null);
+  const [showFlightDialog, setShowFlightDialog] = useState(false);
+
   const handleAddFlight = (termId: string) => {
-    // This will be handled by the FlightDialog component
-    console.log('Add flight for term:', termId);
+    const term = mockTerms.find(t => t.id === termId);
+    if (term) {
+      setSelectedTerm(term);
+      setShowFlightDialog(true);
+    }
   };
 
   const handleViewFlights = (termId: string) => {
-    // This will be handled by the FlightDialog component  
-    console.log('View flights for term:', termId);
+    const term = mockTerms.find(t => t.id === termId);
+    if (term) {
+      setSelectedTerm(term);
+      setShowFlightDialog(true);
+    }
   };
 
   return (
@@ -103,23 +113,14 @@ const Index = () => {
             ) : (
               <div className="space-y-4">
                 {benendenTerms.map((term) => (
-                  <FlightDialog
+                  <TermCard
                     key={term.id}
                     term={term}
                     flights={getFlightsForTerm(term.id)}
-                    onAddFlight={addFlight}
-                    onRemoveFlight={removeFlight}
-                  >
-                    <div className="cursor-pointer">
-                      <TermCard
-                        term={term}
-                        flights={getFlightsForTerm(term.id)}
-                        onAddFlight={handleAddFlight}
-                        onViewFlights={handleViewFlights}
-                        className="hover:shadow-elegant transition-all duration-300"
-                      />
-                    </div>
-                  </FlightDialog>
+                    onAddFlight={handleAddFlight}
+                    onViewFlights={handleViewFlights}
+                    className="hover:shadow-elegant transition-all duration-300"
+                  />
                 ))}
               </div>
             )}
@@ -140,23 +141,14 @@ const Index = () => {
             ) : (
               <div className="space-y-4">
                 {wycombeTerms.map((term) => (
-                  <FlightDialog
+                  <TermCard
                     key={term.id}
                     term={term}
                     flights={getFlightsForTerm(term.id)}
-                    onAddFlight={addFlight}
-                    onRemoveFlight={removeFlight}
-                  >
-                    <div className="cursor-pointer">
-                      <TermCard
-                        term={term}
-                        flights={getFlightsForTerm(term.id)}
-                        onAddFlight={handleAddFlight}
-                        onViewFlights={handleViewFlights}
-                        className="hover:shadow-elegant transition-all duration-300"
-                      />
-                    </div>
-                  </FlightDialog>
+                    onAddFlight={handleAddFlight}
+                    onViewFlights={handleViewFlights}
+                    className="hover:shadow-elegant transition-all duration-300"
+                  />
                 ))}
               </div>
             )}
@@ -177,6 +169,18 @@ const Index = () => {
           </div>
         </div>
       </main>
+
+      {/* Flight Dialog */}
+      {selectedTerm && (
+        <FlightDialog
+          term={selectedTerm}
+          flights={getFlightsForTerm(selectedTerm.id)}
+          onAddFlight={addFlight}
+          onRemoveFlight={removeFlight}
+          open={showFlightDialog}
+          onOpenChange={setShowFlightDialog}
+        />
+      )}
     </div>
   );
 };
