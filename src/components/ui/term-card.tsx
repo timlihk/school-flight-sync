@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Term, FlightDetails, TransportDetails, NotTravellingStatus } from "@/types/school";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { termDetails, getTermDetailsKey } from "@/data/term-details";
 
@@ -22,6 +22,8 @@ interface TermCardProps {
   notTravellingStatus?: NotTravellingStatus;
   className?: string;
   onCardClick?: (term: Term) => void;
+  isExpanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 export function TermCard({ 
@@ -35,10 +37,12 @@ export function TermCard({
   onSetNotTravelling,
   notTravellingStatus,
   className,
-  onCardClick
+  onCardClick,
+  isExpanded,
+  onExpandedChange
 }: TermCardProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(isExpanded || false);
   const isHoliday = term.type === 'holiday';
   const isHalfTerm = term.type === 'half-term';
   const isExeat = term.type === 'exeat';
@@ -182,7 +186,6 @@ export function TermCard({
               className="space-y-2 cursor-pointer hover:bg-muted/10 p-2 rounded-md -m-2 transition-colors"
               onClick={() => onViewFlights(term.id)}
             >
-              <h5 className="text-xs font-medium text-foreground">Flights</h5>
               {relevantFlights.map((flight) => (
                 <div key={flight.id} className="p-2 bg-muted/30 rounded-md">
                   <div className="flex justify-between items-center text-xs">
@@ -208,7 +211,6 @@ export function TermCard({
               className="space-y-2 cursor-pointer hover:bg-muted/10 p-2 rounded-md -m-2 transition-colors"
               onClick={() => onViewTransport(term.id)}
             >
-              <h5 className="text-xs font-medium text-foreground">Transport</h5>
               {relevantTransport.map((transportItem) => (
                 <div key={transportItem.id} className="p-2 bg-muted/20 rounded-md">
                   <div className="flex justify-between items-center text-xs">
@@ -294,6 +296,18 @@ export function TermCard({
 
   const relevantEvent = getRelevantEvent();
 
+  // Sync external expanded state with internal state
+  useEffect(() => {
+    if (isExpanded !== undefined && isExpanded !== isOpen) {
+      setIsOpen(isExpanded);
+    }
+  }, [isExpanded, isOpen]);
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    onExpandedChange?.(open);
+  };
+
   return (
     <>
       <Card 
@@ -302,7 +316,7 @@ export function TermCard({
           className
         )}
       >
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <Collapsible open={isOpen} onOpenChange={handleOpenChange}>
           <CollapsibleTrigger asChild>
             <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
               <div className="flex items-center justify-between">

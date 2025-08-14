@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, Plane, Car } from "lucide-react";
+import { Calendar, Plane, Car, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TermCard } from "@/components/ui/term-card";
 import { FlightDialog } from "@/components/ui/flight-dialog";
@@ -17,6 +17,8 @@ export default function Index() {
   const [showFlightDialog, setShowFlightDialog] = useState(false);
   const [showTransportDialog, setShowTransportDialog] = useState(false);
   const [notTravelling, setNotTravelling] = useState<NotTravellingStatus[]>([]);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [showFlightsOnly, setShowFlightsOnly] = useState(false);
   
   const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
@@ -28,6 +30,23 @@ export default function Index() {
   const wycombeTerms = mockTerms
     .filter(term => term.school === 'wycombe')
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+  // Filter terms that have flights if showFlightsOnly is enabled
+  const filteredBenendenTerms = showFlightsOnly 
+    ? benendenTerms.filter(term => flights.some(f => f.termId === term.id))
+    : benendenTerms;
+  const filteredWycombeTerms = showFlightsOnly 
+    ? wycombeTerms.filter(term => flights.some(f => f.termId === term.id))
+    : wycombeTerms;
+
+  const handleExpandAll = () => {
+    const allTermIds = new Set(mockTerms.map(term => term.id));
+    setExpandedCards(allTermIds);
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedCards(new Set());
+  };
 
   const handleAddFlight = (termId: string) => {
     const term = mockTerms.find(t => t.id === termId);
@@ -114,6 +133,39 @@ export default function Index() {
         </div>
       </header>
 
+      {/* Filter Controls */}
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExpandAll}
+            className="gap-2"
+          >
+            <ChevronDown className="h-4 w-4" />
+            Expand All
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCollapseAll}
+            className="gap-2"
+          >
+            <ChevronUp className="h-4 w-4" />
+            Collapse All
+          </Button>
+          <Button
+            variant={showFlightsOnly ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowFlightsOnly(!showFlightsOnly)}
+            className="gap-2"
+          >
+            <Plane className="h-4 w-4" />
+            {showFlightsOnly ? "Show All Cards" : "Show Cards with Flights"}
+          </Button>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <div className="grid lg:grid-cols-2 gap-8">
@@ -126,7 +178,7 @@ export default function Index() {
             />
             
             <div className="space-y-4">
-              {benendenTerms.map((term) => (
+              {filteredBenendenTerms.map((term) => (
                 <TermCard
                   key={term.id}
                   term={term}
@@ -139,6 +191,18 @@ export default function Index() {
                   onSetNotTravelling={handleSetNotTravelling}
                   notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
                   className="h-full"
+                  isExpanded={expandedCards.has(term.id)}
+                  onExpandedChange={(expanded) => {
+                    setExpandedCards(prev => {
+                      const newSet = new Set(prev);
+                      if (expanded) {
+                        newSet.add(term.id);
+                      } else {
+                        newSet.delete(term.id);
+                      }
+                      return newSet;
+                    });
+                  }}
                 />
               ))}
             </div>
@@ -153,7 +217,7 @@ export default function Index() {
             />
             
             <div className="space-y-4">
-              {wycombeTerms.map((term) => (
+              {filteredWycombeTerms.map((term) => (
                 <TermCard
                   key={term.id}
                   term={term}
@@ -166,6 +230,18 @@ export default function Index() {
                   onSetNotTravelling={handleSetNotTravelling}
                   notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
                   className="h-full"
+                  isExpanded={expandedCards.has(term.id)}
+                  onExpandedChange={(expanded) => {
+                    setExpandedCards(prev => {
+                      const newSet = new Set(prev);
+                      if (expanded) {
+                        newSet.add(term.id);
+                      } else {
+                        newSet.delete(term.id);
+                      }
+                      return newSet;
+                    });
+                  }}
                 />
               ))}
             </div>
