@@ -44,8 +44,14 @@ export default function Index() {
         const termFlights = flights.filter(f => f.termId === term.id);
         const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
         
-        // Show if either has no flight info OR hasn't been marked as not travelling
-        return termFlights.length === 0 || !termNotTravelling?.noFlights;
+        console.log(`Filtering ${term.name} (${term.id}):`, {
+          termFlights: termFlights.length,
+          isNotTravelling: termNotTravelling?.noFlights,
+          shouldShow: termFlights.length === 0 && !termNotTravelling?.noFlights
+        });
+        
+        // Show ONLY if has no flight info AND hasn't been marked as not travelling
+        return termFlights.length === 0 && !termNotTravelling?.noFlights;
       })
     : benendenTerms;
   const filteredWycombeTerms = showFlightsOnly 
@@ -53,8 +59,14 @@ export default function Index() {
         const termFlights = flights.filter(f => f.termId === term.id);
         const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
         
-        // Show if either has no flight info OR hasn't been marked as not travelling
-        return termFlights.length === 0 || !termNotTravelling?.noFlights;
+        console.log(`Filtering ${term.name} (${term.id}):`, {
+          termFlights: termFlights.length,
+          isNotTravelling: termNotTravelling?.noFlights,
+          shouldShow: termFlights.length === 0 && !termNotTravelling?.noFlights
+        });
+        
+        // Show ONLY if has no flight info AND hasn't been marked as not travelling
+        return termFlights.length === 0 && !termNotTravelling?.noFlights;
       })
     : wycombeTerms;
 
