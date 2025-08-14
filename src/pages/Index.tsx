@@ -43,46 +43,18 @@ export default function Index() {
     ? benendenTerms.filter(term => {
         const termFlights = flights.filter(f => f.termId === term.id);
         const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
-        const needsFlights = term.type === 'holiday' || term.type === 'half-term' || 
-                            term.type === 'exeat' || term.type === 'short-leave' || 
-                            term.type === 'long-leave' || term.type === 'term';
         
-        // Show if needs flights, doesn't have "not travelling" marked, and has missing flights
-        if (!needsFlights || termNotTravelling?.noFlights) return false;
-        
-        const needsBothFlights = term.type === 'half-term' || term.type === 'exeat' || 
-                                term.type === 'short-leave' || term.type === 'long-leave';
-        
-        if (needsBothFlights) {
-          const hasOutbound = termFlights.some(f => f.type === 'outbound');
-          const hasReturn = termFlights.some(f => f.type === 'return');
-          return !hasOutbound || !hasReturn;
-        } else {
-          return termFlights.length === 0;
-        }
+        // Show if either has no flight info OR hasn't been marked as not travelling
+        return termFlights.length === 0 || !termNotTravelling?.noFlights;
       })
     : benendenTerms;
   const filteredWycombeTerms = showFlightsOnly 
     ? wycombeTerms.filter(term => {
         const termFlights = flights.filter(f => f.termId === term.id);
         const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
-        const needsFlights = term.type === 'holiday' || term.type === 'half-term' || 
-                            term.type === 'exeat' || term.type === 'short-leave' || 
-                            term.type === 'long-leave' || term.type === 'term';
         
-        // Show if needs flights, doesn't have "not travelling" marked, and has missing flights
-        if (!needsFlights || termNotTravelling?.noFlights) return false;
-        
-        const needsBothFlights = term.type === 'half-term' || term.type === 'exeat' || 
-                                term.type === 'short-leave' || term.type === 'long-leave';
-        
-        if (needsBothFlights) {
-          const hasOutbound = termFlights.some(f => f.type === 'outbound');
-          const hasReturn = termFlights.some(f => f.type === 'return');
-          return !hasOutbound || !hasReturn;
-        } else {
-          return termFlights.length === 0;
-        }
+        // Show if either has no flight info OR hasn't been marked as not travelling
+        return termFlights.length === 0 || !termNotTravelling?.noFlights;
       })
     : wycombeTerms;
 
