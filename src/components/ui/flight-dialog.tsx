@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar, Clock, Plane, Plus, X } from "lucide-react";
+import { Calendar, Clock, Plane, Plus, X, Edit2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ interface FlightDialogProps {
   flights: FlightDetails[];
   onAddFlight: (flight: Omit<FlightDetails, 'id'>) => void;
   onRemoveFlight: (flightId: string) => void;
+  onEditFlight?: (flightId: string, flight: Omit<FlightDetails, 'id'>) => void;
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -36,12 +37,14 @@ export function FlightDialog({
   flights, 
   onAddFlight, 
   onRemoveFlight, 
+  onEditFlight,
   children,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange
 }: FlightDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isAddingFlight, setIsAddingFlight] = useState(false);
+  const [editingFlight, setEditingFlight] = useState<FlightDetails | null>(null);
 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
@@ -59,12 +62,38 @@ export function FlightDialog({
     notes: ''
   });
 
+  // Airline mapping based on IATA codes
+  const getAirlineFromCode = (flightNumber: string): string => {
+    const code = flightNumber.substring(0, 2).toUpperCase();
+    const airlineMap: { [key: string]: string } = {
+      'CX': 'Cathay Pacific',
+      'BA': 'British Airways',
+      'LH': 'Lufthansa',
+      'AF': 'Air France',
+      'KL': 'KLM',
+      'QF': 'Qantas',
+      'SQ': 'Singapore Airlines',
+      'EK': 'Emirates',
+      'QR': 'Qatar Airways',
+      'TG': 'Thai Airways',
+      'UA': 'United Airlines',
+      'DL': 'Delta Air Lines',
+      'AA': 'American Airlines',
+      'VS': 'Virgin Atlantic',
+      'EY': 'Etihad Airways',
+      'TK': 'Turkish Airlines',
+      'JL': 'Japan Airlines',
+      'NH': 'ANA'
+    };
+    return airlineMap[code] || '';
+  };
+
   const handleAddFlight = () => {
     if (!newFlight.airline || !newFlight.flightNumber || !newFlight.departureAirport) {
       return;
     }
 
-    onAddFlight({
+    const flightData = {
       termId: term.id,
       type: newFlight.type,
       airline: newFlight.airline,
@@ -80,9 +109,19 @@ export function FlightDialog({
         time: newFlight.arrivalTime
       },
       notes: newFlight.notes
-    });
+    };
 
-    // Reset form
+    if (editingFlight && onEditFlight) {
+      onEditFlight(editingFlight.id, flightData);
+      setEditingFlight(null);
+    } else {
+      onAddFlight(flightData);
+    }
+
+    resetForm();
+  };
+
+  const resetForm = () => {
     setNewFlight({
       type: 'outbound',
       airline: '',
@@ -96,6 +135,33 @@ export function FlightDialog({
       notes: ''
     });
     setIsAddingFlight(false);
+    setEditingFlight(null);
+  };
+
+  const handleEditFlight = (flight: FlightDetails) => {
+    setEditingFlight(flight);
+    setNewFlight({
+      type: flight.type,
+      airline: flight.airline,
+      flightNumber: flight.flightNumber,
+      departureAirport: flight.departure.airport,
+      departureDate: format(flight.departure.date, 'yyyy-MM-dd'),
+      departureTime: flight.departure.time,
+      arrivalAirport: flight.arrival.airport,
+      arrivalDate: format(flight.arrival.date, 'yyyy-MM-dd'),
+      arrivalTime: flight.arrival.time,
+      notes: flight.notes || ''
+    });
+    setIsAddingFlight(true);
+  };
+
+  const handleFlightNumberChange = (flightNumber: string) => {
+    const airline = getAirlineFromCode(flightNumber);
+    setNewFlight(prev => ({ 
+      ...prev, 
+      flightNumber,
+      airline: airline || prev.airline
+    }));
   };
 
   const dialogContent = (
@@ -127,14 +193,26 @@ export function FlightDialog({
                         {flight.type === 'outbound' ? 'Outbound Flight' : 'Return Flight'}
                       </span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onRemoveFlight(flight.id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {onEditFlight && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditFlight(flight)}
+                          className="text-primary hover:text-primary hover:bg-primary/10"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemoveFlight(flight.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
@@ -169,10 +247,12 @@ export function FlightDialog({
           </div>
         )}
 
-        {/* Add New Flight Form */}
+        {/* Add/Edit Flight Form */}
         {isAddingFlight ? (
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/20">
-            <h3 className="text-lg font-semibold text-foreground">Add New Flight</h3>
+            <h3 className="text-lg font-semibold text-foreground">
+              {editingFlight ? 'Edit Flight' : 'Add New Flight'}
+            </h3>
             
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -208,7 +288,7 @@ export function FlightDialog({
                 <Input
                   id="flightNumber"
                   value={newFlight.flightNumber}
-                  onChange={(e) => setNewFlight(prev => ({ ...prev, flightNumber: e.target.value }))}
+                  onChange={(e) => handleFlightNumberChange(e.target.value)}
                   placeholder="e.g., BA123"
                 />
               </div>
@@ -277,11 +357,11 @@ export function FlightDialog({
 
             <div className="flex gap-2">
               <Button onClick={handleAddFlight} variant="flight">
-                Add Flight
+                {editingFlight ? 'Update Flight' : 'Add Flight'}
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setIsAddingFlight(false)}
+                onClick={resetForm}
               >
                 Cancel
               </Button>

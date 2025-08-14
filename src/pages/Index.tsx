@@ -9,7 +9,7 @@ import { useFlights } from "@/hooks/use-flights";
 import { useState } from "react";
 
 const Index = () => {
-  const { flights, loading, addFlight, removeFlight, getFlightsForTerm } = useFlights();
+  const { flights, loading, addFlight, editFlight, removeFlight, getFlightsForTerm } = useFlights();
 
   const benendenTerms = mockTerms.filter(term => term.school === 'benenden');
   const wycombeTerms = mockTerms.filter(term => term.school === 'wycombe');
@@ -176,6 +176,7 @@ const Index = () => {
           term={selectedTerm}
           flights={getFlightsForTerm(selectedTerm.id)}
           onAddFlight={addFlight}
+          onEditFlight={editFlight}
           onRemoveFlight={removeFlight}
           open={showFlightDialog}
           onOpenChange={setShowFlightDialog}

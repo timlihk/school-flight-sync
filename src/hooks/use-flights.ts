@@ -116,6 +116,68 @@ export function useFlights() {
     }
   };
 
+  const editFlight = async (flightId: string, updatedFlight: Omit<FlightDetails, 'id'>) => {
+    try {
+      // Transform to database format
+      const dbFlight = {
+        term_id: updatedFlight.termId,
+        type: updatedFlight.type,
+        airline: updatedFlight.airline,
+        flight_number: updatedFlight.flightNumber,
+        departure_airport: updatedFlight.departure.airport,
+        departure_date: updatedFlight.departure.date.toISOString().split('T')[0],
+        departure_time: updatedFlight.departure.time,
+        arrival_airport: updatedFlight.arrival.airport,
+        arrival_date: updatedFlight.arrival.date.toISOString().split('T')[0],
+        arrival_time: updatedFlight.arrival.time,
+        notes: updatedFlight.notes || null,
+      };
+
+      const { data, error } = await supabase
+        .from('flights')
+        .update(dbFlight)
+        .eq('id', flightId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Transform back to FlightDetails format and update state
+      const editedFlight: FlightDetails = {
+        id: data.id,
+        termId: data.term_id,
+        type: data.type as 'outbound' | 'return',
+        airline: data.airline,
+        flightNumber: data.flight_number,
+        departure: {
+          airport: data.departure_airport,
+          date: new Date(data.departure_date),
+          time: data.departure_time,
+        },
+        arrival: {
+          airport: data.arrival_airport,
+          date: new Date(data.arrival_date),
+          time: data.arrival_time,
+        },
+        notes: data.notes || undefined,
+      };
+
+      setFlights(prev => prev.map(f => f.id === flightId ? editedFlight : f));
+      
+      toast({
+        title: "Flight Updated",
+        description: `${editedFlight.type === 'outbound' ? 'Outbound' : 'Return'} flight ${editedFlight.flightNumber} has been updated.`,
+      });
+    } catch (error) {
+      console.error('Error editing flight:', error);
+      toast({
+        title: "Error Updating Flight",
+        description: "Failed to update flight in database.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const removeFlight = async (flightId: string) => {
     try {
       const { error } = await supabase
@@ -150,6 +212,7 @@ export function useFlights() {
     flights,
     loading,
     addFlight,
+    editFlight,
     removeFlight,
     getFlightsForTerm,
     refetch: loadFlights,
