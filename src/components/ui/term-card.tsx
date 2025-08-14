@@ -7,6 +7,7 @@ import { Term, FlightDetails, TransportDetails } from "@/types/school";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
+import { termDetails, getTermDetailsKey } from "@/data/term-details";
 
 interface TermCardProps {
   term: Term;
@@ -79,6 +80,44 @@ export function TermCard({
 
   const duration = Math.ceil((term.endDate.getTime() - term.startDate.getTime()) / (1000 * 60 * 60 * 24));
 
+  // Get specific timing information from term details
+  const termDetailsKey = getTermDetailsKey(term.name, term.startDate, term.school);
+  const termEventsData = termDetails[term.school]?.[termDetailsKey] || [];
+  
+  // Find the relevant event based on term type and dates
+  const getRelevantEvent = () => {
+    if (term.type === 'term') {
+      // For term starts, look for "return to School" or "Term begins" events
+      return termEventsData.find(event => 
+        event.event.toLowerCase().includes('return to school') ||
+        event.event.toLowerCase().includes('term begins') ||
+        event.event.toLowerCase().includes('girls return')
+      );
+    } else if (term.type === 'holiday') {
+      // For holidays, look for "Term ends" events
+      return termEventsData.find(event => 
+        event.event.toLowerCase().includes('term ends')
+      );
+    } else if (term.type === 'exeat' || term.type === 'short-leave') {
+      // For exeats/short leaves, look for "begins" events
+      return termEventsData.find(event => 
+        (event.event.toLowerCase().includes('exeat begins') ||
+         event.event.toLowerCase().includes('short leave')) &&
+        event.date.toLowerCase().includes(format(term.startDate, 'MMMM').toLowerCase())
+      );
+    } else if (term.type === 'half-term' || term.type === 'long-leave') {
+      // For half terms/long leaves, look for "begins" events
+      return termEventsData.find(event => 
+        (event.event.toLowerCase().includes('half term begins') ||
+         event.event.toLowerCase().includes('long leave')) &&
+        event.date.toLowerCase().includes(format(term.startDate, 'MMMM').toLowerCase())
+      );
+    }
+    return null;
+  };
+
+  const relevantEvent = getRelevantEvent();
+
   return (
     <>
       <Card 
@@ -96,15 +135,24 @@ export function TermCard({
               {getTypeDisplayName()}
             </Badge>
           </div>
-          <div className="flex items-center text-sm text-muted-foreground gap-2">
-            <Calendar className="h-4 w-4" />
-            <span>
-              {term.type === 'term' 
-                ? format(term.startDate, 'MMM dd yyyy')
-                : `${format(term.startDate, 'MMM dd')} - ${format(term.endDate, 'MMM dd, yyyy')}`
-              }
-            </span>
-            {term.type !== 'term' && <span className="text-xs">({duration} days)</span>}
+          <div className="space-y-1">
+            <div className="flex items-center text-sm text-muted-foreground gap-2">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {term.type === 'term' 
+                  ? format(term.startDate, 'MMM dd yyyy')
+                  : `${format(term.startDate, 'MMM dd')} - ${format(term.endDate, 'MMM dd, yyyy')}`
+                }
+              </span>
+              {term.type !== 'term' && <span className="text-xs">({duration} days)</span>}
+            </div>
+            {relevantEvent && relevantEvent.time && (
+              <div className="flex items-center text-xs text-muted-foreground gap-2 ml-6">
+                <Clock className="h-3 w-3" />
+                <span className="font-medium">{relevantEvent.time}</span>
+                <span>• {relevantEvent.event}</span>
+              </div>
+            )}
           </div>
         </CardHeader>
         
