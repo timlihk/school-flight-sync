@@ -560,19 +560,11 @@ export function TermCard({
                           </Button>
                         </div>
                       </div>
-                    )}
-                  </div>
-                  <div 
-                    className="text-center py-2 cursor-pointer hover:bg-muted/10 rounded-lg transition-colors"
-                    onClick={() => setShowDetails(true)}
-                  >
-                    <div className="text-xs text-muted-foreground">
-                      Click for detailed schedule
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
+                     )}
+                   </div>
+                 </>
+               )}
+             </CardContent>
           </CollapsibleContent>
         </Collapsible>
       </Card>

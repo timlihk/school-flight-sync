@@ -5,6 +5,7 @@ import { TermCard } from "@/components/ui/term-card";
 import { FlightDialog } from "@/components/ui/flight-dialog";
 import { TransportDialog } from "@/components/ui/transport-dialog";
 import { ToDoDialog } from "@/components/ui/todo-dialog";
+import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { SchoolHeader } from "@/components/school-header";
 import { EventSections } from "@/components/ui/event-sections";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
@@ -17,6 +18,7 @@ export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
   const [showFlightDialog, setShowFlightDialog] = useState(false);
   const [showTransportDialog, setShowTransportDialog] = useState(false);
+  const [showTermDetailsDialog, setShowTermDetailsDialog] = useState(false);
   const [notTravelling, setNotTravelling] = useState<NotTravellingStatus[]>([]);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [showFlightsOnly, setShowFlightsOnly] = useState(false);
@@ -173,6 +175,29 @@ export default function Index() {
         </div>
       </header>
 
+      {/* Academic Year Header with Detailed Schedule */}
+      <div className="container mx-auto px-6 py-4">
+        <div className="text-center">
+          <div 
+            className="inline-flex items-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg cursor-pointer hover:bg-card transition-colors"
+            onClick={() => {
+              // Create a dummy term with the selected academic year for the dialog
+              const yearTerms = filteredTerms.filter(t => selectedAcademicYear === 'all' || t.academicYear === selectedAcademicYear);
+              if (yearTerms.length > 0) {
+                setSelectedTerm(yearTerms[0]); // Use the first term as representative
+                setShowTermDetailsDialog(true);
+              }
+            }}
+          >
+            <Calendar className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">
+              {selectedAcademicYear === 'all' ? 'All Academic Years' : `Academic Year ${selectedAcademicYear}`}
+            </span>
+            <span className="text-xs text-muted-foreground">- Click for detailed schedule</span>
+          </div>
+        </div>
+      </div>
+
       {/* Filter Controls */}
       <div className="container mx-auto px-6 py-4">
         <div className="flex flex-wrap justify-center gap-3">
@@ -328,6 +353,12 @@ export default function Index() {
               onRemoveTransport={removeTransport}
               open={showTransportDialog}
               onOpenChange={setShowTransportDialog}
+            />
+
+            <TermDetailsDialog
+              term={selectedTerm}
+              open={showTermDetailsDialog}
+              onOpenChange={setShowTermDetailsDialog}
             />
           </>
         )}
