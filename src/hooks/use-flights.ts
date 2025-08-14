@@ -39,6 +39,7 @@ export function useFlights() {
           date: new Date(flight.arrival_date),
           time: flight.arrival_time,
         },
+        confirmationCode: flight.confirmation_code || undefined,
         notes: flight.notes || undefined,
       })) || [];
 
@@ -69,6 +70,7 @@ export function useFlights() {
         arrival_airport: newFlight.arrival.airport,
         arrival_date: newFlight.arrival.date.toISOString().split('T')[0],
         arrival_time: newFlight.arrival.time,
+        confirmation_code: newFlight.confirmationCode || null,
         notes: newFlight.notes || null,
       };
 
@@ -97,6 +99,7 @@ export function useFlights() {
           date: new Date(data.arrival_date),
           time: data.arrival_time,
         },
+        confirmationCode: data.confirmation_code || undefined,
         notes: data.notes || undefined,
       };
 
@@ -130,6 +133,7 @@ export function useFlights() {
         arrival_airport: updatedFlight.arrival.airport,
         arrival_date: updatedFlight.arrival.date.toISOString().split('T')[0],
         arrival_time: updatedFlight.arrival.time,
+        confirmation_code: updatedFlight.confirmationCode || null,
         notes: updatedFlight.notes || null,
       };
 
@@ -159,6 +163,7 @@ export function useFlights() {
           date: new Date(data.arrival_date),
           time: data.arrival_time,
         },
+        confirmationCode: data.confirmation_code || undefined,
         notes: data.notes || undefined,
       };
 
