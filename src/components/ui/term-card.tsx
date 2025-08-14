@@ -1,9 +1,9 @@
 import { format } from "date-fns";
-import { Calendar, Plane, Plus } from "lucide-react";
+import { Calendar, Plane, Plus, Car, User, Phone, Clock, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Term, FlightDetails } from "@/types/school";
+import { Term, FlightDetails, TransportDetails } from "@/types/school";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
@@ -11,8 +11,11 @@ import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 interface TermCardProps {
   term: Term;
   flights?: FlightDetails[];
+  transport?: TransportDetails[];
   onAddFlight: (termId: string) => void;
   onViewFlights: (termId: string) => void;
+  onAddTransport: (termId: string) => void;
+  onViewTransport: (termId: string) => void;
   className?: string;
   onCardClick?: (term: Term) => void;
 }
@@ -20,8 +23,11 @@ interface TermCardProps {
 export function TermCard({ 
   term, 
   flights = [], 
+  transport = [],
   onAddFlight, 
   onViewFlights,
+  onAddTransport,
+  onViewTransport,
   className,
   onCardClick
 }: TermCardProps) {
@@ -32,6 +38,7 @@ export function TermCard({
   const isShortLeave = term.type === 'short-leave';
   const isLongLeave = term.type === 'long-leave';
   const hasFlights = flights.length > 0;
+  const hasTransport = transport.length > 0;
 
   // Show flight options for holidays, half terms, exeats, leaves, and term starts
   const shouldShowFlights = isHoliday || isHalfTerm || isExeat || isShortLeave || isLongLeave || term.type === 'term';
@@ -156,18 +163,18 @@ export function TermCard({
                     </div>
                   )}
                   
-                  <div className="flex justify-center">
+                  <div className="flex justify-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onAddFlight(term.id);
+                        onViewFlights(term.id);
                       }}
                       className="h-7 text-xs hover:bg-background/80"
                     >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add Flight
+                      <Plane className="h-3 w-3 mr-1" />
+                      View Flights
                     </Button>
                   </div>
                 </div>
@@ -184,9 +191,103 @@ export function TermCard({
                       e.stopPropagation();
                       onAddFlight(term.id);
                     }}
-                    className="h-8 w-8 p-0 hover:bg-background/80"
+                    className="h-7 text-xs hover:bg-background/80"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add Flight
+                  </Button>
+                </div>
+              )}
+              
+              {/* Transport Section */}
+              {hasTransport ? (
+                <div className="space-y-2">
+                  {transport.slice(0, 2).map((transportItem) => (
+                    <div 
+                      key={transportItem.id}
+                      className="p-3 bg-muted/20 rounded-lg border border-muted/40"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">
+                            🚗
+                          </span>
+                          <span className="text-xs font-medium text-foreground">
+                            {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewTransport(term.id);
+                          }}
+                          className="h-6 w-6 p-0 hover:bg-background/80"
+                        >
+                          <Car className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <User className="h-3 w-3" />
+                          <span className="truncate">{transportItem.driverName}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          <span>{transportItem.pickupTime}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          <span className="truncate">{transportItem.phoneNumber}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <CreditCard className="h-3 w-3" />
+                          <span className="truncate">{transportItem.licenseNumber}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {transport.length > 2 && (
+                    <div className="text-xs text-muted-foreground text-center py-1">
+                      +{transport.length - 2} more transport
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewTransport(term.id);
+                      }}
+                      className="h-7 text-xs hover:bg-background/80"
+                    >
+                      <Car className="h-3 w-3 mr-1" />
+                      View Transport
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Car className="h-4 w-4" />
+                    No transport yet
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddTransport(term.id);
+                    }}
+                    className="h-7 text-xs hover:bg-background/80"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add Transport
                   </Button>
                 </div>
               )}

@@ -26,6 +26,17 @@ export interface FlightDetails {
   notes?: string;
 }
 
+export interface TransportDetails {
+  id: string;
+  termId: string;
+  type: 'school-coach' | 'taxi';
+  driverName: string;
+  phoneNumber: string;
+  licenseNumber: string;
+  pickupTime: string;
+  notes?: string;
+}
+
 export interface SchoolData {
   name: string;
   color: string;
