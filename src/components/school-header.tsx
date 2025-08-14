@@ -39,9 +39,6 @@ export function SchoolHeader({ schoolName, termCount, variant, academicYear = "2
         >
           Academic Year {academicYear}
         </span>
-        <Badge variant={getBadgeVariant() as any} className="text-xs">
-          {termCount} terms
-        </Badge>
       </div>
     </div>
   );
