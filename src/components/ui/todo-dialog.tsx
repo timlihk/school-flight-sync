@@ -62,22 +62,54 @@ export function ToDoDialog({
                           term.type === 'exeat' || term.type === 'short-leave' || 
                           term.type === 'long-leave' || term.type === 'term';
       
-      if (needsFlights && termFlights.length === 0) {
-        const daysUntil = Math.ceil((term.startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        let urgency: 'high' | 'medium' | 'low' = 'low';
+      if (needsFlights) {
+        const needsBothFlights = term.type === 'half-term' || term.type === 'exeat' || 
+                                term.type === 'short-leave' || term.type === 'long-leave';
         
-        if (daysUntil <= 30) urgency = 'high';
-        else if (daysUntil <= 60) urgency = 'medium';
+        if (needsBothFlights) {
+          // Check for missing outbound or return flights
+          const hasOutbound = termFlights.some(f => f.type === 'outbound');
+          const hasReturn = termFlights.some(f => f.type === 'return');
+          
+          if (!hasOutbound || !hasReturn) {
+            const daysUntil = Math.ceil((term.startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            let urgency: 'high' | 'medium' | 'low' = 'low';
+            
+            if (daysUntil <= 30) urgency = 'high';
+            else if (daysUntil <= 60) urgency = 'medium';
 
-        items.push({
-          id: `flight-${term.id}`,
-          term,
-          type: 'flight',
-          title: `Book flights for ${term.name}`,
-          description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
-          urgency,
-          dueDate: term.startDate
-        });
+            const missingTypes = [];
+            if (!hasOutbound) missingTypes.push('departure');
+            if (!hasReturn) missingTypes.push('return');
+
+            items.push({
+              id: `flight-${term.id}`,
+              term,
+              type: 'flight',
+              title: `Book ${missingTypes.join(' & ')} flight${missingTypes.length > 1 ? 's' : ''} for ${term.name}`,
+              description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
+              urgency,
+              dueDate: term.startDate
+            });
+          }
+        } else if (termFlights.length === 0) {
+          // For other term types, check if any flights exist
+          const daysUntil = Math.ceil((term.startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          let urgency: 'high' | 'medium' | 'low' = 'low';
+          
+          if (daysUntil <= 30) urgency = 'high';
+          else if (daysUntil <= 60) urgency = 'medium';
+
+          items.push({
+            id: `flight-${term.id}`,
+            term,
+            type: 'flight',
+            title: `Book flights for ${term.name}`,
+            description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
+            urgency,
+            dueDate: term.startDate
+          });
+        }
       }
 
       // Check if transport is needed and missing
