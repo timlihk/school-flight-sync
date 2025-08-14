@@ -75,7 +75,7 @@ const Index = () => {
             <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Academic Year 2024-2025</span>
+                <span>Academic Year 2025-2026</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
@@ -83,7 +83,31 @@ const Index = () => {
               </div>
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
-                <span>{mockTerms.length} Terms & Holidays</span>
+                <span>{mockTerms.length} Terms & Breaks</span>
+              </div>
+            </div>
+
+            {/* Legend for term types */}
+            <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-gradient-academic"></div>
+                <span>Terms</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-gradient-warm"></div>
+                <span>Holidays</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-accent/40"></div>
+                <span>Half Terms</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-primary/20"></div>
+                <span>Exeats (Benenden)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-secondary/20"></div>
+                <span>Short Leaves (Wycombe)</span>
               </div>
             </div>
           </div>

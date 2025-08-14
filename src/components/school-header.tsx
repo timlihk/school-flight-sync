@@ -24,7 +24,7 @@ export function SchoolHeader({ schoolName, termCount, variant }: SchoolHeaderPro
       <div className="flex items-center justify-center gap-2">
         <Calendar className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">
-          Academic Year 2024-2025
+          Academic Year 2025-2026
         </span>
         <Badge variant={getBadgeVariant() as any} className="text-xs">
           {termCount} terms

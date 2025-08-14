@@ -3,7 +3,7 @@ export interface Term {
   name: string;
   startDate: Date;
   endDate: Date;
-  type: 'term' | 'half-term' | 'holiday';
+  type: 'term' | 'half-term' | 'holiday' | 'exeat' | 'short-leave' | 'long-leave';
   school: 'benenden' | 'wycombe';
 }
 

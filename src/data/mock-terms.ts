@@ -1,150 +1,247 @@
 import { Term } from "@/types/school";
 
+// Real term dates scraped from school websites - Academic Year 2025-2026
 export const mockTerms: Term[] = [
-  // Benenden School Terms 2024-2025
+  // Benenden School Terms 2025-2026
   {
-    id: "ben-autumn-2024",
+    id: "ben-autumn-2025",
     name: "Autumn Term",
-    startDate: new Date("2024-09-04"),
-    endDate: new Date("2024-12-13"),
+    startDate: new Date("2025-09-02"),
+    endDate: new Date("2025-12-10"),
     type: "term",
     school: "benenden"
   },
   {
-    id: "ben-autumn-half-2024",
-    name: "Autumn Half Term",
-    startDate: new Date("2024-10-19"),
-    endDate: new Date("2024-11-03"),
+    id: "ben-autumn-exeat1-2025",
+    name: "Fixed Exeat",
+    startDate: new Date("2025-09-26"),
+    endDate: new Date("2025-09-28"),
+    type: "exeat",
+    school: "benenden"
+  },
+  {
+    id: "ben-autumn-half-2025",
+    name: "Half Term",
+    startDate: new Date("2025-10-17"),
+    endDate: new Date("2025-11-02"),
     type: "half-term",
     school: "benenden"
   },
   {
-    id: "ben-christmas-2024",
+    id: "ben-autumn-exeat2-2025",
+    name: "Fixed Exeat",
+    startDate: new Date("2025-11-21"),
+    endDate: new Date("2025-11-23"),
+    type: "exeat",
+    school: "benenden"
+  },
+  {
+    id: "ben-christmas-2025",
     name: "Christmas Holiday",
-    startDate: new Date("2024-12-14"),
-    endDate: new Date("2025-01-12"),
+    startDate: new Date("2025-12-10"),
+    endDate: new Date("2026-01-05"),
     type: "holiday",
     school: "benenden"
   },
   {
-    id: "ben-spring-2025",
-    name: "Spring Term", 
-    startDate: new Date("2025-01-13"),
-    endDate: new Date("2025-04-04"),
+    id: "ben-spring-2026",
+    name: "Spring Term",
+    startDate: new Date("2026-01-05"),
+    endDate: new Date("2026-03-27"),
     type: "term",
     school: "benenden"
   },
   {
-    id: "ben-spring-half-2025",
-    name: "Spring Half Term",
-    startDate: new Date("2025-02-15"),
-    endDate: new Date("2025-02-23"),
-    type: "half-term", 
+    id: "ben-spring-exeat1-2026",
+    name: "Fixed Exeat",
+    startDate: new Date("2026-01-23"),
+    endDate: new Date("2026-01-25"),
+    type: "exeat",
     school: "benenden"
   },
   {
-    id: "ben-easter-2025",
-    name: "Easter Holiday",
-    startDate: new Date("2025-04-05"),
-    endDate: new Date("2025-04-27"),
-    type: "holiday",
-    school: "benenden"
-  },
-  {
-    id: "ben-summer-2025",
-    name: "Summer Term",
-    startDate: new Date("2025-04-28"),
-    endDate: new Date("2025-07-04"),
-    type: "term",
-    school: "benenden"
-  },
-  {
-    id: "ben-summer-half-2025",
-    name: "Summer Half Term",
-    startDate: new Date("2025-05-24"),
-    endDate: new Date("2025-06-01"),
+    id: "ben-spring-half-2026",
+    name: "Half Term",
+    startDate: new Date("2026-02-13"),
+    endDate: new Date("2026-02-22"),
     type: "half-term",
     school: "benenden"
   },
   {
-    id: "ben-summer-holiday-2025",
+    id: "ben-spring-exeat2-2026",
+    name: "Fixed Exeat",
+    startDate: new Date("2026-03-13"),
+    endDate: new Date("2026-03-15"),
+    type: "exeat",
+    school: "benenden"
+  },
+  {
+    id: "ben-easter-2026",
+    name: "Easter Holiday",
+    startDate: new Date("2026-03-27"),
+    endDate: new Date("2026-04-20"),
+    type: "holiday",
+    school: "benenden"
+  },
+  {
+    id: "ben-summer-2026",
+    name: "Summer Term",
+    startDate: new Date("2026-04-20"),
+    endDate: new Date("2026-07-04"),
+    type: "term",
+    school: "benenden"
+  },
+  {
+    id: "ben-summer-exeat1-2026",
+    name: "Fixed Exeat",
+    startDate: new Date("2026-05-01"),
+    endDate: new Date("2026-05-04"),
+    type: "exeat",
+    school: "benenden"
+  },
+  {
+    id: "ben-summer-half-2026",
+    name: "Half Term",
+    startDate: new Date("2026-05-22"),
+    endDate: new Date("2026-05-31"),
+    type: "half-term",
+    school: "benenden"
+  },
+  {
+    id: "ben-summer-exeat2-2026",
+    name: "Fixed Exeat",
+    startDate: new Date("2026-06-19"),
+    endDate: new Date("2026-06-21"),
+    type: "exeat",
+    school: "benenden"
+  },
+  {
+    id: "ben-summer-holiday-2026",
     name: "Summer Holiday",
-    startDate: new Date("2025-07-05"),
-    endDate: new Date("2025-09-01"),
+    startDate: new Date("2026-07-04"),
+    endDate: new Date("2026-09-01"),
     type: "holiday",
     school: "benenden"
   },
 
-  // Wycombe Abbey School Terms 2024-2025
+  // Wycombe Abbey School Terms 2025-2026
   {
-    id: "wyc-autumn-2024",
+    id: "wyc-autumn-2025",
     name: "Autumn Term",
-    startDate: new Date("2024-09-08"),
-    endDate: new Date("2024-12-17"),
+    startDate: new Date("2025-09-01"),
+    endDate: new Date("2025-12-10"),
     type: "term",
     school: "wycombe"
   },
   {
-    id: "wyc-autumn-half-2024",
-    name: "Autumn Half Term",
-    startDate: new Date("2024-10-21"),
-    endDate: new Date("2024-11-05"),
-    type: "half-term",
+    id: "wyc-autumn-short1-2025",
+    name: "Short Leave",
+    startDate: new Date("2025-09-27"),
+    endDate: new Date("2025-09-29"),
+    type: "short-leave",
     school: "wycombe"
   },
   {
-    id: "wyc-christmas-2024",
+    id: "wyc-autumn-long-2025",
+    name: "Long Leave (Half Term)",
+    startDate: new Date("2025-10-17"),
+    endDate: new Date("2025-11-02"),
+    type: "long-leave",
+    school: "wycombe"
+  },
+  {
+    id: "wyc-autumn-short2-2025",
+    name: "Short Leave",
+    startDate: new Date("2025-11-19"),
+    endDate: new Date("2025-11-23"),
+    type: "short-leave",
+    school: "wycombe"
+  },
+  {
+    id: "wyc-christmas-2025",
     name: "Christmas Holiday",
-    startDate: new Date("2024-12-18"),
-    endDate: new Date("2025-01-15"),
+    startDate: new Date("2025-12-10"),
+    endDate: new Date("2026-01-06"),
     type: "holiday",
     school: "wycombe"
   },
   {
-    id: "wyc-spring-2025",
+    id: "wyc-spring-2026",
     name: "Spring Term",
-    startDate: new Date("2025-01-16"),
-    endDate: new Date("2025-04-08"),
+    startDate: new Date("2026-01-06"),
+    endDate: new Date("2026-03-26"),
     type: "term",
     school: "wycombe"
   },
   {
-    id: "wyc-spring-half-2025",
-    name: "Spring Half Term",
-    startDate: new Date("2025-02-17"),
-    endDate: new Date("2025-02-25"),
-    type: "half-term",
+    id: "wyc-spring-short1-2026",
+    name: "Short Leave",
+    startDate: new Date("2026-01-23"),
+    endDate: new Date("2026-01-25"),
+    type: "short-leave",
     school: "wycombe"
   },
   {
-    id: "wyc-easter-2025",
+    id: "wyc-spring-long-2026",
+    name: "Long Leave (Half Term)",
+    startDate: new Date("2026-02-13"),
+    endDate: new Date("2026-02-22"),
+    type: "long-leave",
+    school: "wycombe"
+  },
+  {
+    id: "wyc-spring-short2-2026",
+    name: "Short Leave",
+    startDate: new Date("2026-03-14"),
+    endDate: new Date("2026-03-16"),
+    type: "short-leave",
+    school: "wycombe"
+  },
+  {
+    id: "wyc-easter-2026",
     name: "Easter Holiday",
-    startDate: new Date("2025-04-09"),
-    endDate: new Date("2025-05-02"),
+    startDate: new Date("2026-03-26"),
+    endDate: new Date("2026-04-21"),
     type: "holiday",
     school: "wycombe"
   },
   {
-    id: "wyc-summer-2025",
+    id: "wyc-summer-2026",
     name: "Summer Term",
-    startDate: new Date("2025-05-03"),
-    endDate: new Date("2025-07-08"),
+    startDate: new Date("2026-04-21"),
+    endDate: new Date("2026-06-26"),
     type: "term",
     school: "wycombe"
   },
   {
-    id: "wyc-summer-half-2025",
-    name: "Summer Half Term",
-    startDate: new Date("2025-05-26"),
-    endDate: new Date("2025-06-03"),
-    type: "half-term",
+    id: "wyc-summer-short1-2026",
+    name: "Short Leave",
+    startDate: new Date("2026-05-01"),
+    endDate: new Date("2026-05-04"),
+    type: "short-leave",
     school: "wycombe"
   },
   {
-    id: "wyc-summer-holiday-2025",
+    id: "wyc-summer-long-2026",
+    name: "Long Leave (Half Term)",
+    startDate: new Date("2026-05-22"),
+    endDate: new Date("2026-05-31"),
+    type: "long-leave",
+    school: "wycombe"
+  },
+  {
+    id: "wyc-summer-short2-2026",
+    name: "Short Leave",
+    startDate: new Date("2026-06-12"),
+    endDate: new Date("2026-06-14"),
+    type: "short-leave",
+    school: "wycombe"
+  },
+  {
+    id: "wyc-summer-holiday-2026",
     name: "Summer Holiday",
-    startDate: new Date("2025-07-09"),
-    endDate: new Date("2025-09-03"),
+    startDate: new Date("2026-06-26"),
+    endDate: new Date("2026-09-01"),
     type: "holiday",
     school: "wycombe"
   }

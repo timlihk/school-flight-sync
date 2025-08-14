@@ -23,18 +23,44 @@ export function TermCard({
 }: TermCardProps) {
   const isHoliday = term.type === 'holiday';
   const isHalfTerm = term.type === 'half-term';
+  const isExeat = term.type === 'exeat';
+  const isShortLeave = term.type === 'short-leave';
+  const isLongLeave = term.type === 'long-leave';
   const hasFlights = flights.length > 0;
+
+  // Show flight options for holidays, half terms, exeats, and leaves
+  const shouldShowFlights = isHoliday || isHalfTerm || isExeat || isShortLeave || isLongLeave;
 
   const getTermTypeColor = () => {
     switch (term.type) {
       case 'holiday':
         return 'bg-gradient-warm text-accent-foreground';
       case 'half-term':
+      case 'long-leave':
         return 'bg-accent/20 text-accent-foreground border border-accent/30';
+      case 'exeat':
+        return 'bg-primary/10 text-benenden border border-primary/20';
+      case 'short-leave':
+        return 'bg-secondary/10 text-wycombe border border-secondary/20';
       default:
         return term.school === 'benenden' 
           ? 'bg-gradient-academic text-primary-foreground' 
           : 'bg-gradient-elegant text-secondary-foreground';
+    }
+  };
+
+  const getTypeDisplayName = () => {
+    switch (term.type) {
+      case 'exeat':
+        return 'Fixed Exeat';
+      case 'short-leave':
+        return 'Short Leave';
+      case 'long-leave':
+        return 'Long Leave';
+      case 'half-term':
+        return 'Half Term';
+      default:
+        return term.type.replace('-', ' ');
     }
   };
 
@@ -51,7 +77,7 @@ export function TermCard({
             {term.name}
           </CardTitle>
           <Badge className={cn("text-xs font-medium", getTermTypeColor())}>
-            {term.type.replace('-', ' ')}
+            {getTypeDisplayName()}
           </Badge>
         </div>
         <div className="flex items-center text-sm text-muted-foreground gap-2">
@@ -64,7 +90,7 @@ export function TermCard({
       </CardHeader>
       
       <CardContent className="pt-0">
-        {(isHoliday || isHalfTerm) && (
+        {shouldShowFlights && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-foreground flex items-center gap-2">
