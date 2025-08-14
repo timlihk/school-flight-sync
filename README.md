@@ -6,6 +6,16 @@ A comprehensive travel management application designed for parents to track thei
 
 School Flight Sync helps parents manage complex academic calendars, track flight bookings, arrange ground transport, and stay organized with an intelligent to-do system. The application provides a unified view of both schools' schedules with intuitive filtering and management capabilities.
 
+## 🚨 Security Notice
+
+**This application is currently in development and contains security vulnerabilities that must be addressed before production use:**
+- Database credentials are hardcoded (see [SECURITY.md](SECURITY.md) for details)
+- No user authentication system implemented
+- Requires proper environment variable configuration
+- Privacy compliance measures needed for educational data
+
+**Do not deploy to production without addressing security issues outlined in our security documentation.**
+
 ## ✨ Key Features
 
 ### 📅 Academic Calendar Management
@@ -35,7 +45,8 @@ School Flight Sync helps parents manage complex academic calendars, track flight
   - **High Priority**: Red (30 days or less for flights, 14 days or less for transport)
   - **Medium Priority**: Orange (60 days or less for flights, 30 days or less for transport)
   - **Low Priority**: Gray (more than 60/30 days respectively)
-- **Contextual Actions**: Click any to-do item to view the full term details in a popup
+- **Contextual Actions**: Click any to-do item to view the full term details in a popup modal
+- **Term Card Integration**: To-do items now show popup term cards instead of direct editing
 - **Filtering Options**: Filter to-dos by type (flights/transport) and school
 - **Live Counter**: Real-time badge showing outstanding tasks
 
@@ -54,6 +65,7 @@ School Flight Sync helps parents manage complex academic calendars, track flight
 - Node.js 18+ and npm
 - Modern web browser
 - Git for version control
+- Supabase account for database (required for full functionality)
 
 ### Local Development
 
@@ -182,6 +194,10 @@ interface TransportDetails {
 ## 🔧 Configuration
 
 ### Environment Variables
+
+**⚠️ SECURITY WARNING**: Never commit these to version control!
+
+Create a `.env.local` file in the project root:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -190,8 +206,9 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ### Database Setup
 1. Create a new Supabase project
 2. Run the provided migrations in `/supabase/migrations/`
-3. Configure Row Level Security policies as needed
+3. **Important**: Review and configure Row Level Security policies (currently set to allow all access)
 4. Update environment variables with your Supabase credentials
+5. Never expose database credentials in client-side code
 
 ## 📱 Deployment
 
@@ -218,13 +235,43 @@ This application is configured for Railway deployment:
 3. Configure environment variables in your hosting platform
 4. Ensure proper routing for SPA (Single Page Application)
 
+## 📋 Development Status
+
+### Recent Changes (Latest Updates)
+- **Enhanced To-Do System**: Clicking to-do items now shows popup term cards instead of direct action dialogs
+- **Improved Flight Confirmation Display**: Fixed display issues with confirmation codes in travel sub-cards
+- **UI Consistency**: Standardized button sizing and alignment across all controls
+- **Navigation Improvements**: Replaced "Show Cards with Flights to Book" button with school dropdown filter
+- **Security Awareness**: Added comprehensive security documentation and warnings
+
+### Known Issues
+- **Critical Security**: Database credentials hardcoded in client code
+- **No Authentication**: Application lacks user authentication system
+- **Privacy Compliance**: Missing COPPA/GDPR compliance measures
+- **Testing**: No test suite implemented
+- **Performance**: No code splitting or lazy loading implemented
+
+### Upcoming Priorities
+1. **Security Hardening**: Implement proper environment variable management and authentication
+2. **Testing Infrastructure**: Add comprehensive test coverage
+3. **Performance Optimization**: Implement code splitting and bundle optimization
+4. **Privacy Compliance**: Add required privacy and consent mechanisms
+
 ## 🤝 Contributing
+
+**Before contributing, please review our security documentation and ensure all changes follow security best practices.**
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Commit your changes: `git commit -m 'Add amazing feature'`
 4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
+
+### Development Guidelines
+- All new features must include TypeScript types
+- Security-sensitive changes require thorough review
+- UI changes should maintain accessibility standards
+- Database changes must include proper migrations
 
 ## 📄 License
 

@@ -1,12 +1,20 @@
 # Contributing to School Flight Sync
 
-We love your input! We want to make contributing to School Flight Sync as easy and transparent as possible, whether it's:
+Thank you for your interest in contributing to School Flight Sync! This document provides guidelines and information for contributors.
 
-- Reporting a bug
-- Discussing the current state of the code
-- Submitting a fix
-- Proposing new features
-- Becoming a maintainer
+## 🚨 Important Security Notice
+
+**Before contributing, please read our [SECURITY.md](SECURITY.md) file thoroughly.** This project currently contains critical security vulnerabilities that must be understood before making any contributions.
+
+**All contributions must follow security best practices and should not introduce additional security risks.**
+
+We welcome contributions in the following areas:
+- Fixing security vulnerabilities
+- Reporting bugs (following responsible disclosure)
+- Improving code quality and performance
+- Adding comprehensive tests
+- Enhancing documentation
+- Proposing new features (with security considerations)
 
 ## Development Process
 
@@ -119,28 +127,51 @@ export function Component({ prop }: ComponentProps) {
 
 ## Testing Guidelines
 
-### Unit Tests
-- Write tests for all **utility functions**
-- Test **custom hooks** thoroughly
-- Mock external dependencies
-- Aim for **80%+ code coverage**
+**⚠️ CRITICAL**: This project currently has NO testing infrastructure. Contributors are strongly encouraged to add tests for all new functionality.
 
-### Integration Tests
-- Test **user workflows** end-to-end
-- Verify **form submissions** work correctly
-- Test **data persistence** and retrieval
-- Ensure **responsive behavior** works
+### Testing Infrastructure Needed
+The project currently lacks:
+- Test runner setup (Vitest recommended)
+- Testing library configuration
+- Component testing utilities
+- Mock configurations
+- Coverage reporting
 
-### Running Tests
+### Setting Up Testing (Contribution Opportunity)
 ```bash
-# Run all tests
-npm test
+# Recommended testing setup
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom
+```
 
-# Run tests in watch mode
-npm run test:watch
+### Testing Requirements for New Contributions
+- **All new features** must include tests
+- **Security-related changes** require comprehensive testing
+- **Database changes** need integration tests
+- **UI components** need accessibility testing
 
-# Run tests with coverage
-npm run test:coverage
+### Example Test Structure
+```typescript
+// __tests__/components/TermCard.test.tsx
+import { render, screen } from '@testing-library/react';
+import { TermCard } from '@/components/ui/term-card';
+
+describe('TermCard', () => {
+  it('should render term information safely', () => {
+    const mockTerm = {
+      id: 'test-term',
+      name: 'Autumn Term',
+      school: 'benenden' as const,
+      // ... other properties
+    };
+    
+    render(<TermCard term={mockTerm} />);
+    expect(screen.getByText('Autumn Term')).toBeInTheDocument();
+  });
+  
+  it('should not expose sensitive data in DOM', () => {
+    // Test that sensitive information is properly handled
+  });
+});
 ```
 
 ## Database Changes
@@ -223,20 +254,45 @@ Include:
 - **Alternative solutions** considered
 - **Screenshots/mockups** (if helpful)
 
-## Security Guidelines
+## Security Guidelines (CRITICAL)
 
-### Data Handling
-- **Never commit** API keys or secrets
-- Use **environment variables** for configuration
-- Implement **input validation** on both client and server
-- Follow **Row Level Security** patterns in Supabase
-- **Sanitize user input** to prevent XSS attacks
+**⚠️ This application currently has critical security vulnerabilities. All contributions must prioritize security.**
 
-### Authentication
-- Use **secure authentication** patterns
-- Implement **proper authorization** checks
-- Follow **OWASP security guidelines**
-- **Audit dependencies** regularly for vulnerabilities
+### Current Security Issues
+- **Hardcoded database credentials** in source code
+- **No user authentication** system implemented  
+- **Over-permissive database policies** allowing unrestricted access
+- **Missing privacy compliance** for educational data (COPPA/GDPR/FERPA)
+- **No input validation** or sanitization
+
+### Required Security Practices
+- **Never commit** API keys, secrets, or credentials
+- **Use environment variables** for all configuration
+- **Implement proper authentication** before adding features
+- **Follow Row Level Security** patterns in database
+- **Validate and sanitize** all user inputs
+- **Consider educational data privacy** laws (COPPA/GDPR/FERPA)
+- **Audit dependencies** for security vulnerabilities
+
+### Security-First Development
+```typescript
+// ✅ Good - Environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+if (!supabaseUrl) {
+  throw new Error('Missing VITE_SUPABASE_URL environment variable');
+}
+
+// ❌ Bad - Hardcoded credentials
+const supabaseUrl = "https://example.supabase.co";
+
+// ✅ Good - Input validation  
+const validateFlightInput = (input: unknown): FlightDetails => {
+  return FlightDetailsSchema.parse(input); // Using Zod
+};
+
+// ❌ Bad - No validation
+const flight = req.body; // Direct use without validation
+```
 
 ## Performance Guidelines
 
