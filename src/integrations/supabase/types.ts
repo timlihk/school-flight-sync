@@ -70,46 +70,37 @@ export type Database = {
       }
       transport: {
         Row: {
-          arrival_date: string | null
-          arrival_location: string | null
-          arrival_time: string | null
           created_at: string
-          departure_date: string
-          departure_location: string | null
-          departure_time: string | null
+          driver_name: string
           id: string
-          method: string
+          license_number: string
           notes: string | null
+          phone_number: string
+          pickup_time: string
           term_id: string
           type: string
           updated_at: string
         }
         Insert: {
-          arrival_date?: string | null
-          arrival_location?: string | null
-          arrival_time?: string | null
           created_at?: string
-          departure_date: string
-          departure_location?: string | null
-          departure_time?: string | null
+          driver_name: string
           id?: string
-          method: string
+          license_number: string
           notes?: string | null
+          phone_number: string
+          pickup_time: string
           term_id: string
           type: string
           updated_at?: string
         }
         Update: {
-          arrival_date?: string | null
-          arrival_location?: string | null
-          arrival_time?: string | null
           created_at?: string
-          departure_date?: string
-          departure_location?: string | null
-          departure_time?: string | null
+          driver_name?: string
           id?: string
-          method?: string
+          license_number?: string
           notes?: string | null
+          phone_number?: string
+          pickup_time?: string
           term_id?: string
           type?: string
           updated_at?: string
