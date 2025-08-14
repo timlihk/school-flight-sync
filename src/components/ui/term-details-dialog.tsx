@@ -13,7 +13,8 @@ interface TermDetailsDialogProps {
 export function TermDetailsDialog({ term, open, onOpenChange }: TermDetailsDialogProps) {
   if (!term) return null;
 
-  const detailsKey = getTermDetailsKey(term.name);
+  const detailsKey = getTermDetailsKey(term.name, term.startDate, term.school);
+  console.log('Term details lookup:', term.name, term.startDate, term.school, 'key:', detailsKey);
   const schoolDetails = term.school === 'benenden' ? termDetails.benenden : termDetails.wycombe;
   const details = schoolDetails[detailsKey as keyof typeof schoolDetails] || [];
 

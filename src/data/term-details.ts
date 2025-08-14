@@ -156,20 +156,31 @@ export const termDetails = {
   }
 };
 
-export function getTermDetailsKey(termName: string): string {
+export function getTermDetailsKey(termName: string, startDate: Date, school: 'benenden' | 'wycombe'): string {
+  const year = startDate.getFullYear();
+  const month = startDate.getMonth(); // 0-based: Jan=0, Feb=1, etc.
   const lowerName = termName.toLowerCase();
   
-  // Autumn terms
-  if (lowerName.includes("autumn") && lowerName.includes("2025")) return "autumn-2025";
-  if (lowerName.includes("autumn") && lowerName.includes("2026")) return "autumn-2026";
+  // Determine season based on start date and term name
+  if ((lowerName.includes("autumn") || (month >= 8 && month <= 11)) && year === 2025) {
+    return "autumn-2025";
+  }
+  if ((lowerName.includes("autumn") || (month >= 8 && month <= 11)) && year === 2026) {
+    return "autumn-2026";
+  }
+  if ((lowerName.includes("spring") || (month >= 0 && month <= 4)) && year === 2026) {
+    return "spring-2026";
+  }
+  if ((lowerName.includes("spring") || (month >= 0 && month <= 4)) && year === 2027) {
+    return "spring-2027";
+  }
+  if ((lowerName.includes("summer") || (month >= 4 && month <= 7)) && year === 2026) {
+    return "summer-2026";
+  }
+  if ((lowerName.includes("summer") || (month >= 4 && month <= 7)) && year === 2027) {
+    return "summer-2027";
+  }
   
-  // Spring terms
-  if (lowerName.includes("spring") && lowerName.includes("2026")) return "spring-2026";
-  if (lowerName.includes("spring") && lowerName.includes("2027")) return "spring-2027";
-  
-  // Summer terms
-  if (lowerName.includes("summer") && lowerName.includes("2026")) return "summer-2026";
-  if (lowerName.includes("summer") && lowerName.includes("2027")) return "summer-2027";
-  
+  console.log('No match found for term:', termName, 'start date:', startDate, 'school:', school);
   return "";
 }
