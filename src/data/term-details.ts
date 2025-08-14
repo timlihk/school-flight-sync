@@ -1,26 +1,51 @@
-// Term details from school websites
+// Parse term details from scraped school website data
+const benendenData = `
+Monday 1 September | 8.30am | Staff Training
+Tuesday 2 September | 8.30am | Staff training
+Tuesday 2 September | 11.00am | Grey Jumpers return to School
+Tuesday 2 September | 12.00pm | Fourth and new Upper Fourth boarders and day students arrive at School
+Tuesday 2 September | 12.00pm | Six One boarders return to School*
+Tuesday 2 September | 3.00pm | Current Upper Fourth, Lower Fifth, Fifth and Upper Fifth boarders return to School*
+Tuesday 2 September | 4.00pm | New Lower Fifth and Fifth boarders and day students arrive at School
+Tuesday 2 September | 5.45pm | Six Two boarders return to School*
+Wednesday 3 September | 8.00am | Current Day students return to School
+Saturday 6 and Sunday 7 September |  | Closed Weekend
+Friday 26 September | 12.30pm | Fixed Exeat begins
+Sunday 28 September | 7.30pm | Fixed Exeat ends – Houses reopen from 6.00pm when staff are back on duty
+Friday 17 October | 12.30pm | Half Term begins
+Sunday 2 November | 7.30pm | Half Term ends
+Friday 21 November | 12.30pm | Fixed Exeat begins
+Sunday 23 November | 7.30pm | Fixed Exeat ends – Houses reopen from 6.00pm when staff are back on duty
+Saturday 6 and Sunday 7 December |  | Closed Weekend
+Wednesday 10 December | 1.00pm | Term ends
+`;
+
+const wycombeData = `
+Thursday 28 August – Friday 29 August |  | Staff INSET Days
+Monday 1 September |  | Term Starts: UVI, LVI, UIII, UV
+Tuesday 2 September |  | Term Starts: UIV, LV, LIV
+Saturday 6 September- Sunday 7 September |  | Closed Weekend
+Saturday 27 September – Monday 29 September |  | Short Leave
+Friday 17 October – Sunday 2 November |  | Long Leave
+Wednesday 19 November – Sunday 23 November |  | Short Leave
+Saturday 6 December – Sunday 7 December |  | Closed Weekend
+Wednesday 10 December |  | Term ends
+`;
+
+function parseTermData(data: string) {
+  return data.trim().split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split(' | ');
+    return {
+      date: parts[0]?.trim() || '',
+      time: parts[1]?.trim() || '',
+      event: parts[2]?.trim() || ''
+    };
+  });
+}
+
 export const termDetails = {
   benenden: {
-    "autumn-2025": [
-      { date: "Monday 1 September", time: "8.30am", event: "Staff Training" },
-      { date: "Tuesday 2 September", time: "8.30am", event: "Staff training" },
-      { date: "Tuesday 2 September", time: "11.00am", event: "Grey Jumpers return to School" },
-      { date: "Tuesday 2 September", time: "12.00pm", event: "Fourth and new Upper Fourth boarders and day students arrive at School" },
-      { date: "Tuesday 2 September", time: "12.00pm", event: "Six One boarders return to School*" },
-      { date: "Tuesday 2 September", time: "3.00pm", event: "Current Upper Fourth, Lower Fifth, Fifth and Upper Fifth boarders return to School*" },
-      { date: "Tuesday 2 September", time: "4.00pm", event: "New Lower Fifth and Fifth boarders and day students arrive at School" },
-      { date: "Tuesday 2 September", time: "5.45pm", event: "Six Two boarders return to School*" },
-      { date: "Wednesday 3 September", time: "8.00am", event: "Current Day students return to School" },
-      { date: "Saturday 6 and Sunday 7 September", time: "", event: "Closed Weekend" },
-      { date: "Friday 26 September", time: "12.30pm", event: "Fixed Exeat begins" },
-      { date: "Sunday 28 September", time: "7.30pm", event: "Fixed Exeat ends – Houses reopen from 6.00pm when staff are back on duty" },
-      { date: "Friday 17 October", time: "12.30pm", event: "Half Term begins" },
-      { date: "Sunday 2 November", time: "7.30pm", event: "Half Term ends" },
-      { date: "Friday 21 November", time: "12.30pm", event: "Fixed Exeat begins" },
-      { date: "Sunday 23 November", time: "7.30pm", event: "Fixed Exeat ends – Houses reopen from 6.00pm when staff are back on duty" },
-      { date: "Saturday 6 and Sunday 7 December", time: "", event: "Closed Weekend" },
-      { date: "Wednesday 10 December", time: "1.00pm", event: "Term ends" }
-    ],
+    "autumn-2025": parseTermData(benendenData),
     "spring-2026": [
       { date: "Monday 5 January", time: "8.30am", event: "Staff training" },
       { date: "Monday 5 January", time: "from 4.00pm", event: "Term begins, boarders return to School" },
@@ -52,17 +77,7 @@ export const termDetails = {
     ]
   },
   wycombe: {
-    "autumn-2025": [
-      { date: "Thursday 28 August – Friday 29 August", time: "", event: "Staff INSET Days" },
-      { date: "Monday 1 September", time: "", event: "Term Starts: UVI, LVI, UIII, UV" },
-      { date: "Tuesday 2 September", time: "", event: "Term Starts: UIV, LV, LIV" },
-      { date: "Saturday 6 September- Sunday 7 September", time: "", event: "Closed Weekend" },
-      { date: "Saturday 27 September – Monday 29 September", time: "", event: "Short Leave" },
-      { date: "Friday 17 October – Sunday 2 November", time: "", event: "Long Leave" },
-      { date: "Wednesday 19 November – Sunday 23 November", time: "", event: "Short Leave" },
-      { date: "Saturday 6 December – Sunday 7 December", time: "", event: "Closed Weekend" },
-      { date: "Wednesday 10 December", time: "", event: "Term ends" }
-    ],
+    "autumn-2025": parseTermData(wycombeData),
     "spring-2026": [
       { date: "Monday 5 January – Tuesday 6 January", time: "", event: "Staff INSET Days and Parent Teacher Meetings" },
       { date: "Tuesday 6 January", time: "", event: "Term Starts" },
