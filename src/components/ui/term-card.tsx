@@ -83,10 +83,9 @@ export function TermCard({
     <>
       <Card 
         className={cn(
-          "transition-all duration-300 hover:shadow-elegant group animate-fade-in cursor-pointer",
+          "transition-all duration-300 hover:shadow-elegant group animate-fade-in",
           className
         )}
-        onClick={() => setShowDetails(true)}
       >
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -111,7 +110,10 @@ export function TermCard({
         
         <CardContent className="pt-0">
           {shouldShowFlights && (
-            <div className="space-y-3">
+            <div 
+              className="space-y-3 cursor-pointer p-2 rounded-lg hover:bg-muted/10 transition-colors"
+              onClick={() => onViewFlights(term.id)}
+            >
               {hasFlights ? (
                 <div className="space-y-2">
                   {flights.slice(0, 2).map((flight) => (
@@ -182,7 +184,10 @@ export function TermCard({
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                <div 
+                  className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
+                  onClick={() => onAddFlight(term.id)}
+                >
                   <span className="text-sm text-muted-foreground flex items-center gap-2">
                     <Plane className="h-4 w-4" />
                     No flights yet
@@ -200,100 +205,111 @@ export function TermCard({
                   </Button>
                 </div>
               )}
-              
-              {/* Transport Section */}
-              {hasTransport ? (
-                <div className="space-y-2">
-                  {transport.slice(0, 2).map((transportItem) => (
-                    <div 
-                      key={transportItem.id}
-                      className="p-3 bg-muted/20 rounded-lg border border-muted/40"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">
-                            🚗
-                          </span>
-                          <span className="text-xs font-medium text-foreground">
-                            {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
-                          </span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onViewTransport(term.id);
-                          }}
-                          className="h-6 w-6 p-0 hover:bg-background/80"
-                        >
-                          <Car className="h-3 w-3" />
-                        </Button>
+            </div>
+          )}
+          
+          {/* Transport Section */}
+          <div 
+            className="space-y-3 cursor-pointer p-2 rounded-lg hover:bg-muted/10 transition-colors"
+            onClick={() => onViewTransport(term.id)}
+          >
+            {hasTransport ? (
+              <div className="space-y-2">
+                {transport.slice(0, 2).map((transportItem) => (
+                  <div 
+                    key={transportItem.id}
+                    className="p-3 bg-muted/20 rounded-lg border border-muted/40"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">
+                          🚗
+                        </span>
+                        <span className="text-xs font-medium text-foreground">
+                          {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
+                        </span>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <User className="h-3 w-3" />
-                          <span className="truncate">{transportItem.driverName}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          <span>{transportItem.pickupTime}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Phone className="h-3 w-3" />
-                          <span className="truncate">{transportItem.phoneNumber}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <CreditCard className="h-3 w-3" />
-                          <span className="truncate">{transportItem.licenseNumber}</span>
-                        </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewTransport(term.id);
+                        }}
+                        className="h-6 w-6 p-0 hover:bg-background/80"
+                      >
+                        <Car className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-1 text-xs">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span className="truncate">{transportItem.driverName}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{transportItem.pickupTime}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Phone className="h-3 w-3" />
+                        <span className="truncate">{transportItem.phoneNumber}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <CreditCard className="h-3 w-3" />
+                        <span className="truncate">{transportItem.licenseNumber}</span>
                       </div>
                     </div>
-                  ))}
-                  
-                  {transport.length > 2 && (
-                    <div className="text-xs text-muted-foreground text-center py-1">
-                      +{transport.length - 2} more transport
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewTransport(term.id);
-                      }}
-                      className="h-8 w-8 p-0 hover:bg-background/80"
-                    >
-                      <Car className="h-4 w-4" />
-                    </Button>
                   </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                  <span className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Car className="h-4 w-4" />
-                    No transport yet
-                  </span>
+                ))}
+                
+                {transport.length > 2 && (
+                  <div className="text-xs text-muted-foreground text-center py-1">
+                    +{transport.length - 2} more transport
+                  </div>
+                )}
+                
+                <div className="flex justify-center">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onAddTransport(term.id);
+                      onViewTransport(term.id);
                     }}
                     className="h-8 w-8 p-0 hover:bg-background/80"
                   >
                     <Car className="h-4 w-4" />
                   </Button>
                 </div>
-              )}
-            </div>
-          )}
-          <div className="text-center py-2">
+              </div>
+            ) : (
+              <div 
+                className="flex items-center justify-between p-3 bg-muted/20 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
+                onClick={() => onAddTransport(term.id)}
+              >
+                <span className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Car className="h-4 w-4" />
+                  No transport yet
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddTransport(term.id);
+                  }}
+                  className="h-8 w-8 p-0 hover:bg-background/80"
+                >
+                  <Car className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+          <div 
+            className="text-center py-2 cursor-pointer hover:bg-muted/10 rounded-lg transition-colors"
+            onClick={() => setShowDetails(true)}
+          >
             <div className="text-xs text-muted-foreground">
               Click for detailed schedule
             </div>

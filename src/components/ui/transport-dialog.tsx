@@ -47,7 +47,7 @@ export function TransportDialog({
   const setIsOpen = onOpenChange || setInternalOpen;
 
   const handleAddTransport = () => {
-    if (!newTransport.driverName || !newTransport.phoneNumber || !newTransport.pickupTime) {
+    if (!newTransport.type) {
       return;
     }
 
