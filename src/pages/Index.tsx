@@ -38,6 +38,10 @@ export default function Index() {
     .filter(term => term.school === 'wycombe')
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
+  console.log('Current showFlightsOnly state:', showFlightsOnly);
+  console.log('Total Benenden terms:', benendenTerms.length);
+  console.log('Total Wycombe terms:', wycombeTerms.length);
+
   // Filter terms that need flights to be booked if showFlightsOnly is enabled
   const filteredBenendenTerms = showFlightsOnly 
     ? benendenTerms.filter(term => {
@@ -69,6 +73,9 @@ export default function Index() {
         return termFlights.length === 0 && !termNotTravelling?.noFlights;
       })
     : wycombeTerms;
+
+  console.log('After filtering - Benenden terms:', filteredBenendenTerms.length);
+  console.log('After filtering - Wycombe terms:', filteredWycombeTerms.length);
 
   const handleToggleExpandAll = () => {
     if (allExpanded) {
