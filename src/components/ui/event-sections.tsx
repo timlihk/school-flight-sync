@@ -174,7 +174,7 @@ export function EventSections({ terms, school, className }: EventSectionsProps) 
               
               <CollapsibleContent>
                 <CardContent className="pt-0">
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4">
                     {renderTravelCard(event, 'start')}
                     {renderTravelCard(event, 'end')}
                   </div>
