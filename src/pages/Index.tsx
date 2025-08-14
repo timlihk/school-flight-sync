@@ -164,8 +164,16 @@ export default function Index() {
             className="gap-2"
           >
             <Plane className="h-4 w-4" />
-            {showFlightsOnly ? "Show All Cards" : "Show Cards with Flights"}
+            {showFlightsOnly ? "Show All Cards" : "Show Cards with Flights to Book"}
           </Button>
+          <ToDoDialog 
+            terms={mockTerms}
+            flights={flights}
+            transport={transport}
+            notTravelling={notTravelling}
+            onAddFlight={handleAddFlight}
+            onAddTransport={handleAddTransport}
+          />
         </div>
       </div>
 
@@ -251,17 +259,6 @@ export default function Index() {
           </div>
         </div>
 
-        {/* To Do Button */}
-        <div className="mt-12 flex justify-center">
-            <ToDoDialog 
-              terms={mockTerms}
-              flights={flights}
-              transport={transport}
-              notTravelling={notTravelling}
-              onAddFlight={handleAddFlight}
-              onAddTransport={handleAddTransport}
-            />
-        </div>
 
         {selectedTerm && (
           <>
