@@ -10,12 +10,13 @@ import { EventSections } from "@/components/ui/event-sections";
 import { mockTerms } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
-import { Term } from "@/types/school";
+import { Term, NotTravellingStatus } from "@/types/school";
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
   const [showFlightDialog, setShowFlightDialog] = useState(false);
   const [showTransportDialog, setShowTransportDialog] = useState(false);
+  const [notTravelling, setNotTravelling] = useState<NotTravellingStatus[]>([]);
   
   const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
@@ -42,6 +43,27 @@ export default function Index() {
       setSelectedTerm(term);
       setShowFlightDialog(true);
     }
+  };
+
+  const handleSetNotTravelling = (termId: string, type: 'flights' | 'transport') => {
+    setNotTravelling(prev => {
+      const existing = prev.find(nt => nt.termId === termId);
+      if (existing) {
+        return prev.map(nt => 
+          nt.termId === termId 
+            ? { 
+                ...nt, 
+                ...(type === 'flights' ? { noFlights: true } : { noTransport: true })
+              }
+            : nt
+        );
+      } else {
+        return [...prev, { 
+          termId, 
+          ...(type === 'flights' ? { noFlights: true } : { noTransport: true })
+        }];
+      }
+    });
   };
 
   const handleAddTransport = (termId: string) => {
@@ -114,6 +136,8 @@ export default function Index() {
                   onViewFlights={handleViewFlights}
                   onAddTransport={handleAddTransport}
                   onViewTransport={handleViewTransport}
+                  onSetNotTravelling={handleSetNotTravelling}
+                  notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
                   className="h-full"
                 />
               ))}
@@ -139,6 +163,8 @@ export default function Index() {
                   onViewFlights={handleViewFlights}
                   onAddTransport={handleAddTransport}
                   onViewTransport={handleViewTransport}
+                  onSetNotTravelling={handleSetNotTravelling}
+                  notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
                   className="h-full"
                 />
               ))}
@@ -148,13 +174,14 @@ export default function Index() {
 
         {/* To Do Button */}
         <div className="mt-12 flex justify-center">
-          <ToDoDialog
-            terms={mockTerms}
-            flights={flights}
-            transport={transport}
-            onAddFlight={handleAddFlight}
-            onAddTransport={handleAddTransport}
-          />
+            <ToDoDialog 
+              terms={mockTerms}
+              flights={flights}
+              transport={transport}
+              notTravelling={notTravelling}
+              onAddFlight={handleAddFlight}
+              onAddTransport={handleAddTransport}
+            />
         </div>
 
         {selectedTerm && (

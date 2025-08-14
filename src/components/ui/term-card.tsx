@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Term, FlightDetails, TransportDetails } from "@/types/school";
+import { Term, FlightDetails, TransportDetails, NotTravellingStatus } from "@/types/school";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
@@ -18,6 +18,8 @@ interface TermCardProps {
   onViewFlights: (termId: string) => void;
   onAddTransport: (termId: string) => void;
   onViewTransport: (termId: string) => void;
+  onSetNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
+  notTravellingStatus?: NotTravellingStatus;
   className?: string;
   onCardClick?: (term: Term) => void;
 }
@@ -30,6 +32,8 @@ export function TermCard({
   onViewFlights,
   onAddTransport,
   onViewTransport,
+  onSetNotTravelling,
+  notTravellingStatus,
   className,
   onCardClick
 }: TermCardProps) {
@@ -218,25 +222,84 @@ export function TermCard({
             </div>
           )}
           
-          <div className="grid grid-cols-2 gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="justify-start gap-2"
-              onClick={() => onAddFlight(term.id)}
-            >
-              <Plane className="h-4 w-4" />
-              {relevantFlights.length > 0 ? 'View' : 'Add'} Flight
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="justify-start gap-2"
-              onClick={() => onAddTransport(term.id)}
-            >
-              <Car className="h-4 w-4" />
-              {relevantTransport.length > 0 ? 'View' : 'Add'} Transport
-            </Button>
+          <div className="space-y-2">
+            {/* Flight buttons */}
+            <div className="flex gap-2">
+              {notTravellingStatus?.noFlights ? (
+                <Badge variant="secondary" className="text-xs">
+                  Not travelling (flights)
+                </Badge>
+              ) : relevantFlights.length > 0 ? (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="justify-start gap-2 flex-1"
+                  onClick={() => onViewFlights(term.id)}
+                >
+                  <Plane className="h-4 w-4" />
+                  View Flight
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start gap-2 flex-1"
+                    onClick={() => onAddFlight(term.id)}
+                  >
+                    <Plane className="h-4 w-4" />
+                    Add Flight
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onSetNotTravelling(term.id, 'flights')}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Not travelling
+                  </Button>
+                </>
+              )}
+            </div>
+            
+            {/* Transport buttons */}
+            <div className="flex gap-2">
+              {notTravellingStatus?.noTransport ? (
+                <Badge variant="secondary" className="text-xs">
+                  Not travelling (transport)
+                </Badge>
+              ) : relevantTransport.length > 0 ? (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="justify-start gap-2 flex-1"
+                  onClick={() => onViewTransport(term.id)}
+                >
+                  <Car className="h-4 w-4" />
+                  View Transport
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start gap-2 flex-1"
+                    onClick={() => onAddTransport(term.id)}
+                  >
+                    <Car className="h-4 w-4" />
+                    Add Transport
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onSetNotTravelling(term.id, 'transport')}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Not travelling
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
           
           {relevantFlights.length === 0 && relevantTransport.length === 0 && (
@@ -388,26 +451,46 @@ export function TermCard({
                             </div>
                           )}
                         </div>
+                      ) : notTravellingStatus?.noFlights ? (
+                        <div className="p-3 bg-muted/30 rounded-lg">
+                          <div className="flex items-center justify-center">
+                            <Badge variant="secondary" className="text-xs">
+                              Not travelling
+                            </Badge>
+                          </div>
+                        </div>
                       ) : (
-                        <div 
-                          className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
-                          onClick={() => onAddFlight(term.id)}
-                        >
-                          <span className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Plane className="h-4 w-4" />
-                            No flights yet
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAddFlight(term.id);
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-background/80"
+                        <div className="space-y-2">
+                          <div 
+                            className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
+                            onClick={() => onAddFlight(term.id)}
                           >
-                            <Plane className="h-4 w-4" />
-                          </Button>
+                            <span className="text-sm text-muted-foreground flex items-center gap-2">
+                              <Plane className="h-4 w-4" />
+                              No flights yet
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onAddFlight(term.id);
+                              }}
+                              className="h-8 w-8 p-0 hover:bg-background/80"
+                            >
+                              <Plane className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-center">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => onSetNotTravelling(term.id, 'flights')}
+                              className="text-xs text-muted-foreground"
+                            >
+                              Not travelling
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -496,26 +579,46 @@ export function TermCard({
                           </div>
                         )}
                       </div>
+                    ) : notTravellingStatus?.noTransport ? (
+                      <div className="p-3 bg-muted/20 rounded-lg">
+                        <div className="flex items-center justify-center">
+                          <Badge variant="secondary" className="text-xs">
+                            Not travelling
+                          </Badge>
+                        </div>
+                      </div>
                     ) : (
-                      <div 
-                        className="flex items-center justify-between p-3 bg-muted/20 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
-                        onClick={() => onAddTransport(term.id)}
-                      >
-                        <span className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Car className="h-4 w-4" />
-                          No transport yet
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAddTransport(term.id);
-                          }}
-                          className="h-8 w-8 p-0 hover:bg-background/80"
+                      <div className="space-y-2">
+                        <div 
+                          className="flex items-center justify-between p-3 bg-muted/20 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
+                          onClick={() => onAddTransport(term.id)}
                         >
-                          <Car className="h-4 w-4" />
-                        </Button>
+                          <span className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Car className="h-4 w-4" />
+                            No transport yet
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAddTransport(term.id);
+                            }}
+                            className="h-8 w-8 p-0 hover:bg-background/80"
+                          >
+                            <Car className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="flex justify-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => onSetNotTravelling(term.id, 'transport')}
+                            className="text-xs text-muted-foreground"
+                          >
+                            Not travelling
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>

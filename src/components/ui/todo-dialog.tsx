@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Term, FlightDetails, TransportDetails } from "@/types/school";
+import { Term, FlightDetails, TransportDetails, NotTravellingStatus } from "@/types/school";
 import { cn } from "@/lib/utils";
 
 interface ToDoDialogProps {
   terms: Term[];
   flights: FlightDetails[];
   transport: TransportDetails[];
+  notTravelling: NotTravellingStatus[];
   onAddFlight: (termId: string) => void;
   onAddTransport: (termId: string) => void;
   children?: React.ReactNode;
@@ -33,6 +34,7 @@ export function ToDoDialog({
   terms, 
   flights, 
   transport, 
+  notTravelling,
   onAddFlight, 
   onAddTransport, 
   children 
@@ -56,13 +58,14 @@ export function ToDoDialog({
     upcomingTerms.forEach(term => {
       const termFlights = flights.filter(f => f.termId === term.id);
       const termTransport = transport.filter(t => t.termId === term.id);
+      const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
       
       // Check if flights are needed and missing
       const needsFlights = term.type === 'holiday' || term.type === 'half-term' || 
                           term.type === 'exeat' || term.type === 'short-leave' || 
                           term.type === 'long-leave' || term.type === 'term';
       
-      if (needsFlights) {
+      if (needsFlights && !termNotTravelling?.noFlights) {
         const needsBothFlights = term.type === 'half-term' || term.type === 'exeat' || 
                                 term.type === 'short-leave' || term.type === 'long-leave';
         
@@ -113,7 +116,7 @@ export function ToDoDialog({
       }
 
       // Check if transport is needed and missing
-      if (needsFlights && termTransport.length === 0) {
+      if (needsFlights && !termNotTravelling?.noTransport && termTransport.length === 0) {
         const daysUntil = Math.ceil((term.startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         let urgency: 'high' | 'medium' | 'low' = 'low';
         

@@ -38,6 +38,12 @@ export interface TransportDetails {
   notes?: string;
 }
 
+export interface NotTravellingStatus {
+  termId: string;
+  noFlights?: boolean;
+  noTransport?: boolean;
+}
+
 export interface SchoolData {
   name: string;
   color: string;
