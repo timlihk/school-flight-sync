@@ -422,38 +422,25 @@ export function TermCard({
                             </Badge>
                           </div>
                         </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div 
-                            className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
+                       ) : (
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="justify-start gap-2 flex-1"
                             onClick={() => onAddFlight(term.id)}
                           >
-                            <span className="text-sm text-muted-foreground flex items-center gap-2">
-                              <Plane className="h-4 w-4" />
-                              No flights yet
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onAddFlight(term.id);
-                              }}
-                              className="h-8 w-8 p-0 hover:bg-background/80"
-                            >
-                              <Plane className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="flex justify-center">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => onSetNotTravelling(term.id, 'flights')}
-                              className="text-xs text-muted-foreground"
-                            >
-                              Not travelling
-                            </Button>
-                          </div>
+                            <Plane className="h-4 w-4" />
+                            Add Flight
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => onSetNotTravelling(term.id, 'flights')}
+                            className="text-xs text-muted-foreground shrink-0"
+                          >
+                            Not travelling
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -524,39 +511,26 @@ export function TermCard({
                           </Badge>
                         </div>
                       </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div 
-                          className="flex items-center justify-between p-3 bg-muted/20 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
-                          onClick={() => onAddTransport(term.id)}
-                        >
-                          <span className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Car className="h-4 w-4" />
-                            No transport yet
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAddTransport(term.id);
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-background/80"
-                          >
-                            <Car className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="flex justify-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => onSetNotTravelling(term.id, 'transport')}
-                            className="text-xs text-muted-foreground"
-                          >
-                            Not travelling
-                          </Button>
-                        </div>
-                      </div>
+                     ) : (
+                       <div className="flex gap-2">
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           className="justify-start gap-2 flex-1"
+                           onClick={() => onAddTransport(term.id)}
+                         >
+                           <Car className="h-4 w-4" />
+                           Add Transport
+                         </Button>
+                         <Button 
+                           variant="ghost" 
+                           size="sm" 
+                           onClick={() => onSetNotTravelling(term.id, 'transport')}
+                           className="text-xs text-muted-foreground shrink-0"
+                         >
+                           Not travelling
+                         </Button>
+                       </div>
                      )}
                    </div>
                  </>
