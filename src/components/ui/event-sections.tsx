@@ -15,14 +15,23 @@ interface EventSectionsProps {
 }
 
 export function EventSections({ terms, school, className }: EventSectionsProps) {
-  const [openEvents, setOpenEvents] = React.useState<Set<string>>(new Set());
-
-  // Filter events by type (exeat/half-term for Benenden, short-leave/long-leave for Wycombe)
+  // Open the first exeat/half-term by default so user can see the travel cards
   const breakEvents = terms.filter(term => 
     school === 'benenden' 
       ? ['exeat', 'half-term'].includes(term.type)
       : ['short-leave', 'long-leave'].includes(term.type)
   );
+  
+  const [openEvents, setOpenEvents] = React.useState<Set<string>>(
+    new Set(breakEvents.slice(0, 1).map(event => event.id))
+  );
+
+  // Remove this filter since we already filtered above
+  // const breakEvents = terms.filter(term => 
+  //   school === 'benenden' 
+  //     ? ['exeat', 'half-term'].includes(term.type)
+  //     : ['short-leave', 'long-leave'].includes(term.type)
+  // );
 
   const toggleEvent = (eventId: string) => {
     const newOpenEvents = new Set(openEvents);
