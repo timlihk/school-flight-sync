@@ -100,26 +100,93 @@ export function TermCard({
         
         <CardContent className="pt-0">
           {shouldShowFlights && (
-            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-              <span className="text-sm text-muted-foreground flex items-center gap-2">
-                <Plane className="h-4 w-4" />
-                {hasFlights ? `${flights.length} flight${flights.length !== 1 ? 's' : ''} planned` : 'No flights yet'}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (hasFlights) {
-                    onViewFlights(term.id);
-                  } else {
-                    onAddFlight(term.id);
-                  }
-                }}
-                className="h-8 w-8 p-0 hover:bg-background/80"
-              >
-                <Plane className="h-4 w-4" />
-              </Button>
+            <div className="space-y-3">
+              {hasFlights ? (
+                <div className="space-y-2">
+                  {flights.slice(0, 2).map((flight) => (
+                    <div 
+                      key={flight.id}
+                      className="p-3 bg-muted/30 rounded-lg border border-muted/50"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">
+                            {flight.type === 'outbound' ? '✈️' : '🛬'}
+                          </span>
+                          <span className="text-xs font-medium text-foreground">
+                            {flight.type === 'outbound' ? 'Outbound' : 'Return'}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewFlights(term.id);
+                          }}
+                          className="h-6 w-6 p-0 hover:bg-background/80"
+                        >
+                          <Plane className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-foreground">
+                            {flight.airline} {flight.flightNumber}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {format(flight.departure.date, 'MMM dd')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-muted-foreground">
+                          <span>{flight.departure.airport} → {flight.arrival.airport}</span>
+                          <span>{flight.departure.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {flights.length > 2 && (
+                    <div className="text-xs text-muted-foreground text-center py-1">
+                      +{flights.length - 2} more flights
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddFlight(term.id);
+                      }}
+                      className="h-7 text-xs hover:bg-background/80"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Flight
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Plane className="h-4 w-4" />
+                    No flights yet
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddFlight(term.id);
+                    }}
+                    className="h-8 w-8 p-0 hover:bg-background/80"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
           <div className="text-center py-2">
