@@ -269,19 +269,21 @@ export function TermCard({
                   </div>
                 )}
                 
-                <div className="flex justify-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onViewTransport(term.id);
-                    }}
-                    className="h-8 w-8 p-0 hover:bg-background/80"
-                  >
-                    <Car className="h-4 w-4" />
-                  </Button>
-                </div>
+                {!isAutumnTermStart && (
+                  <div className="flex justify-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewTransport(term.id);
+                      }}
+                      className="h-8 w-8 p-0 hover:bg-background/80"
+                    >
+                      <Car className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div 
