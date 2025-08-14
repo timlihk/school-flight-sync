@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { format, isAfter, isBefore, addMonths } from "date-fns";
-import { CheckSquare, Plane, Car, Calendar, AlertCircle } from "lucide-react";
+import { CheckSquare, Plane, Car, Calendar, AlertCircle, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Term, FlightDetails, TransportDetails } from "@/types/school";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,8 @@ export function ToDoDialog({
   children 
 }: ToDoDialogProps) {
   const [open, setOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<'all' | 'flight' | 'transport'>('all');
+  const [schoolFilter, setSchoolFilter] = useState<'all' | 'benenden' | 'wycombe'>('all');
 
   // Get terms in next 12 months
   const now = new Date();
@@ -107,7 +110,14 @@ export function ToDoDialog({
     });
   };
 
-  const toDoItems = generateToDoItems();
+  const allToDoItems = generateToDoItems();
+  
+  // Apply filters
+  const toDoItems = allToDoItems.filter(item => {
+    const typeMatch = typeFilter === 'all' || item.type === typeFilter;
+    const schoolMatch = schoolFilter === 'all' || item.term.school === schoolFilter;
+    return typeMatch && schoolMatch;
+  });
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
@@ -166,6 +176,36 @@ export function ToDoDialog({
             </Badge>
           </DialogTitle>
         </DialogHeader>
+        
+        {/* Filters */}
+        <div className="flex items-center gap-3 pb-4 border-b">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={typeFilter} onValueChange={(value: 'all' | 'flight' | 'transport') => setTypeFilter(value)}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="flight">Flights</SelectItem>
+              <SelectItem value="transport">Transport</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={schoolFilter} onValueChange={(value: 'all' | 'benenden' | 'wycombe') => setSchoolFilter(value)}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by school" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Schools</SelectItem>
+              <SelectItem value="benenden">Benenden</SelectItem>
+              <SelectItem value="wycombe">Wycombe Abbey</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Badge variant="outline" className="ml-auto">
+            {toDoItems.length} of {allToDoItems.length} items
+          </Badge>
+        </div>
         
         <div className="flex-1 overflow-y-auto space-y-4">
           {toDoItems.length === 0 ? (
