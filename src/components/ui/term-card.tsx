@@ -123,6 +123,17 @@ export function TermCard({
     const date = isStart ? term.startDate : term.endDate;
     const title = isStart ? 'Travel from School' : 'Return to School';
     
+    // Get flights and transport for this direction
+    const relevantFlights = flights.filter(f => {
+      const isOutbound = f.type === 'outbound';
+      return isStart ? isOutbound : !isOutbound;
+    });
+    
+    const relevantTransport = transport.filter(t => {
+      // For now, show all transport - could be filtered by type/date if needed
+      return true;
+    });
+    
     return (
       <Card className="border border-border">
         <CardHeader className="pb-3">
@@ -157,6 +168,42 @@ export function TermCard({
         </CardHeader>
         
         <CardContent className="pt-0 space-y-3">
+          {/* Show existing flights */}
+          {relevantFlights.length > 0 && (
+            <div className="space-y-2">
+              <h5 className="text-xs font-medium text-foreground">Flights</h5>
+              {relevantFlights.map((flight) => (
+                <div key={flight.id} className="p-2 bg-muted/30 rounded-md">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-medium">{flight.airline} {flight.flightNumber}</span>
+                    <span className="text-muted-foreground">{flight.departure.time}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {flight.departure.airport} → {flight.arrival.airport}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Show existing transport */}
+          {relevantTransport.length > 0 && (
+            <div className="space-y-2">
+              <h5 className="text-xs font-medium text-foreground">Transport</h5>
+              {relevantTransport.map((transportItem) => (
+                <div key={transportItem.id} className="p-2 bg-muted/20 rounded-md">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-medium">{transportItem.driverName}</span>
+                    <span className="text-muted-foreground">{transportItem.pickupTime}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
           <div className="grid grid-cols-2 gap-2">
             <Button 
               variant="outline" 
@@ -165,7 +212,7 @@ export function TermCard({
               onClick={() => onAddFlight(term.id)}
             >
               <Plane className="h-4 w-4" />
-              Add Flight
+              {relevantFlights.length > 0 ? 'View' : 'Add'} Flight
             </Button>
             <Button 
               variant="outline" 
@@ -174,14 +221,16 @@ export function TermCard({
               onClick={() => onAddTransport(term.id)}
             >
               <Car className="h-4 w-4" />
-              Add Transport
+              {relevantTransport.length > 0 ? 'View' : 'Add'} Transport
             </Button>
           </div>
           
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>• No flights booked</p>
-            <p>• No transport arranged</p>
-          </div>
+          {relevantFlights.length === 0 && relevantTransport.length === 0 && (
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p>• No flights booked</p>
+              <p>• No transport arranged</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
