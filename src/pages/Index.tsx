@@ -19,9 +19,13 @@ export default function Index() {
   const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
 
-  // Separate terms by school
-  const benendenTerms = mockTerms.filter(term => term.school === 'benenden');
-  const wycombeTerms = mockTerms.filter(term => term.school === 'wycombe');
+  // Separate terms by school and sort chronologically
+  const benendenTerms = mockTerms
+    .filter(term => term.school === 'benenden')
+    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+  const wycombeTerms = mockTerms
+    .filter(term => term.school === 'wycombe')
+    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
   const handleAddFlight = (termId: string) => {
     const term = mockTerms.find(t => t.id === termId);
@@ -99,27 +103,19 @@ export default function Index() {
             />
             
             <div className="space-y-4">
-              {benendenTerms
-                .filter(term => term.type === 'term')
-                .map((term) => (
-                  <TermCard
-                    key={term.id}
-                    term={term}
-                    flights={flights.filter(f => f.termId === term.id)}
-                    transport={getTransportForTerm(term.id)}
-                    onAddFlight={handleAddFlight}
-                    onViewFlights={handleViewFlights}
-                    onAddTransport={handleAddTransport}
-                    onViewTransport={handleViewTransport}
-                    className="h-full"
-                  />
-                ))}
-              
-              <EventSections 
-                terms={benendenTerms} 
-                school="benenden" 
-                className="mt-6" 
-              />
+              {benendenTerms.map((term) => (
+                <TermCard
+                  key={term.id}
+                  term={term}
+                  flights={flights.filter(f => f.termId === term.id)}
+                  transport={getTransportForTerm(term.id)}
+                  onAddFlight={handleAddFlight}
+                  onViewFlights={handleViewFlights}
+                  onAddTransport={handleAddTransport}
+                  onViewTransport={handleViewTransport}
+                  className="h-full"
+                />
+              ))}
             </div>
           </div>
 
@@ -132,27 +128,19 @@ export default function Index() {
             />
             
             <div className="space-y-4">
-              {wycombeTerms
-                .filter(term => term.type === 'term')
-                .map((term) => (
-                  <TermCard
-                    key={term.id}
-                    term={term}
-                    flights={flights.filter(f => f.termId === term.id)}
-                    transport={getTransportForTerm(term.id)}
-                    onAddFlight={handleAddFlight}
-                    onViewFlights={handleViewFlights}
-                    onAddTransport={handleAddTransport}
-                    onViewTransport={handleViewTransport}
-                    className="h-full"
-                  />
-                ))}
-              
-              <EventSections 
-                terms={wycombeTerms} 
-                school="wycombe" 
-                className="mt-6" 
-              />
+              {wycombeTerms.map((term) => (
+                <TermCard
+                  key={term.id}
+                  term={term}
+                  flights={flights.filter(f => f.termId === term.id)}
+                  transport={getTransportForTerm(term.id)}
+                  onAddFlight={handleAddFlight}
+                  onViewFlights={handleViewFlights}
+                  onAddTransport={handleAddTransport}
+                  onViewTransport={handleViewTransport}
+                  className="h-full"
+                />
+              ))}
             </div>
           </div>
         </div>
