@@ -12,8 +12,6 @@ import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
 import { Term, NotTravellingStatus } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTransport } from "@/hooks/use-transport";
-import { Term, NotTravellingStatus } from "@/types/school";
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
