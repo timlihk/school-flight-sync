@@ -15,7 +15,14 @@ interface EventSectionsProps {
 }
 
 export function EventSections({ terms, school, className }: EventSectionsProps) {
-  const [openEvents, setOpenEvents] = React.useState<Set<string>>(new Set());
+  // Open first event by default to show the content
+  const [openEvents, setOpenEvents] = React.useState<Set<string>>(
+    new Set(terms.filter(term => 
+      school === 'benenden' 
+        ? ['exeat', 'half-term'].includes(term.type)
+        : ['short-leave', 'long-leave'].includes(term.type)
+    ).slice(0, 1).map(term => term.id))
+  );
 
   // Filter events by type (exeat/half-term for Benenden, short-leave/long-leave for Wycombe)
   const breakEvents = terms.filter(term => 
