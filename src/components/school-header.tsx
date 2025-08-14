@@ -1,7 +1,7 @@
 import { GraduationCap, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import benendenLogo from "@/assets/benenden-logo.png";
-import wycommebLogo from "@/assets/wycombe-logo.png";
+import benendenLogo from "/lovable-uploads/2862c869-2c37-4d6f-a4f9-6d8f96162fad.png";
+import wycommebLogo from "/lovable-uploads/ca153a00-902a-4a17-a0dc-2f475bb46d6e.png";
 
 interface SchoolHeaderProps {
   schoolName: string;
