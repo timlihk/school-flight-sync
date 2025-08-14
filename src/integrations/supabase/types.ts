@@ -68,6 +68,54 @@ export type Database = {
         }
         Relationships: []
       }
+      transport: {
+        Row: {
+          arrival_date: string | null
+          arrival_location: string | null
+          arrival_time: string | null
+          created_at: string
+          departure_date: string
+          departure_location: string | null
+          departure_time: string | null
+          id: string
+          method: string
+          notes: string | null
+          term_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          arrival_date?: string | null
+          arrival_location?: string | null
+          arrival_time?: string | null
+          created_at?: string
+          departure_date: string
+          departure_location?: string | null
+          departure_time?: string | null
+          id?: string
+          method: string
+          notes?: string | null
+          term_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          arrival_date?: string | null
+          arrival_location?: string | null
+          arrival_time?: string | null
+          created_at?: string
+          departure_date?: string
+          departure_location?: string | null
+          departure_time?: string | null
+          id?: string
+          method?: string
+          notes?: string | null
+          term_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
