@@ -5,6 +5,7 @@ import { TermCard } from "@/components/ui/term-card";
 import { FlightDialog } from "@/components/ui/flight-dialog";
 import { TransportDialog } from "@/components/ui/transport-dialog";
 import { SchoolHeader } from "@/components/school-header";
+import { EventSections } from "@/components/ui/event-sections";
 import { mockTerms } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
@@ -98,19 +99,27 @@ export default function Index() {
             />
             
             <div className="space-y-4">
-              {benendenTerms.map((term) => (
-                <TermCard
-                  key={term.id}
-                  term={term}
-                  flights={flights.filter(f => f.termId === term.id)}
-                  transport={getTransportForTerm(term.id)}
-                  onAddFlight={handleAddFlight}
-                  onViewFlights={handleViewFlights}
-                  onAddTransport={handleAddTransport}
-                  onViewTransport={handleViewTransport}
-                  className="h-full"
-                />
-              ))}
+              {benendenTerms
+                .filter(term => term.type === 'term')
+                .map((term) => (
+                  <TermCard
+                    key={term.id}
+                    term={term}
+                    flights={flights.filter(f => f.termId === term.id)}
+                    transport={getTransportForTerm(term.id)}
+                    onAddFlight={handleAddFlight}
+                    onViewFlights={handleViewFlights}
+                    onAddTransport={handleAddTransport}
+                    onViewTransport={handleViewTransport}
+                    className="h-full"
+                  />
+                ))}
+              
+              <EventSections 
+                terms={benendenTerms} 
+                school="benenden" 
+                className="mt-6" 
+              />
             </div>
           </div>
 
@@ -123,19 +132,27 @@ export default function Index() {
             />
             
             <div className="space-y-4">
-              {wycombeTerms.map((term) => (
-                <TermCard
-                  key={term.id}
-                  term={term}
-                  flights={flights.filter(f => f.termId === term.id)}
-                  transport={getTransportForTerm(term.id)}
-                  onAddFlight={handleAddFlight}
-                  onViewFlights={handleViewFlights}
-                  onAddTransport={handleAddTransport}
-                  onViewTransport={handleViewTransport}
-                  className="h-full"
-                />
-              ))}
+              {wycombeTerms
+                .filter(term => term.type === 'term')
+                .map((term) => (
+                  <TermCard
+                    key={term.id}
+                    term={term}
+                    flights={flights.filter(f => f.termId === term.id)}
+                    transport={getTransportForTerm(term.id)}
+                    onAddFlight={handleAddFlight}
+                    onViewFlights={handleViewFlights}
+                    onAddTransport={handleAddTransport}
+                    onViewTransport={handleViewTransport}
+                    className="h-full"
+                  />
+                ))}
+              
+              <EventSections 
+                terms={wycombeTerms} 
+                school="wycombe" 
+                className="mt-6" 
+              />
             </div>
           </div>
         </div>
