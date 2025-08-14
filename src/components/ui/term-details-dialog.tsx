@@ -71,28 +71,42 @@ export function TermDetailsDialog({ term, open, onOpenChange }: TermDetailsDialo
                 Detailed Schedule
               </h3>
               <div className="space-y-2">
-                {details.map((detail, index) => (
-                  <div 
-                    key={index}
-                    className="flex flex-col gap-2 p-3 rounded-lg border border-border hover:shadow-soft transition-shadow"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="font-medium text-foreground text-sm">
-                          {detail.date}
-                        </div>
-                        {detail.time && (
-                          <div className="text-xs text-muted-foreground">
-                            {detail.time}
+                {(() => {
+                  // Group events by date
+                  const groupedEvents = details.reduce((acc, detail) => {
+                    const date = detail.date;
+                    if (!acc[date]) {
+                      acc[date] = [];
+                    }
+                    acc[date].push(detail);
+                    return acc;
+                  }, {} as Record<string, typeof details>);
+
+                  return Object.entries(groupedEvents).map(([date, dateEvents]) => (
+                    <div 
+                      key={date}
+                      className="p-3 rounded-lg border border-border hover:shadow-soft transition-shadow"
+                    >
+                      <div className="font-medium text-foreground text-sm mb-2">
+                        {date}
+                      </div>
+                      <div className="space-y-2">
+                        {dateEvents.map((detail, index) => (
+                          <div key={index} className="flex flex-col gap-1">
+                            {detail.time && (
+                              <div className="text-xs text-muted-foreground">
+                                {detail.time}
+                              </div>
+                            )}
+                            <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium w-fit ${getEventTypeColor(detail.event)}`}>
+                              {detail.event}
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
-                    <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(detail.event)}`}>
-                      {detail.event}
-                    </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
           ) : (
