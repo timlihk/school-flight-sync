@@ -380,44 +380,33 @@ export function TermCard({
                               key={flight.id}
                               className="p-3 bg-muted/30 rounded-lg border border-muted/50"
                             >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm">
-                                    {flight.type === 'outbound' ? '✈️' : '🛬'}
-                                  </span>
-                                  <span className="text-xs font-medium text-foreground">
-                                    {flight.type === 'outbound' ? 'Outbound' : 'Return'}
-                                  </span>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onViewFlights(term.id);
-                                  }}
-                                  className="h-6 w-6 p-0 hover:bg-background/80"
-                                >
-                                  <Plane className="h-3 w-3" />
-                                </Button>
-                              </div>
-                              
-                              <div className="space-y-1 text-xs">
-                                <div className="flex justify-between items-center">
-                                  <span className="font-medium text-foreground">
-                                    {flight.airline} {flight.flightNumber}
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    {format(flight.departure.date, 'MMM dd')} {flight.departure.time}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center text-muted-foreground">
-                                  <span>{flight.departure.airport} → {flight.arrival.airport}</span>
-                                  {flight.confirmationCode && (
-                                    <span className="font-medium">{flight.confirmationCode}</span>
-                                  )}
-                                </div>
-                              </div>
+                               <div className="flex items-center justify-between mb-2">
+                                 <div className="flex items-center gap-2">
+                                   <span className="text-sm">
+                                     {flight.type === 'outbound' ? '✈️' : '🛬'}
+                                   </span>
+                                   <span className="text-xs font-medium text-foreground">
+                                     {flight.type === 'outbound' ? 'Outbound' : 'Return'}
+                                   </span>
+                                 </div>
+                               </div>
+                               
+                               <div className="space-y-1 text-xs">
+                                 <div className="flex justify-between items-center">
+                                   <span className="font-medium text-foreground">
+                                     {flight.airline} {flight.flightNumber}
+                                   </span>
+                                   <span className="text-muted-foreground">
+                                     {format(flight.departure.date, 'MMM dd')} {flight.departure.time}
+                                   </span>
+                                 </div>
+                                 <div className="flex justify-between items-center text-muted-foreground">
+                                   <span>{flight.departure.airport} → {flight.arrival.airport}</span>
+                                   {flight.confirmationCode && (
+                                     <span className="font-medium">{flight.confirmationCode}</span>
+                                   )}
+                                 </div>
+                               </div>
                             </div>
                           ))}
                           
@@ -427,22 +416,6 @@ export function TermCard({
                             </div>
                           )}
                           
-                          {!isAutumnTermStart && (
-                            <div className="flex justify-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onViewFlights(term.id);
-                                }}
-                                className="h-7 text-xs hover:bg-background/80"
-                              >
-                                <Plane className="h-3 w-3 mr-1" />
-                                View Flights
-                              </Button>
-                            </div>
-                          )}
                         </div>
                       ) : notTravellingStatus?.noFlights ? (
                         <div className="p-3 bg-muted/30 rounded-lg">
@@ -501,27 +474,16 @@ export function TermCard({
                             key={transportItem.id}
                             className="p-3 bg-muted/20 rounded-lg border border-muted/40"
                           >
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm">
-                                  🚗
-                                </span>
-                                <span className="text-xs font-medium text-foreground">
-                                  {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
-                                </span>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onViewTransport(term.id);
-                                }}
-                                className="h-6 w-6 p-0 hover:bg-background/80"
-                              >
-                                <Car className="h-3 w-3" />
-                              </Button>
-                            </div>
+                             <div className="flex items-center justify-between mb-2">
+                               <div className="flex items-center gap-2">
+                                 <span className="text-sm">
+                                   🚗
+                                 </span>
+                                 <span className="text-xs font-medium text-foreground">
+                                   {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
+                                 </span>
+                               </div>
+                             </div>
                             
                             <div className="grid grid-cols-2 gap-1 text-xs">
                               <div className="flex items-center gap-1 text-muted-foreground">
@@ -556,21 +518,6 @@ export function TermCard({
                           </div>
                         )}
                         
-                        {!isAutumnTermStart && (
-                          <div className="flex justify-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onViewTransport(term.id);
-                              }}
-                              className="h-8 w-8 p-0 hover:bg-background/80"
-                            >
-                              <Car className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
                       </div>
                     ) : notTravellingStatus?.noTransport ? (
                       <div className="p-3 bg-muted/20 rounded-lg">
