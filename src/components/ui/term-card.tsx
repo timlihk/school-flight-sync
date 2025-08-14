@@ -134,7 +134,7 @@ export function TermCard({
     // Get flights and transport for this direction
     const relevantFlights = flights.filter(f => {
       const isOutbound = f.type === 'outbound';
-      return isStart ? isOutbound : !isOutbound;
+      return f.termId === term.id && (isStart ? isOutbound : !isOutbound);
     });
     
     const relevantTransport = transport.filter(t => {
@@ -190,16 +190,16 @@ export function TermCard({
                 <div key={flight.id} className="p-2 bg-muted/30 rounded-md">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-medium">{flight.airline} {flight.flightNumber}</span>
-                    <span className="text-muted-foreground">{flight.departure.time}</span>
+                    <span className="text-muted-foreground">
+                      {format(flight.departure.date, 'MMM dd')} {flight.departure.time}
+                    </span>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {flight.departure.airport} → {flight.arrival.airport}
+                  <div className="flex justify-between items-center text-xs text-muted-foreground">
+                    <span>{flight.departure.airport} → {flight.arrival.airport}</span>
+                    {flight.confirmationCode && (
+                      <span className="font-medium">{flight.confirmationCode}</span>
+                    )}
                   </div>
-                  {flight.confirmationCode && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Confirmation: {flight.confirmationCode}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
