@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { TermCard } from "@/components/ui/term-card";
 import { FlightDialog } from "@/components/ui/flight-dialog";
 import { TransportDialog } from "@/components/ui/transport-dialog";
-import { CalendarEvents } from "@/components/ui/calendar-events";
 import { SchoolHeader } from "@/components/school-header";
 import { mockTerms } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
@@ -89,7 +88,7 @@ export default function Index() {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8">
           {/* Benenden School */}
           <div className="space-y-6">
             <SchoolHeader 
@@ -137,20 +136,6 @@ export default function Index() {
                   className="h-full"
                 />
               ))}
-            </div>
-          </div>
-
-          {/* Calendar Events */}
-          <div className="space-y-6">
-            <CalendarEvents 
-              terms={mockTerms}
-              className="sticky top-24"
-            />
-            
-            {/* Summary */}
-            <div className="text-center space-y-2 p-4 bg-card/50 rounded-lg border border-border/50">
-              <div className="text-sm text-muted-foreground">Total tracked</div>
-              <div className="font-semibold text-lg text-primary">{flights.length} flights</div>
             </div>
           </div>
         </div>
