@@ -144,12 +144,13 @@ export default function Index() {
   };
 
   const handleShowScheduleForSchool = (school: 'benenden' | 'wycombe') => {
-    // Find the first term for this school in the current academic year
-    const schoolTerms = filteredTerms.filter(t => t.school === school);
-    if (schoolTerms.length > 0) {
-      setSelectedTerm(schoolTerms[0]);
-      setShowTermDetailsDialog(true);
-    }
+    // Open the official school term dates website
+    const urls = {
+      benenden: 'https://www.benenden.school/news/term-dates/',
+      wycombe: 'https://www.wycombeabbey.com/term-dates/'
+    };
+    
+    window.open(urls[school], '_blank');
   };
 
   if (loading || isTransportLoading) {

@@ -38,7 +38,7 @@ export function SchoolHeader({ schoolName, termCount, variant, academicYear = "2
           onClick={onAcademicYearClick}
         >
           Academic Year {academicYear}
-          {onAcademicYearClick && <span className="ml-1 text-xs text-muted-foreground">- Click for detailed schedule</span>}
+          {onAcademicYearClick && <span className="ml-1 text-xs text-muted-foreground">- Click for latest term dates</span>}
         </span>
         <Badge variant={getBadgeVariant() as any} className="text-xs">
           {termCount} terms
