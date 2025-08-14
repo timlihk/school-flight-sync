@@ -1,5 +1,7 @@
 import { GraduationCap, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import benendenLogo from "@/assets/benenden-logo.png";
+import wycommebLogo from "@/assets/wycombe-logo.png";
 
 interface SchoolHeaderProps {
   schoolName: string;
@@ -15,7 +17,13 @@ export function SchoolHeader({ schoolName, termCount, variant }: SchoolHeaderPro
   return (
     <div className="text-center space-y-3 animate-fade-in">
       <div className="flex items-center justify-center gap-3">
-        <GraduationCap className="h-8 w-8 text-primary" />
+        <div className="w-12 h-12 rounded-full bg-card shadow-soft border border-border p-2 flex items-center justify-center">
+          <img 
+            src={variant === 'benenden' ? benendenLogo : wycommebLogo} 
+            alt={`${schoolName} logo`}
+            className="w-8 h-8 object-contain"
+          />
+        </div>
         <h2 className="text-2xl font-bold text-foreground">
           {schoolName}
         </h2>
