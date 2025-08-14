@@ -163,13 +163,8 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Calendar Events & Summary Section */}
-        <div className="mt-12 space-y-8">
-          <CalendarEvents 
-            terms={mockTerms} 
-            className="max-w-4xl mx-auto"
-          />
-          
+        {/* Summary Section */}
+        <div className="mt-12">
           <div className="text-center">
             <div className="inline-flex items-center gap-4 px-6 py-3 bg-card rounded-full shadow-soft border border-border">
               <span className="text-sm text-muted-foreground">
