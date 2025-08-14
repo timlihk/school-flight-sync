@@ -149,12 +149,14 @@ export function TermCard({
                             {flight.airline} {flight.flightNumber}
                           </span>
                           <span className="text-muted-foreground">
-                            {format(flight.departure.date, 'MMM dd')}
+                            {format(flight.departure.date, 'MMM dd')} {flight.departure.time}
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-muted-foreground">
                           <span>{flight.departure.airport} → {flight.arrival.airport}</span>
-                          <span>{flight.departure.time}</span>
+                          {flight.confirmationCode && (
+                            <span className="font-medium">{flight.confirmationCode}</span>
+                          )}
                         </div>
                       </div>
                     </div>

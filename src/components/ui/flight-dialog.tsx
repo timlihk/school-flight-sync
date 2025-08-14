@@ -59,6 +59,7 @@ export function FlightDialog({
     arrivalAirport: '',
     arrivalDate: format(term.startDate, 'yyyy-MM-dd'),
     arrivalTime: '',
+    confirmationCode: '',
     notes: ''
   });
 
@@ -108,6 +109,7 @@ export function FlightDialog({
         date: new Date(newFlight.arrivalDate),
         time: newFlight.arrivalTime
       },
+      confirmationCode: newFlight.confirmationCode,
       notes: newFlight.notes
     };
 
@@ -132,6 +134,7 @@ export function FlightDialog({
       arrivalAirport: '',
       arrivalDate: format(term.startDate, 'yyyy-MM-dd'),
       arrivalTime: '',
+      confirmationCode: '',
       notes: ''
     });
     setIsAddingFlight(false);
@@ -150,6 +153,7 @@ export function FlightDialog({
       arrivalAirport: flight.arrival.airport,
       arrivalDate: format(flight.arrival.date, 'yyyy-MM-dd'),
       arrivalTime: flight.arrival.time,
+      confirmationCode: flight.confirmationCode || '',
       notes: flight.notes || ''
     });
     setIsAddingFlight(true);
@@ -342,6 +346,16 @@ export function FlightDialog({
                   onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalTime: e.target.value }))}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmationCode">Confirmation Code (Optional)</Label>
+              <Input
+                id="confirmationCode"
+                value={newFlight.confirmationCode}
+                onChange={(e) => setNewFlight(prev => ({ ...prev, confirmationCode: e.target.value }))}
+                placeholder="e.g., ABC123"
+              />
             </div>
 
             <div className="space-y-2">

@@ -23,6 +23,7 @@ export interface FlightDetails {
     date: Date;
     time: string;
   };
+  confirmationCode?: string;
   notes?: string;
 }
 
