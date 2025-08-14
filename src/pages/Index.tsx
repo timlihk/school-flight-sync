@@ -19,6 +19,7 @@ export default function Index() {
   const [notTravelling, setNotTravelling] = useState<NotTravellingStatus[]>([]);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [showFlightsOnly, setShowFlightsOnly] = useState(false);
+  const [allExpanded, setAllExpanded] = useState(false);
   
   const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
@@ -39,13 +40,15 @@ export default function Index() {
     ? wycombeTerms.filter(term => flights.some(f => f.termId === term.id))
     : wycombeTerms;
 
-  const handleExpandAll = () => {
-    const allTermIds = new Set(mockTerms.map(term => term.id));
-    setExpandedCards(allTermIds);
-  };
-
-  const handleCollapseAll = () => {
-    setExpandedCards(new Set());
+  const handleToggleExpandAll = () => {
+    if (allExpanded) {
+      setExpandedCards(new Set());
+      setAllExpanded(false);
+    } else {
+      const allTermIds = new Set(mockTerms.map(term => term.id));
+      setExpandedCards(allTermIds);
+      setAllExpanded(true);
+    }
   };
 
   const handleAddFlight = (termId: string) => {
@@ -139,20 +142,20 @@ export default function Index() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleExpandAll}
+            onClick={handleToggleExpandAll}
             className="gap-2"
           >
-            <ChevronDown className="h-4 w-4" />
-            Expand All
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCollapseAll}
-            className="gap-2"
-          >
-            <ChevronUp className="h-4 w-4" />
-            Collapse All
+            {allExpanded ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Collapse All
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                Expand All
+              </>
+            )}
           </Button>
           <Button
             variant={showFlightsOnly ? "default" : "outline"}
