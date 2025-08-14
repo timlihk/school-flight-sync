@@ -187,10 +187,10 @@ export function ToDoDialog({
         {children || (
           <Button 
             variant="outline" 
-            size="lg"
-            className="gap-2 bg-card/80 backdrop-blur-sm border-primary/20 hover:bg-primary/5 transition-all duration-200"
+            size="sm"
+            className="gap-2"
           >
-            <CheckSquare className="h-5 w-5" />
+            <CheckSquare className="h-4 w-4" />
             To Do
             {toDoItems.length > 0 && (
               <Badge variant="destructive" className="ml-1 min-w-[20px] h-5 text-xs">
