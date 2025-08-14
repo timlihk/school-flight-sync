@@ -17,6 +17,7 @@ interface ToDoDialogProps {
   notTravelling: NotTravellingStatus[];
   onAddFlight: (termId: string) => void;
   onAddTransport: (termId: string) => void;
+  onShowTerm?: (termId: string) => void;
   children?: React.ReactNode;
 }
 
@@ -37,6 +38,7 @@ export function ToDoDialog({
   notTravelling,
   onAddFlight, 
   onAddTransport, 
+  onShowTerm,
   children 
 }: ToDoDialogProps) {
   const [open, setOpen] = useState(false);
@@ -174,10 +176,16 @@ export function ToDoDialog({
 
   const handleItemClick = (item: ToDoItem) => {
     setOpen(false);
-    if (item.type === 'flight') {
-      onAddFlight(item.term.id);
+    // Show the term card instead of directly adding
+    if (onShowTerm) {
+      onShowTerm(item.term.id);
     } else {
-      onAddTransport(item.term.id);
+      // Fallback to old behavior if onShowTerm is not provided
+      if (item.type === 'flight') {
+        onAddFlight(item.term.id);
+      } else {
+        onAddTransport(item.term.id);
+      }
     }
   };
 
@@ -187,13 +195,12 @@ export function ToDoDialog({
         {children || (
           <Button 
             variant="outline" 
-            size="sm"
-            className="gap-2"
+            className="gap-2 w-28 h-9 font-normal"
           >
             <CheckSquare className="h-4 w-4" />
             To Do
             {toDoItems.length > 0 && (
-              <Badge variant="destructive" className="ml-1 min-w-[20px] h-5 text-xs">
+              <Badge variant="destructive" className="ml-1 min-w-[20px] h-5 text-xs flex items-center justify-center">
                 {toDoItems.length}
               </Badge>
             )}

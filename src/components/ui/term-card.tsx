@@ -308,6 +308,7 @@ export function TermCard({
   return (
     <>
       <Card 
+        id={`term-card-${term.id}`}
         className={cn(
           "transition-all duration-300 hover:shadow-elegant group animate-fade-in overflow-hidden",
           className

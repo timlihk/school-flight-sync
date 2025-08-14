@@ -14,16 +14,19 @@ import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term, NotTravellingStatus } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
   const [showFlightDialog, setShowFlightDialog] = useState(false);
   const [showTransportDialog, setShowTransportDialog] = useState(false);
   const [showTermDetailsDialog, setShowTermDetailsDialog] = useState(false);
+  const [showTermCardPopup, setShowTermCardPopup] = useState(false);
+  const [popupTerm, setPopupTerm] = useState<Term | null>(null);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
-  const [showFlightsOnly, setShowFlightsOnly] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('all');
+  const [selectedSchool, setSelectedSchool] = useState<string>('both');
   
   const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
@@ -41,44 +44,9 @@ export default function Index() {
     .filter(term => term.school === 'wycombe')
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
-  console.log('Current showFlightsOnly state:', showFlightsOnly);
-  console.log('Total Benenden terms:', benendenTerms.length);
-  console.log('Total Wycombe terms:', wycombeTerms.length);
-
-  // Filter terms that need flights to be booked if showFlightsOnly is enabled
-  const filteredBenendenTerms = showFlightsOnly 
-    ? benendenTerms.filter(term => {
-        const termFlights = flights.filter(f => f.termId === term.id);
-        const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
-        
-        console.log(`Filtering ${term.name} (${term.id}):`, {
-          termFlights: termFlights.length,
-          isNotTravelling: termNotTravelling?.noFlights,
-          shouldShow: termFlights.length === 0 && !termNotTravelling?.noFlights
-        });
-        
-        // Show ONLY if has no flight info AND hasn't been marked as not travelling
-        return termFlights.length === 0 && !termNotTravelling?.noFlights;
-      })
-    : benendenTerms;
-  const filteredWycombeTerms = showFlightsOnly 
-    ? wycombeTerms.filter(term => {
-        const termFlights = flights.filter(f => f.termId === term.id);
-        const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
-        
-        console.log(`Filtering ${term.name} (${term.id}):`, {
-          termFlights: termFlights.length,
-          isNotTravelling: termNotTravelling?.noFlights,
-          shouldShow: termFlights.length === 0 && !termNotTravelling?.noFlights
-        });
-        
-        // Show ONLY if has no flight info AND hasn't been marked as not travelling
-        return termFlights.length === 0 && !termNotTravelling?.noFlights;
-      })
-    : wycombeTerms;
-
-  console.log('After filtering - Benenden terms:', filteredBenendenTerms.length);
-  console.log('After filtering - Wycombe terms:', filteredWycombeTerms.length);
+  // Filter terms based on selected school
+  const shouldShowBenenden = selectedSchool === 'both' || selectedSchool === 'benenden';
+  const shouldShowWycombe = selectedSchool === 'both' || selectedSchool === 'wycombe';
 
   const handleToggleExpandAll = () => {
     if (allExpanded) {
@@ -96,6 +64,10 @@ export default function Index() {
     if (term) {
       setSelectedTerm(term);
       setShowFlightDialog(true);
+      // Close popup if it's open
+      if (showTermCardPopup) {
+        setShowTermCardPopup(false);
+      }
     }
   };
 
@@ -116,6 +88,10 @@ export default function Index() {
     if (term) {
       setSelectedTerm(term);
       setShowTransportDialog(true);
+      // Close popup if it's open
+      if (showTermCardPopup) {
+        setShowTermCardPopup(false);
+      }
     }
   };
 
@@ -135,6 +111,14 @@ export default function Index() {
     };
     
     window.open(urls[school], '_blank');
+  };
+
+  const handleShowTerm = (termId: string) => {
+    const term = mockTerms.find(t => t.id === termId);
+    if (term) {
+      setPopupTerm(term);
+      setShowTermCardPopup(true);
+    }
   };
 
   if (loading || isTransportLoading || notTravellingLoading) {
@@ -174,7 +158,7 @@ export default function Index() {
       <div className="container mx-auto px-6 py-4">
         <div className="flex flex-wrap justify-center gap-3">
           <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48 h-9">
               <SelectValue placeholder="Academic Year" />
             </SelectTrigger>
             <SelectContent>
@@ -184,11 +168,20 @@ export default function Index() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={selectedSchool} onValueChange={setSelectedSchool}>
+            <SelectTrigger className="w-48 h-9">
+              <SelectValue placeholder="Select School" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="both">Both Schools</SelectItem>
+              <SelectItem value="benenden">Benenden School</SelectItem>
+              <SelectItem value="wycombe">Wycombe Abbey School</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
-            size="sm"
             onClick={handleToggleExpandAll}
-            className="gap-2"
+            className="gap-2 w-32 h-9 font-normal"
           >
             {allExpanded ? (
               <>
@@ -202,15 +195,6 @@ export default function Index() {
               </>
             )}
           </Button>
-          <Button
-            variant={showFlightsOnly ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowFlightsOnly(!showFlightsOnly)}
-            className="gap-2"
-          >
-            <Plane className="h-4 w-4" />
-            {showFlightsOnly ? "Show All Cards" : "Show Cards with Flights to Book"}
-          </Button>
           <ToDoDialog 
             terms={filteredTerms}
             flights={flights}
@@ -218,25 +202,27 @@ export default function Index() {
             notTravelling={notTravelling}
             onAddFlight={handleAddFlight}
             onAddTransport={handleAddTransport}
+            onShowTerm={handleShowTerm}
           />
         </div>
       </div>
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className={`grid ${selectedSchool === 'both' ? 'lg:grid-cols-2' : 'lg:grid-cols-1 max-w-3xl mx-auto'} gap-8`}>
           {/* Benenden School */}
-          <div className="space-y-6">
-            <SchoolHeader 
-              schoolName="Benenden School"
-              termCount={benendenTerms.length}
-              variant="benenden"
-              academicYear={selectedAcademicYear === 'all' ? '2025-2026' : selectedAcademicYear}
-              onAcademicYearClick={() => handleShowScheduleForSchool('benenden')}
-            />
-            
-            <div className="space-y-4">
-              {filteredBenendenTerms.map((term) => (
+          {shouldShowBenenden && (
+            <div className="space-y-6">
+              <SchoolHeader 
+                schoolName="Benenden School"
+                termCount={benendenTerms.length}
+                variant="benenden"
+                academicYear={selectedAcademicYear === 'all' ? '2025-2026' : selectedAcademicYear}
+                onAcademicYearClick={() => handleShowScheduleForSchool('benenden')}
+              />
+              
+              <div className="space-y-4">
+                {benendenTerms.map((term) => (
                 <TermCard
                   key={term.id}
                   term={term}
@@ -262,22 +248,24 @@ export default function Index() {
                     });
                   }}
                 />
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Wycombe Abbey School */}
-          <div className="space-y-6">
-            <SchoolHeader 
-              schoolName="Wycombe Abbey School"
-              termCount={wycombeTerms.length}
-              variant="wycombe"
-              academicYear={selectedAcademicYear === 'all' ? '2025-2026' : selectedAcademicYear}
-              onAcademicYearClick={() => handleShowScheduleForSchool('wycombe')}
-            />
-            
-            <div className="space-y-4">
-              {filteredWycombeTerms.map((term) => (
+          {shouldShowWycombe && (
+            <div className="space-y-6">
+              <SchoolHeader 
+                schoolName="Wycombe Abbey School"
+                termCount={wycombeTerms.length}
+                variant="wycombe"
+                academicYear={selectedAcademicYear === 'all' ? '2025-2026' : selectedAcademicYear}
+                onAcademicYearClick={() => handleShowScheduleForSchool('wycombe')}
+              />
+              
+              <div className="space-y-4">
+                {wycombeTerms.map((term) => (
                 <TermCard
                   key={term.id}
                   term={term}
@@ -303,9 +291,10 @@ export default function Index() {
                     });
                   }}
                 />
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
 
@@ -337,6 +326,36 @@ export default function Index() {
               onOpenChange={setShowTermDetailsDialog}
             />
           </>
+        )}
+
+        {/* Term Card Popup Modal */}
+        {popupTerm && (
+          <Dialog open={showTermCardPopup} onOpenChange={setShowTermCardPopup}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  {popupTerm.name}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="mt-4">
+                <TermCard
+                  term={popupTerm}
+                  flights={flights.filter(f => f.termId === popupTerm.id)}
+                  transport={getTransportForTerm(popupTerm.id)}
+                  onAddFlight={handleAddFlight}
+                  onViewFlights={handleViewFlights}
+                  onAddTransport={handleAddTransport}
+                  onViewTransport={handleViewTransport}
+                  onSetNotTravelling={handleSetNotTravelling}
+                  notTravellingStatus={notTravelling.find(nt => nt.termId === popupTerm.id)}
+                  isExpanded={true}
+                  onExpandedChange={() => {}}
+                  className="border-0 shadow-none bg-transparent"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </main>
     </div>
