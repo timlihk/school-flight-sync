@@ -134,6 +134,10 @@ export function TermCard({
       return true;
     });
     
+    // Debug log to see the transport data
+    console.log('Transport data for term:', term.name, transport);
+    console.log('Relevant transport:', relevantTransport);
+    
     return (
       <Card className="border border-border">
         <CardHeader className="pb-3">
@@ -461,6 +465,12 @@ export function TermCard({
                                 <span className="truncate">{transportItem.licenseNumber}</span>
                               </div>
                             </div>
+                            
+                            {transportItem.notes && (
+                              <div className="mt-2 text-xs text-muted-foreground">
+                                <span className="font-medium">Notes:</span> {transportItem.notes}
+                              </div>
+                            )}
                           </div>
                         ))}
                         
