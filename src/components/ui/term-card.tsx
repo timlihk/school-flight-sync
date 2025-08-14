@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Calendar, Plane, Plus, Car, User, Phone, Clock, CreditCard, ChevronDown } from "lucide-react";
+import { Calendar, Plane, Plus, Car, User, Phone, Clock, CreditCard, ChevronDown, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -118,6 +118,65 @@ export function TermCard({
     return null;
   };
 
+  const renderTravelCard = (direction: 'start' | 'end') => {
+    const isStart = direction === 'start';
+    const date = isStart ? term.startDate : term.endDate;
+    const title = isStart ? 'Travel from School' : 'Return to School';
+    
+    return (
+      <Card className="border border-border">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={cn(
+                "p-2 rounded-full",
+                isStart ? "bg-red-100 dark:bg-red-900" : "bg-green-100 dark:bg-green-900"
+              )}>
+                <ArrowRight className={cn(
+                  "h-4 w-4",
+                  isStart ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
+                )} />
+              </div>
+              <div>
+                <h4 className="font-medium text-sm">{title}</h4>
+                <p className="text-xs text-muted-foreground">
+                  {format(date, 'EEE, MMM dd yyyy')}
+                </p>
+              </div>
+            </div>
+            <Badge 
+              variant="outline" 
+              className={cn(
+                "text-xs",
+                isStart ? "border-red-200 text-red-700" : "border-green-200 text-green-700"
+              )}
+            >
+              {isStart ? 'Departure' : 'Return'}
+            </Badge>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="pt-0 space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" size="sm" className="justify-start gap-2">
+              <Plane className="h-4 w-4" />
+              Add Flight
+            </Button>
+            <Button variant="outline" size="sm" className="justify-start gap-2">
+              <Car className="h-4 w-4" />
+              Add Transport
+            </Button>
+          </div>
+          
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>• No flights booked</p>
+            <p>• No transport arranged</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   const relevantEvent = getRelevantEvent();
 
   return (
@@ -172,176 +231,207 @@ export function TermCard({
           
           <CollapsibleContent>
             <CardContent className="pt-0">
-              {shouldShowFlights && (
-                <div 
-                  className="space-y-3 cursor-pointer p-2 rounded-lg hover:bg-muted/10 transition-colors"
-                  onClick={() => onViewFlights(term.id)}
-                >
-                  {hasFlights ? (
-                    <div className="space-y-2">
-                      {flights.slice(0, 2).map((flight) => (
-                        <div 
-                          key={flight.id}
-                          className="p-3 bg-muted/30 rounded-lg border border-muted/50"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">
-                                {flight.type === 'outbound' ? '✈️' : '🛬'}
-                              </span>
-                              <span className="text-xs font-medium text-foreground">
-                                {flight.type === 'outbound' ? 'Outbound' : 'Return'}
-                              </span>
+              {/* Show travel cards for exeat and half-term events */}
+              {(term.type === 'exeat' || term.type === 'half-term' || term.type === 'short-leave' || term.type === 'long-leave') ? (
+                <div className="grid gap-4">
+                  {renderTravelCard('start')}
+                  {renderTravelCard('end')}
+                </div>
+              ) : (
+                <>
+                  {shouldShowFlights && (
+                    <div 
+                      className="space-y-3 cursor-pointer p-2 rounded-lg hover:bg-muted/10 transition-colors"
+                      onClick={() => onViewFlights(term.id)}
+                    >
+                      {hasFlights ? (
+                        <div className="space-y-2">
+                          {flights.slice(0, 2).map((flight) => (
+                            <div 
+                              key={flight.id}
+                              className="p-3 bg-muted/30 rounded-lg border border-muted/50"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm">
+                                    {flight.type === 'outbound' ? '✈️' : '🛬'}
+                                  </span>
+                                  <span className="text-xs font-medium text-foreground">
+                                    {flight.type === 'outbound' ? 'Outbound' : 'Return'}
+                                  </span>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onViewFlights(term.id);
+                                  }}
+                                  className="h-6 w-6 p-0 hover:bg-background/80"
+                                >
+                                  <Plane className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              
+                              <div className="space-y-1 text-xs">
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium text-foreground">
+                                    {flight.airline} {flight.flightNumber}
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    {format(flight.departure.date, 'MMM dd')} {flight.departure.time}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center text-muted-foreground">
+                                  <span>{flight.departure.airport} → {flight.arrival.airport}</span>
+                                  {flight.confirmationCode && (
+                                    <span className="font-medium">{flight.confirmationCode}</span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
+                          ))}
+                          
+                          {flights.length > 2 && (
+                            <div className="text-xs text-muted-foreground text-center py-1">
+                              +{flights.length - 2} more flights
+                            </div>
+                          )}
+                          
+                          {!isAutumnTermStart && (
+                            <div className="flex justify-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onViewFlights(term.id);
+                                }}
+                                className="h-7 text-xs hover:bg-background/80"
+                              >
+                                <Plane className="h-3 w-3 mr-1" />
+                                View Flights
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div 
+                          className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
+                          onClick={() => onAddFlight(term.id)}
+                        >
+                          <span className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Plane className="h-4 w-4" />
+                            No flights yet
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAddFlight(term.id);
+                            }}
+                            className="h-8 w-8 p-0 hover:bg-background/80"
+                          >
+                            <Plane className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Transport Section */}
+                  <div 
+                    className="space-y-3 cursor-pointer p-2 rounded-lg hover:bg-muted/10 transition-colors"
+                    onClick={() => onViewTransport(term.id)}
+                  >
+                    {hasTransport ? (
+                      <div className="space-y-2">
+                        {transport.slice(0, 2).map((transportItem) => (
+                          <div 
+                            key={transportItem.id}
+                            className="p-3 bg-muted/20 rounded-lg border border-muted/40"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">
+                                  🚗
+                                </span>
+                                <span className="text-xs font-medium text-foreground">
+                                  {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
+                                </span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onViewTransport(term.id);
+                                }}
+                                className="h-6 w-6 p-0 hover:bg-background/80"
+                              >
+                                <Car className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-1 text-xs">
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <User className="h-3 w-3" />
+                                <span className="truncate">{transportItem.driverName}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                <span>{transportItem.pickupTime}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Phone className="h-3 w-3" />
+                                <span className="truncate">{transportItem.phoneNumber}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <CreditCard className="h-3 w-3" />
+                                <span className="truncate">{transportItem.licenseNumber}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {transport.length > 2 && (
+                          <div className="text-xs text-muted-foreground text-center py-1">
+                            +{transport.length - 2} more transport
+                          </div>
+                        )}
+                        
+                        {!isAutumnTermStart && (
+                          <div className="flex justify-center">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onViewFlights(term.id);
+                                onViewTransport(term.id);
                               }}
-                              className="h-6 w-6 p-0 hover:bg-background/80"
+                              className="h-8 w-8 p-0 hover:bg-background/80"
                             >
-                              <Plane className="h-3 w-3" />
+                              <Car className="h-4 w-4" />
                             </Button>
                           </div>
-                          
-                          <div className="space-y-1 text-xs">
-                            <div className="flex justify-between items-center">
-                              <span className="font-medium text-foreground">
-                                {flight.airline} {flight.flightNumber}
-                              </span>
-                              <span className="text-muted-foreground">
-                                {format(flight.departure.date, 'MMM dd')} {flight.departure.time}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center text-muted-foreground">
-                              <span>{flight.departure.airport} → {flight.arrival.airport}</span>
-                              {flight.confirmationCode && (
-                                <span className="font-medium">{flight.confirmationCode}</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {flights.length > 2 && (
-                        <div className="text-xs text-muted-foreground text-center py-1">
-                          +{flights.length - 2} more flights
-                        </div>
-                      )}
-                      
-                      {!isAutumnTermStart && (
-                        <div className="flex justify-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onViewFlights(term.id);
-                            }}
-                            className="h-7 text-xs hover:bg-background/80"
-                          >
-                            <Plane className="h-3 w-3 mr-1" />
-                            View Flights
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div 
-                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
-                      onClick={() => onAddFlight(term.id)}
-                    >
-                      <span className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Plane className="h-4 w-4" />
-                        No flights yet
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddFlight(term.id);
-                        }}
-                        className="h-8 w-8 p-0 hover:bg-background/80"
-                      >
-                        <Plane className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Transport Section */}
-              <div 
-                className="space-y-3 cursor-pointer p-2 rounded-lg hover:bg-muted/10 transition-colors"
-                onClick={() => onViewTransport(term.id)}
-              >
-                {hasTransport ? (
-                  <div className="space-y-2">
-                    {transport.slice(0, 2).map((transportItem) => (
+                        )}
+                      </div>
+                    ) : (
                       <div 
-                        key={transportItem.id}
-                        className="p-3 bg-muted/20 rounded-lg border border-muted/40"
+                        className="flex items-center justify-between p-3 bg-muted/20 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
+                        onClick={() => onAddTransport(term.id)}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">
-                              🚗
-                            </span>
-                            <span className="text-xs font-medium text-foreground">
-                              {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
-                            </span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onViewTransport(term.id);
-                            }}
-                            className="h-6 w-6 p-0 hover:bg-background/80"
-                          >
-                            <Car className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-1 text-xs">
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <User className="h-3 w-3" />
-                            <span className="truncate">{transportItem.driverName}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            <span>{transportItem.pickupTime}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            <span className="truncate">{transportItem.phoneNumber}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <CreditCard className="h-3 w-3" />
-                            <span className="truncate">{transportItem.licenseNumber}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {transport.length > 2 && (
-                      <div className="text-xs text-muted-foreground text-center py-1">
-                        +{transport.length - 2} more transport
-                      </div>
-                    )}
-                    
-                    {!isAutumnTermStart && (
-                      <div className="flex justify-center">
+                        <span className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Car className="h-4 w-4" />
+                          No transport yet
+                        </span>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onViewTransport(term.id);
+                            onAddTransport(term.id);
                           }}
                           className="h-8 w-8 p-0 hover:bg-background/80"
                         >
@@ -350,37 +440,16 @@ export function TermCard({
                       </div>
                     )}
                   </div>
-                ) : (
                   <div 
-                    className="flex items-center justify-between p-3 bg-muted/20 rounded-lg cursor-pointer hover:bg-muted/10 transition-colors"
-                    onClick={() => onAddTransport(term.id)}
+                    className="text-center py-2 cursor-pointer hover:bg-muted/10 rounded-lg transition-colors"
+                    onClick={() => setShowDetails(true)}
                   >
-                    <span className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Car className="h-4 w-4" />
-                      No transport yet
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddTransport(term.id);
-                      }}
-                      className="h-8 w-8 p-0 hover:bg-background/80"
-                    >
-                      <Car className="h-4 w-4" />
-                    </Button>
+                    <div className="text-xs text-muted-foreground">
+                      Click for detailed schedule
+                    </div>
                   </div>
-                )}
-              </div>
-              <div 
-                className="text-center py-2 cursor-pointer hover:bg-muted/10 rounded-lg transition-colors"
-                onClick={() => setShowDetails(true)}
-              >
-                <div className="text-xs text-muted-foreground">
-                  Click for detailed schedule
-                </div>
-              </div>
+                </>
+              )}
             </CardContent>
           </CollapsibleContent>
         </Collapsible>

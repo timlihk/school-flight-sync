@@ -116,12 +116,6 @@ export default function Index() {
                   className="h-full"
                 />
               ))}
-              
-              <EventSections 
-                terms={benendenTerms} 
-                school="benenden" 
-                className="mt-6" 
-              />
             </div>
           </div>
 
@@ -147,12 +141,6 @@ export default function Index() {
                   className="h-full"
                 />
               ))}
-              
-              <EventSections 
-                terms={wycombeTerms} 
-                school="wycombe" 
-                className="mt-6" 
-              />
             </div>
           </div>
         </div>
