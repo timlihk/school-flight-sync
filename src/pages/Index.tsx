@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from "react";
+import { useState, Suspense, lazy, useMemo, useCallback } from "react";
 import { Calendar, Plane, Car, ChevronDown, ChevronUp, FileText, Download, LogOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
@@ -37,35 +37,54 @@ export default function Index() {
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus } = useNotTravelling();
 
-  // Filter by academic year first, then separate by school and sort chronologically
-  const filteredTerms = selectedAcademicYear === 'all' 
-    ? mockTerms 
-    : mockTerms.filter(term => term.academicYear === selectedAcademicYear);
+  // Memoize expensive term filtering and sorting operations
+  const filteredTerms = useMemo(() => {
+    return selectedAcademicYear === 'all' 
+      ? mockTerms 
+      : mockTerms.filter(term => term.academicYear === selectedAcademicYear);
+  }, [selectedAcademicYear]);
     
-  const benendenTerms = filteredTerms
-    .filter(term => term.school === 'benenden')
-    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-  const wycombeTerms = filteredTerms
-    .filter(term => term.school === 'wycombe')
-    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+  const { benendenTerms, wycombeTerms } = useMemo(() => {
+    const benenden = filteredTerms
+      .filter(term => term.school === 'benenden')
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    const wycombe = filteredTerms
+      .filter(term => term.school === 'wycombe')
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    
+    return { benendenTerms: benenden, wycombeTerms: wycombe };
+  }, [filteredTerms]);
 
-  // Filter terms based on selected school
-  const shouldShowBenenden = selectedSchool === 'both' || selectedSchool === 'benenden';
-  const shouldShowWycombe = selectedSchool === 'both' || selectedSchool === 'wycombe';
+  // Memoize school visibility flags
+  const { shouldShowBenenden, shouldShowWycombe } = useMemo(() => ({
+    shouldShowBenenden: selectedSchool === 'both' || selectedSchool === 'benenden',
+    shouldShowWycombe: selectedSchool === 'both' || selectedSchool === 'wycombe'
+  }), [selectedSchool]);
 
-  const handleToggleExpandAll = () => {
+  // Memoize all term IDs for expand/collapse functionality
+  const allTermIds = useMemo(() => 
+    new Set(mockTerms.map(term => term.id)), 
+    []
+  );
+
+  const handleToggleExpandAll = useCallback(() => {
     if (allExpanded) {
       setExpandedCards(new Set());
       setAllExpanded(false);
     } else {
-      const allTermIds = new Set(mockTerms.map(term => term.id));
       setExpandedCards(allTermIds);
       setAllExpanded(true);
     }
-  };
+  }, [allExpanded, allTermIds]);
 
-  const handleAddFlight = (termId: string) => {
-    const term = mockTerms.find(t => t.id === termId);
+  // Memoize term lookup for better performance
+  const termLookup = useMemo(() => 
+    new Map(mockTerms.map(term => [term.id, term])), 
+    []
+  );
+
+  const handleAddFlight = useCallback((termId: string) => {
+    const term = termLookup.get(termId);
     if (term) {
       setSelectedTerm(term);
       setShowFlightDialog(true);
@@ -74,22 +93,22 @@ export default function Index() {
         setShowTermCardPopup(false);
       }
     }
-  };
+  }, [termLookup, showTermCardPopup]);
 
-  const handleViewFlights = (termId: string) => {
-    const term = mockTerms.find(t => t.id === termId);
+  const handleViewFlights = useCallback((termId: string) => {
+    const term = termLookup.get(termId);
     if (term) {
       setSelectedTerm(term);
       setShowFlightDialog(true);
     }
-  };
+  }, [termLookup]);
 
-  const handleSetNotTravelling = (termId: string, type: 'flights' | 'transport') => {
+  const handleSetNotTravelling = useCallback((termId: string, type: 'flights' | 'transport') => {
     setNotTravellingStatus(termId, type);
-  };
+  }, [setNotTravellingStatus]);
 
-  const handleAddTransport = (termId: string) => {
-    const term = mockTerms.find(t => t.id === termId);
+  const handleAddTransport = useCallback((termId: string) => {
+    const term = termLookup.get(termId);
     if (term) {
       setSelectedTerm(term);
       setShowTransportDialog(true);
@@ -98,41 +117,54 @@ export default function Index() {
         setShowTermCardPopup(false);
       }
     }
-  };
+  }, [termLookup, showTermCardPopup]);
 
-  const handleViewTransport = (termId: string) => {
-    const term = mockTerms.find(t => t.id === termId);
+  const handleViewTransport = useCallback((termId: string) => {
+    const term = termLookup.get(termId);
     if (term) {
       setSelectedTerm(term);
       setShowTransportDialog(true);
     }
-  };
+  }, [termLookup]);
 
-  const handleShowScheduleForSchool = (school: 'benenden' | 'wycombe') => {
-    // Open the official school term dates website
-    const urls = {
-      benenden: 'https://www.benenden.school/news/term-dates/',
-      wycombe: 'https://www.wycombeabbey.com/term-dates/'
-    };
-    
-    window.open(urls[school], '_blank');
-  };
+  // Memoize school URLs to prevent recreation on every render
+  const schoolUrls = useMemo(() => ({
+    benenden: 'https://www.benenden.school/news/term-dates/',
+    wycombe: 'https://www.wycombeabbey.com/term-dates/'
+  }), []);
 
-  const handleShowTerm = (termId: string) => {
-    const term = mockTerms.find(t => t.id === termId);
+  const handleShowScheduleForSchool = useCallback((school: 'benenden' | 'wycombe') => {
+    window.open(schoolUrls[school], '_blank');
+  }, [schoolUrls]);
+
+  const handleShowTerm = useCallback((termId: string) => {
+    const term = termLookup.get(termId);
     if (term) {
       setPopupTerm(term);
       setShowTermCardPopup(true);
     }
-  };
+  }, [termLookup]);
 
 
-  // Component loading fallback for lazy-loaded dialogs
-  const DialogLoader = () => (
+  // Memoize DialogLoader component to prevent unnecessary re-renders
+  const DialogLoader = useMemo(() => (
     <div className="flex items-center justify-center p-4">
       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
     </div>
-  );
+  ), []);
+
+  // Optimize expanded card change handler with useCallback
+  const handleExpandedChange = useCallback((termId: string, expanded: boolean) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (expanded) {
+        newSet.add(termId);
+      } else {
+        newSet.delete(termId);
+      }
+      return newSet;
+    });
+  }, []);
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
@@ -281,17 +313,7 @@ export default function Index() {
                   notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
                   className="h-full"
                   isExpanded={expandedCards.has(term.id)}
-                  onExpandedChange={(expanded) => {
-                    setExpandedCards(prev => {
-                      const newSet = new Set(prev);
-                      if (expanded) {
-                        newSet.add(term.id);
-                      } else {
-                        newSet.delete(term.id);
-                      }
-                      return newSet;
-                    });
-                  }}
+                  onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
                 />
                 ))}
               </div>
@@ -324,17 +346,7 @@ export default function Index() {
                   notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
                   className="h-full"
                   isExpanded={expandedCards.has(term.id)}
-                  onExpandedChange={(expanded) => {
-                    setExpandedCards(prev => {
-                      const newSet = new Set(prev);
-                      if (expanded) {
-                        newSet.add(term.id);
-                      } else {
-                        newSet.delete(term.id);
-                      }
-                      return newSet;
-                    });
-                  }}
+                  onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
                 />
                 ))}
               </div>

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Term, FlightDetails, TransportDetails, NotTravellingStatus } from "@/types/school";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useMemo } from "react";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { termDetails, getTermDetailsKey } from "@/data/term-details";
 
@@ -26,7 +26,7 @@ interface TermCardProps {
   onExpandedChange?: (expanded: boolean) => void;
 }
 
-export function TermCard({ 
+const TermCard = memo(function TermCard({ 
   term, 
   flights = [], 
   transport = [],
@@ -43,11 +43,17 @@ export function TermCard({
 }: TermCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [isOpen, setIsOpen] = useState(isExpanded || false);
-  const isHoliday = term.type === 'holiday';
-  const isHalfTerm = term.type === 'half-term';
-  const isExeat = term.type === 'exeat';
-  const isShortLeave = term.type === 'short-leave';
-  const isLongLeave = term.type === 'long-leave';
+  
+  // Memoize computed values to prevent unnecessary recalculations
+  const termTypeFlags = useMemo(() => ({
+    isHoliday: term.type === 'holiday',
+    isHalfTerm: term.type === 'half-term',
+    isExeat: term.type === 'exeat',
+    isShortLeave: term.type === 'short-leave',
+    isLongLeave: term.type === 'long-leave'
+  }), [term.type]);
+  
+  const { isHoliday, isHalfTerm, isExeat, isShortLeave, isLongLeave } = termTypeFlags;
   const hasFlights = flights.length > 0;
   const hasTransport = transport.length > 0;
   const isAutumnTermStart = term.type === 'term' && term.name.toLowerCase().includes('autumn');
@@ -548,4 +554,6 @@ export function TermCard({
       />
     </>
   );
-}
+});
+
+export { TermCard };
