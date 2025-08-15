@@ -23,6 +23,13 @@ class OpenSkyService {
 
   // OAuth2 token management
   private async getAccessToken(): Promise<string | null> {
+    // Skip OAuth2 in browser environment due to CORS restrictions
+    console.log('🚫 Skipping OAuth2 in browser due to CORS policy - using anonymous access');
+    return null;
+
+    // Note: OAuth2 Client Credentials flow is blocked by CORS in browsers
+    // This would work in a server environment but not in client-side JavaScript
+    /*
     // Check if we have a valid token
     if (this.accessToken && this.tokenExpiry && new Date() < this.tokenExpiry) {
       return this.accessToken;
@@ -69,6 +76,7 @@ class OpenSkyService {
       console.error('Error obtaining OAuth2 token:', error);
       return null;
     }
+    */
   }
 
   // Get flight schedule information from OpenSky flights API

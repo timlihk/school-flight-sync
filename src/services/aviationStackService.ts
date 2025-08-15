@@ -48,7 +48,16 @@ class AviationStackService {
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(`AviationStack API request failed: ${response.status} ${response.statusText}`);
+        // Try to get more detailed error information
+        let errorDetails = `${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.text();
+          console.error('AviationStack error response:', errorData);
+          errorDetails += ` - ${errorData}`;
+        } catch (e) {
+          // Ignore errors reading response body
+        }
+        throw new Error(`AviationStack API request failed: ${errorDetails}`);
       }
 
       const data = await response.json();
