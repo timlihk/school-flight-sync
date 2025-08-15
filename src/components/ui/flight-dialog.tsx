@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar, Clock, Plane, Plus, X, Edit2, Search, Loader2 } from "lucide-react";
+import { Calendar, Clock, Plane, Plus, X, Edit2, Search, Loader2, Database } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { FlightDetails, Term } from "@/types/school";
 import { flightLookupService } from "@/services/flightLookupService";
+import { flightCorrectionService } from "@/services/flightCorrectionService";
 import { useToast } from "@/hooks/use-toast";
 
 interface FlightDialogProps {
@@ -29,6 +30,7 @@ interface FlightDialogProps {
   onAddFlight: (flight: Omit<FlightDetails, 'id'>) => void;
   onRemoveFlight: (flightId: string) => void;
   onEditFlight?: (flightId: string, flight: Omit<FlightDetails, 'id'>) => void;
+  onApplyCorrection?: (flightNumber: string, originalDate: string, correctedFlight: FlightDetails) => Promise<any>;
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -40,6 +42,7 @@ export function FlightDialog({
   onAddFlight, 
   onRemoveFlight, 
   onEditFlight,
+  onApplyCorrection,
   children,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange
@@ -50,6 +53,8 @@ export function FlightDialog({
   const [editingFlight, setEditingFlight] = useState<FlightDetails | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [showAdvancedForm, setShowAdvancedForm] = useState(false);
+  const [isSavingCorrection, setIsSavingCorrection] = useState(false);
+  const [wasAutoFilled, setWasAutoFilled] = useState(false);
 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
@@ -157,6 +162,8 @@ export function FlightDialog({
     setEditingFlight(null);
     setShowAdvancedForm(false);
     setIsLookingUp(false);
+    setWasAutoFilled(false);
+    setIsSavingCorrection(false);
   };
 
   const handleEditFlight = (flight: FlightDetails) => {
@@ -185,6 +192,76 @@ export function FlightDialog({
       flightNumber,
       airline: airline || prev.airline
     }));
+  };
+
+  const handleSaveCorrection = async () => {
+    if (!newFlight.flightNumber || !newFlight.departureDate) {
+      toast({
+        title: "Missing Information",
+        description: "Flight number and departure date are required for saving corrections.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingCorrection(true);
+    try {
+      // Create corrected flight data
+      const correctedFlight: FlightDetails = {
+        id: editingFlight?.id || 'temp',
+        termId: term.id,
+        type: newFlight.type,
+        airline: newFlight.airline,
+        flightNumber: newFlight.flightNumber,
+        departure: {
+          airport: newFlight.departureAirport,
+          date: new Date(newFlight.departureDate),
+          time: newFlight.departureTime
+        },
+        arrival: {
+          airport: newFlight.arrivalAirport,
+          date: new Date(newFlight.arrivalDate),
+          time: newFlight.arrivalTime
+        },
+        confirmationCode: newFlight.confirmationCode,
+        notes: newFlight.notes
+      };
+
+      const stats = onApplyCorrection 
+        ? await onApplyCorrection(newFlight.flightNumber, newFlight.departureDate, correctedFlight)
+        : await flightCorrectionService.applyManualCorrection(
+            newFlight.flightNumber,
+            newFlight.departureDate,
+            correctedFlight
+          );
+
+      // Show success message with stats
+      const successMessages = [];
+      if (stats.cacheUpdated) successMessages.push('✅ Cache updated');
+      if (stats.databaseFlightsUpdated > 0) successMessages.push(`✅ ${stats.databaseFlightsUpdated} database flight(s) updated`);
+      if (stats.similarFlightsFound > 0) successMessages.push(`🔍 Found ${stats.similarFlightsFound} similar flight(s)`);
+
+      toast({
+        title: "Flight Correction Saved",
+        description: stats.errors.length > 0 
+          ? `Partially successful. ${successMessages.join(', ')}. Errors: ${stats.errors.join(', ')}`
+          : `${successMessages.join(', ')}. Future lookups will use this corrected data.`,
+        variant: stats.errors.length > 0 ? "destructive" : "default",
+      });
+
+      // Mark as no longer auto-filled since correction is saved
+      setWasAutoFilled(false);
+
+    } catch (error) {
+      console.error('Correction save error:', error);
+      toast({
+        title: "Save Correction Failed",
+        description: "Unable to save correction. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingCorrection(false);
+    }
   };
 
   const handleAutoLookup = async () => {
@@ -218,6 +295,7 @@ export function FlightDialog({
           arrivalDate: result.data!.arrival.date,
           arrivalTime: result.data!.arrival.time,
         }));
+        setWasAutoFilled(true);
 
         toast({
           title: "Flight Information Found",
@@ -512,6 +590,22 @@ export function FlightDialog({
               <Button onClick={handleAddFlight} variant="flight">
                 {editingFlight ? 'Update Flight' : 'Add Flight'}
               </Button>
+              {/* Save Correction Button - shown when user manually edits auto-filled data */}
+              {wasAutoFilled && showAdvancedForm && (
+                <Button 
+                  onClick={handleSaveCorrection}
+                  variant="outline"
+                  disabled={isSavingCorrection}
+                  className="gap-2"
+                >
+                  {isSavingCorrection ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Database className="h-4 w-4" />
+                  )}
+                  {isSavingCorrection ? 'Saving...' : 'Save Correction'}
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 onClick={resetForm}

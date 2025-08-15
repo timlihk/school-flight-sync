@@ -5,6 +5,7 @@ import { FlightDetails } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
 import { transformFlightToDb, transformDbToFlight, transformDbFlightsArray } from '@/utils/flightTransforms';
 import { hybridFlightService } from '@/services/hybridFlightService';
+import { flightCorrectionService } from '@/services/flightCorrectionService';
 
 // Query keys for React Query
 const QUERY_KEYS = {
@@ -302,6 +303,31 @@ export function useFlights() {
     }
   };
 
+  // Apply manual correction to flight data and update related entries
+  const applyFlightCorrection = async (
+    flightNumber: string,
+    originalDate: string, 
+    correctedFlight: FlightDetails
+  ) => {
+    try {
+      const stats = await flightCorrectionService.applyManualCorrection(
+        flightNumber,
+        originalDate,
+        correctedFlight
+      );
+
+      // Refresh flights data to reflect database updates
+      if (stats.databaseFlightsUpdated > 0) {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.flights });
+      }
+
+      return stats;
+    } catch (error) {
+      console.error('Error applying flight correction:', error);
+      throw error;
+    }
+  };
+
   return {
     flights,
     loading,
@@ -314,6 +340,8 @@ export function useFlights() {
     updateFlightStatus,
     updateNearFlightStatuses,
     checkFlightStatus,
+    // Flight correction functionality
+    applyFlightCorrection,
     // Expose mutation states for better UX
     isAddingFlight: addFlightMutation.isPending,
     isEditingFlight: editFlightMutation.isPending,

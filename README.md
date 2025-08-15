@@ -21,6 +21,9 @@ School Flight Sync is designed to help parents efficiently manage and track:
 
 ### ✈️ Flight Tracking
 - **Flight Management**: Add, edit, and remove flight details for each term
+- **Auto-Fill**: Intelligent flight lookup using flight number and date
+- **Manual Corrections**: Save corrected flight information to improve future lookups
+- **Database Updates**: Automatically update similar flights when corrections are saved
 - **Outbound & Return**: Separate tracking for outbound and return flights
 - **Flight Details**: Store airline, flight numbers, airports, times, and confirmation codes
 - **Quick Filters**: "Show Cards with Flights to Book" feature for easy identification
@@ -159,8 +162,21 @@ The application will be available at `http://localhost:5173`
 
 ### Adding Flight Information
 1. Click on a term card or use the "Add Flight" button
-2. Fill in flight details including airline, flight number, and times
-3. Save to store the information in the database
+2. Enter flight number and departure date
+3. Click "Auto-fill" to automatically populate flight details from APIs
+4. Edit any incorrect information manually
+5. Click "Save Correction" to update cache and database with corrected data
+6. Save to store the information in the database
+
+### Manual Flight Corrections
+When auto-filled flight information is incorrect:
+1. Enable "Show Advanced" to edit auto-filled fields
+2. Correct the wrong information (times, airports, terminals)
+3. Click "Save Correction" to:
+   - Update the 60-day cache with correct data
+   - Find and update similar flights in your database
+   - Ensure future lookups use the corrected information
+4. The correction applies to all flights with the same flight number
 
 ### Managing Transport
 1. Click "Add Transport" on any term card
