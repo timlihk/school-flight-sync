@@ -71,6 +71,88 @@ class OpenSkyService {
     }
   }
 
+  // Get flight schedule information from OpenSky flights API
+  async getFlightSchedule(flightNumber: string, date: string): Promise<FlightStatusResponse> {
+    try {
+      // Convert date to Unix timestamps for the day
+      const flightDate = new Date(date);
+      const dayStart = new Date(flightDate);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(flightDate);
+      dayEnd.setHours(23, 59, 59, 999);
+      
+      const beginTime = Math.floor(dayStart.getTime() / 1000);
+      const endTime = Math.floor(dayEnd.getTime() / 1000);
+      
+      // Normalize callsign for search
+      const callsign = this.normalizeCallsign(flightNumber);
+      
+      // Get authentication
+      const headers: HeadersInit = {};
+      const token = await this.getAccessToken();
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      } else if (this.username && this.password) {
+        headers.Authorization = `Basic ${btoa(`${this.username}:${this.password}`)}`;
+      }
+
+      // Try to find the flight by searching major airports
+      const majorAirports = ['VHHH', 'EGLL', 'EGKK', 'LFPG', 'EDDF', 'EHAM', 'OMDB', 'WSSS', 'RJAA', 'RJTT'];
+      
+      for (const airport of majorAirports) {
+        try {
+          // Check departures from this airport
+          const departureUrl = `${this.baseUrl}/flights/departure?airport=${airport}&begin=${beginTime}&end=${endTime}`;
+          const depResponse = await fetch(departureUrl, { headers });
+          
+          if (depResponse.ok) {
+            const depFlights = await depResponse.json();
+            const matchingFlight = depFlights.find((flight: any) => 
+              flight.callsign?.trim().toUpperCase() === callsign.toUpperCase()
+            );
+            
+            if (matchingFlight) {
+              return this.transformOpenSkyFlightData(matchingFlight, flightNumber, 'departure');
+            }
+          }
+          
+          // Check arrivals at this airport (only for previous day or earlier)
+          if (flightDate < new Date()) {
+            const arrivalUrl = `${this.baseUrl}/flights/arrival?airport=${airport}&begin=${beginTime}&end=${endTime}`;
+            const arrResponse = await fetch(arrivalUrl, { headers });
+            
+            if (arrResponse.ok) {
+              const arrFlights = await arrResponse.json();
+              const matchingFlight = arrFlights.find((flight: any) => 
+                flight.callsign?.trim().toUpperCase() === callsign.toUpperCase()
+              );
+              
+              if (matchingFlight) {
+                return this.transformOpenSkyFlightData(matchingFlight, flightNumber, 'arrival');
+              }
+            }
+          }
+        } catch (error) {
+          // Continue to next airport if this one fails
+          console.log(`No flights found at ${airport}:`, error);
+          continue;
+        }
+      }
+      
+      return {
+        success: false,
+        error: 'Flight schedule not found in OpenSky database'
+      };
+      
+    } catch (error) {
+      console.error('OpenSky flight schedule lookup error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch flight schedule'
+      };
+    }
+  }
+
   async getFlightStatus(flightNumber: string, date: string): Promise<FlightStatusResponse> {
     try {
       // Rate limiting: ensure minimum delay between API calls
@@ -172,6 +254,75 @@ class OpenSkyService {
     }
 
     return flightNumber;
+  }
+
+  private transformOpenSkyFlightData(flightData: any, originalFlightNumber: string, type: 'departure' | 'arrival'): FlightStatusResponse {
+    try {
+      // OpenSky flight data structure
+      const {
+        callsign,
+        estDepartureAirport,
+        estArrivalAirport,
+        firstSeen,
+        lastSeen,
+        estDepartureAirportHorizDistance,
+        estArrivalAirportHorizDistance,
+        estDepartureAirportVertDistance,
+        estArrivalAirportVertDistance,
+        departureAirportCandidatesCount,
+        arrivalAirportCandidatesCount
+      } = flightData;
+
+      // Convert Unix timestamps to readable times
+      const departureTime = firstSeen ? new Date(firstSeen * 1000) : null;
+      const arrivalTime = lastSeen ? new Date(lastSeen * 1000) : null;
+
+      let status: FlightStatus['status'] = 'scheduled';
+      if (type === 'arrival' && arrivalTime) {
+        status = 'landed';
+      } else if (departureTime && arrivalTime && Date.now() > departureTime.getTime() && Date.now() < arrivalTime.getTime()) {
+        status = 'active';
+      }
+
+      const flightStatus: FlightStatus = {
+        flightNumber: originalFlightNumber,
+        status,
+        actualDeparture: departureTime ? {
+          date: departureTime.toISOString().split('T')[0],
+          time: departureTime.toTimeString().slice(0, 5)
+        } : undefined,
+        actualArrival: arrivalTime ? {
+          date: arrivalTime.toISOString().split('T')[0],
+          time: arrivalTime.toTimeString().slice(0, 5)
+        } : undefined,
+        estimatedArrival: arrivalTime ? {
+          date: arrivalTime.toISOString().split('T')[0],
+          time: arrivalTime.toTimeString().slice(0, 5)
+        } : undefined,
+        lastUpdated: new Date().toISOString(),
+        // Store airport information for later use
+        departureAirport: estDepartureAirport,
+        arrivalAirport: estArrivalAirport,
+        position: {
+          longitude: 0,
+          latitude: 0,
+          altitude: 0,
+          velocity: 0,
+          heading: 0
+        }
+      };
+
+      return {
+        success: true,
+        data: flightStatus
+      };
+    } catch (error) {
+      console.error('Error transforming OpenSky flight data:', error);
+      return {
+        success: false,
+        error: 'Failed to parse flight data'
+      };
+    }
   }
 
   private transformOpenSkyResponse(stateVector: any[], originalFlightNumber: string): FlightStatus {

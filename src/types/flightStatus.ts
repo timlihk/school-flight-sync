@@ -30,6 +30,9 @@ export interface FlightStatus {
     velocity: number;
     heading: number;
   };
+  // Airport information from OpenSky API
+  departureAirport?: string;
+  arrivalAirport?: string;
   lastUpdated: string;
 }
 
