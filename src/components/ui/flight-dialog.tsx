@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar, Clock, Plane, Plus, X, Edit2 } from "lucide-react";
+import { Calendar, Clock, Plane, Plus, X, Edit2, Search, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FlightDetails, Term } from "@/types/school";
+import { flightLookupService } from "@/services/flightLookupService";
+import { useToast } from "@/hooks/use-toast";
 
 interface FlightDialogProps {
   term: Term;
@@ -42,9 +44,12 @@ export function FlightDialog({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange
 }: FlightDialogProps) {
+  const { toast } = useToast();
   const [internalOpen, setInternalOpen] = useState(false);
   const [isAddingFlight, setIsAddingFlight] = useState(false);
   const [editingFlight, setEditingFlight] = useState<FlightDetails | null>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
@@ -90,8 +95,19 @@ export function FlightDialog({
   };
 
   const handleAddFlight = () => {
-    if (!newFlight.airline || !newFlight.flightNumber || !newFlight.departureAirport) {
+    if (!newFlight.flightNumber || !newFlight.departureDate) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter flight number and departure date.",
+        variant: "destructive",
+      });
       return;
+    }
+
+    // Auto-fill basic info if not already filled
+    if (!newFlight.airline) {
+      const airline = getAirlineFromCode(newFlight.flightNumber);
+      setNewFlight(prev => ({ ...prev, airline }));
     }
 
     const flightData = {
@@ -139,6 +155,8 @@ export function FlightDialog({
     });
     setIsAddingFlight(false);
     setEditingFlight(null);
+    setShowAdvancedForm(false);
+    setIsLookingUp(false);
   };
 
   const handleEditFlight = (flight: FlightDetails) => {
@@ -157,6 +175,7 @@ export function FlightDialog({
       notes: flight.notes || ''
     });
     setIsAddingFlight(true);
+    setShowAdvancedForm(true); // Show advanced form when editing
   };
 
   const handleFlightNumberChange = (flightNumber: string) => {
@@ -166,6 +185,58 @@ export function FlightDialog({
       flightNumber,
       airline: airline || prev.airline
     }));
+  };
+
+  const handleAutoLookup = async () => {
+    if (!newFlight.flightNumber || !newFlight.departureDate) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter flight number and departure date first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLookingUp(true);
+    try {
+      const result = await flightLookupService.lookupFlight(
+        newFlight.flightNumber,
+        newFlight.departureDate
+      );
+
+      if (result.success && result.data) {
+        setNewFlight(prev => ({
+          ...prev,
+          airline: result.data!.airline,
+          flightNumber: result.data!.flightNumber,
+          departureAirport: result.data!.departure.airport,
+          departureTime: result.data!.departure.time,
+          arrivalAirport: result.data!.arrival.airport,
+          arrivalDate: result.data!.arrival.date,
+          arrivalTime: result.data!.arrival.time,
+        }));
+
+        toast({
+          title: "Flight Information Found",
+          description: `Auto-filled details for ${result.data.airline} ${result.data.flightNumber}`,
+        });
+      } else {
+        toast({
+          title: "Flight Not Found",
+          description: result.error || "Unable to find flight information. Please enter details manually.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Flight lookup error:', error);
+      toast({
+        title: "Lookup Failed",
+        description: "Unable to lookup flight information. Please enter details manually.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLookingUp(false);
+    }
   };
 
   const dialogContent = (
@@ -258,94 +329,159 @@ export function FlightDialog({
               {editingFlight ? 'Edit Flight' : 'Add New Flight'}
             </h3>
             
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Flight Type</Label>
-                <Select 
-                  value={newFlight.type} 
-                  onValueChange={(value: 'outbound' | 'return') => 
-                    setNewFlight(prev => ({ ...prev, type: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="outbound">Outbound</SelectItem>
-                    <SelectItem value="return">Return</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Simple Form - Flight Number and Date First */}
+            <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="type">Flight Type</Label>
+                  <Select 
+                    value={newFlight.type} 
+                    onValueChange={(value: 'outbound' | 'return') => 
+                      setNewFlight(prev => ({ ...prev, type: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="outbound">Outbound</SelectItem>
+                      <SelectItem value="return">Return</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="airline">Airline</Label>
-                <Input
-                  id="airline"
-                  value={newFlight.airline}
-                  onChange={(e) => setNewFlight(prev => ({ ...prev, airline: e.target.value }))}
-                  placeholder="e.g., British Airways"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="departureDate">Departure Date</Label>
+                  <Input
+                    id="departureDate"
+                    type="date"
+                    value={newFlight.departureDate}
+                    onChange={(e) => setNewFlight(prev => ({ ...prev, departureDate: e.target.value }))}
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="flightNumber">Flight Number</Label>
-                <Input
-                  id="flightNumber"
-                  value={newFlight.flightNumber}
-                  onChange={(e) => handleFlightNumberChange(e.target.value)}
-                  placeholder="e.g., BA123"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="flightNumber"
+                    value={newFlight.flightNumber}
+                    onChange={(e) => handleFlightNumberChange(e.target.value)}
+                    placeholder="e.g., BA123, CX251"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAutoLookup}
+                    disabled={isLookingUp || !newFlight.flightNumber || !newFlight.departureDate}
+                    className="gap-2"
+                  >
+                    {isLookingUp ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                    {isLookingUp ? 'Looking up...' : 'Auto-fill'}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Enter flight number and click "Auto-fill" to automatically populate flight details
+                </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="departureAirport">Departure Airport</Label>
-                <Input
-                  id="departureAirport"
-                  value={newFlight.departureAirport}
-                  onChange={(e) => setNewFlight(prev => ({ ...prev, departureAirport: e.target.value }))}
-                  placeholder="e.g., LHR"
-                />
-              </div>
+              {/* Auto-filled or manual fields */}
+              {(newFlight.airline || showAdvancedForm) && (
+                <div className="space-y-4 pt-4 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-foreground">Flight Details</h4>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAdvancedForm(!showAdvancedForm)}
+                      className="text-xs"
+                    >
+                      {showAdvancedForm ? 'Hide Advanced' : 'Show Advanced'}
+                    </Button>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="airline">Airline</Label>
+                      <Input
+                        id="airline"
+                        value={newFlight.airline}
+                        onChange={(e) => setNewFlight(prev => ({ ...prev, airline: e.target.value }))}
+                        placeholder="e.g., British Airways"
+                        readOnly={!showAdvancedForm}
+                        className={!showAdvancedForm ? "bg-muted/50" : ""}
+                      />
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="arrivalAirport">Arrival Airport</Label>
-                <Input
-                  id="arrivalAirport"
-                  value={newFlight.arrivalAirport}
-                  onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalAirport: e.target.value }))}
-                  placeholder="e.g., CDG"
-                />
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="departureAirport">Departure Airport</Label>
+                      <Input
+                        id="departureAirport"
+                        value={newFlight.departureAirport}
+                        onChange={(e) => setNewFlight(prev => ({ ...prev, departureAirport: e.target.value }))}
+                        placeholder="e.g., LHR T5"
+                        readOnly={!showAdvancedForm}
+                        className={!showAdvancedForm ? "bg-muted/50" : ""}
+                      />
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="departureDate">Departure Date</Label>
-                <Input
-                  id="departureDate"
-                  type="date"
-                  value={newFlight.departureDate}
-                  onChange={(e) => setNewFlight(prev => ({ ...prev, departureDate: e.target.value }))}
-                />
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="arrivalAirport">Arrival Airport</Label>
+                      <Input
+                        id="arrivalAirport"
+                        value={newFlight.arrivalAirport}
+                        onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalAirport: e.target.value }))}
+                        placeholder="e.g., HKG T1"
+                        readOnly={!showAdvancedForm}
+                        className={!showAdvancedForm ? "bg-muted/50" : ""}
+                      />
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="departureTime">Departure Time</Label>
-                <Input
-                  id="departureTime"
-                  type="time"
-                  value={newFlight.departureTime}
-                  onChange={(e) => setNewFlight(prev => ({ ...prev, departureTime: e.target.value }))}
-                />
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="arrivalDate">Arrival Date</Label>
+                      <Input
+                        id="arrivalDate"
+                        type="date"
+                        value={newFlight.arrivalDate}
+                        onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalDate: e.target.value }))}
+                        readOnly={!showAdvancedForm}
+                        className={!showAdvancedForm ? "bg-muted/50" : ""}
+                      />
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="arrivalTime">Arrival Time</Label>
-                <Input
-                  id="arrivalTime"
-                  type="time"
-                  value={newFlight.arrivalTime}
-                  onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalTime: e.target.value }))}
-                />
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="departureTime">Departure Time</Label>
+                      <Input
+                        id="departureTime"
+                        type="time"
+                        value={newFlight.departureTime}
+                        onChange={(e) => setNewFlight(prev => ({ ...prev, departureTime: e.target.value }))}
+                        readOnly={!showAdvancedForm}
+                        className={!showAdvancedForm ? "bg-muted/50" : ""}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="arrivalTime">Arrival Time</Label>
+                      <Input
+                        id="arrivalTime"
+                        type="time"
+                        value={newFlight.arrivalTime}
+                        onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalTime: e.target.value }))}
+                        readOnly={!showAdvancedForm}
+                        className={!showAdvancedForm ? "bg-muted/50" : ""}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
