@@ -2,7 +2,7 @@ import { FlightDetails, TransportDetails, Term, NotTravellingStatus } from '@/ty
 import { format } from 'date-fns';
 
 // CSV Export Utilities
-export function exportToCSV(data: any[], filename: string) {
+export function exportToCSV(data: Record<string, unknown>[], filename: string) {
   if (data.length === 0) {
     throw new Error('No data to export');
   }
@@ -27,7 +27,7 @@ export function exportToCSV(data: any[], filename: string) {
 }
 
 // JSON Export Utilities
-export function exportToJSON(data: any, filename: string) {
+export function exportToJSON(data: Record<string, unknown> | Record<string, unknown>[], filename: string) {
   const jsonContent = JSON.stringify(data, null, 2);
   downloadFile(jsonContent, filename, 'application/json');
 }
@@ -149,7 +149,12 @@ export function transformForPrint(
     });
     
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, Array<{
+    term: Term;
+    flights: FlightDetails[];
+    transport?: TransportDetails;
+    notTravelling?: NotTravellingStatus;
+  }>>);
 
   return groupedBySchool;
 }

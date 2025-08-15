@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TransportDetails } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
@@ -9,11 +9,7 @@ export function useTransport() {
   const { toast } = useToast();
 
   // Load transport from database
-  useEffect(() => {
-    loadTransport();
-  }, []);
-
-  const loadTransport = async () => {
+  const loadTransport = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('transport')
@@ -45,7 +41,12 @@ export function useTransport() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadTransport();
+  }, [loadTransport]);
+
 
   const addTransport = async (newTransport: Omit<TransportDetails, 'id'>) => {
     try {

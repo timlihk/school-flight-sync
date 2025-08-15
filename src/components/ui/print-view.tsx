@@ -12,7 +12,12 @@ interface PrintViewProps {
 }
 
 export function PrintView({ flights, transport, notTravelling, terms }: PrintViewProps) {
-  const [printData, setPrintData] = useState<Record<string, any[]>>({});
+  const [printData, setPrintData] = useState<Record<string, Array<{
+    term: Term;
+    flights: FlightDetails[];
+    transport?: TransportDetails;
+    notTravelling?: NotTravellingStatus;
+  }>>>({});
 
   useEffect(() => {
     const data = transformForPrint(flights, transport, notTravelling, terms);

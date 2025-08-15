@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FlightDetails } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
+import { transformFlightToDb, transformDbToFlight, transformDbFlightsArray } from '@/utils/flightTransforms';
 
 export function useFlights() {
   const [flights, setFlights] = useState<FlightDetails[]>([]);
@@ -9,11 +10,7 @@ export function useFlights() {
   const { toast } = useToast();
 
   // Load flights from database
-  useEffect(() => {
-    loadFlights();
-  }, []);
-
-  const loadFlights = async () => {
+  const loadFlights = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('flights')
@@ -22,27 +19,8 @@ export function useFlights() {
 
       if (error) throw error;
 
-      // Transform database format to FlightDetails format
-      const transformedFlights: FlightDetails[] = data?.map((flight) => ({
-        id: flight.id,
-        termId: flight.term_id,
-        type: flight.type as 'outbound' | 'return',
-        airline: flight.airline,
-        flightNumber: flight.flight_number,
-        departure: {
-          airport: flight.departure_airport,
-          date: new Date(flight.departure_date),
-          time: flight.departure_time,
-        },
-        arrival: {
-          airport: flight.arrival_airport,
-          date: new Date(flight.arrival_date),
-          time: flight.arrival_time,
-        },
-        confirmationCode: flight.confirmation_code || undefined,
-        notes: flight.notes || undefined,
-      })) || [];
-
+      // Use utility function to transform database format to FlightDetails format
+      const transformedFlights = data ? transformDbFlightsArray(data) : [];
       setFlights(transformedFlights);
     } catch (error) {
       console.error('Error loading flights:', error);
@@ -54,25 +32,17 @@ export function useFlights() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadFlights();
+  }, [loadFlights]);
+
 
   const addFlight = async (newFlight: Omit<FlightDetails, 'id'>) => {
     try {
-      // Transform to database format
-      const dbFlight = {
-        term_id: newFlight.termId,
-        type: newFlight.type,
-        airline: newFlight.airline,
-        flight_number: newFlight.flightNumber,
-        departure_airport: newFlight.departure.airport,
-        departure_date: newFlight.departure.date.toISOString().split('T')[0],
-        departure_time: newFlight.departure.time,
-        arrival_airport: newFlight.arrival.airport,
-        arrival_date: newFlight.arrival.date.toISOString().split('T')[0],
-        arrival_time: newFlight.arrival.time,
-        confirmation_code: newFlight.confirmationCode || null,
-        notes: newFlight.notes || null,
-      };
+      // Use utility function to transform to database format
+      const dbFlight = transformFlightToDb(newFlight);
 
       const { data, error } = await supabase
         .from('flights')
@@ -82,27 +52,8 @@ export function useFlights() {
 
       if (error) throw error;
 
-      // Transform back to FlightDetails format and add to state
-      const addedFlight: FlightDetails = {
-        id: data.id,
-        termId: data.term_id,
-        type: data.type as 'outbound' | 'return',
-        airline: data.airline,
-        flightNumber: data.flight_number,
-        departure: {
-          airport: data.departure_airport,
-          date: new Date(data.departure_date),
-          time: data.departure_time,
-        },
-        arrival: {
-          airport: data.arrival_airport,
-          date: new Date(data.arrival_date),
-          time: data.arrival_time,
-        },
-        confirmationCode: data.confirmation_code || undefined,
-        notes: data.notes || undefined,
-      };
-
+      // Use utility function to transform back to FlightDetails format
+      const addedFlight = transformDbToFlight(data);
       setFlights(prev => [...prev, addedFlight]);
       
       toast({
@@ -121,21 +72,8 @@ export function useFlights() {
 
   const editFlight = async (flightId: string, updatedFlight: Omit<FlightDetails, 'id'>) => {
     try {
-      // Transform to database format
-      const dbFlight = {
-        term_id: updatedFlight.termId,
-        type: updatedFlight.type,
-        airline: updatedFlight.airline,
-        flight_number: updatedFlight.flightNumber,
-        departure_airport: updatedFlight.departure.airport,
-        departure_date: updatedFlight.departure.date.toISOString().split('T')[0],
-        departure_time: updatedFlight.departure.time,
-        arrival_airport: updatedFlight.arrival.airport,
-        arrival_date: updatedFlight.arrival.date.toISOString().split('T')[0],
-        arrival_time: updatedFlight.arrival.time,
-        confirmation_code: updatedFlight.confirmationCode || null,
-        notes: updatedFlight.notes || null,
-      };
+      // Use utility function to transform to database format
+      const dbFlight = transformFlightToDb(updatedFlight);
 
       const { data, error } = await supabase
         .from('flights')
@@ -146,27 +84,8 @@ export function useFlights() {
 
       if (error) throw error;
 
-      // Transform back to FlightDetails format and update state
-      const editedFlight: FlightDetails = {
-        id: data.id,
-        termId: data.term_id,
-        type: data.type as 'outbound' | 'return',
-        airline: data.airline,
-        flightNumber: data.flight_number,
-        departure: {
-          airport: data.departure_airport,
-          date: new Date(data.departure_date),
-          time: data.departure_time,
-        },
-        arrival: {
-          airport: data.arrival_airport,
-          date: new Date(data.arrival_date),
-          time: data.arrival_time,
-        },
-        confirmationCode: data.confirmation_code || undefined,
-        notes: data.notes || undefined,
-      };
-
+      // Use utility function to transform back to FlightDetails format
+      const editedFlight = transformDbToFlight(data);
       setFlights(prev => prev.map(f => f.id === flightId ? editedFlight : f));
       
       toast({

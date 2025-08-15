@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { NotTravellingStatus } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
@@ -9,11 +9,7 @@ export function useNotTravelling() {
   const { toast } = useToast();
 
   // Load not travelling status from database
-  useEffect(() => {
-    loadNotTravelling();
-  }, []);
-
-  const loadNotTravelling = async () => {
+  const loadNotTravelling = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('not_travelling')
@@ -39,7 +35,12 @@ export function useNotTravelling() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadNotTravelling();
+  }, [loadNotTravelling]);
+
 
   const setNotTravellingStatus = async (termId: string, type: 'flights' | 'transport') => {
     try {
