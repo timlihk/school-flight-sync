@@ -180,6 +180,12 @@ class AviationStackService {
     }
   }
 
+  // Alias for getFlightSchedule to match interface expected by hybrid service
+  async getFlightStatus(flightNumber: string, date: string): Promise<FlightStatusResponse> {
+    console.log('🔄 AviationStack: getFlightStatus called (aliased to getFlightSchedule)');
+    return await this.getFlightSchedule(flightNumber, date);
+  }
+
   // Get usage statistics (useful for monitoring free plan quota)
   async getUsageStats(): Promise<{ remaining?: number; used?: number; limit?: number } | null> {
     if (!this.isConfigured) {
