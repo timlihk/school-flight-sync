@@ -1,300 +1,209 @@
 # School Flight Sync
 
-A comprehensive travel management application designed for parents to track their daughters' school term dates and coordinate travel arrangements for Benenden School and Wycombe Abbey School.
+A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
-## 🎯 Overview
+## Overview
 
-School Flight Sync helps parents manage complex academic calendars, track flight bookings, arrange ground transport, and stay organized with an intelligent to-do system. The application provides a unified view of both schools' schedules with intuitive filtering and management capabilities.
+School Flight Sync is designed to help parents efficiently manage and track:
+- School term dates for multiple UK boarding schools
+- Flight bookings for term start/end dates
+- Ground transportation arrangements
+- Academic calendars across different schools
+- Travel coordination for multiple children
 
-## 🚨 Security Notice
+## Features
 
-**This application is currently in development and contains security vulnerabilities that must be addressed before production use:**
-- Database credentials are hardcoded (see [SECURITY.md](SECURITY.md) for details)
-- No user authentication system implemented
-- Requires proper environment variable configuration
-- Privacy compliance measures needed for educational data
+### 📅 Term Management
+- **Multi-School Support**: Track term dates for Benenden School and Wycombe Abbey School
+- **Academic Year Filtering**: View terms by academic year (2025-2026, 2026-2027)
+- **Term Types**: Differentiate between regular terms, half-terms, exeats, and holidays
+- **Detailed Schedules**: View specific arrival/departure times and important dates
 
-**Do not deploy to production without addressing security issues outlined in our security documentation.**
-
-## ✨ Key Features
-
-### 📅 Academic Calendar Management
-- **Dual School Support**: Manage terms for both Benenden School and Wycombe Abbey School
-- **Academic Year Filtering**: View terms by specific academic year or see all years
-- **School-Specific Filtering**: Focus on one school or view both simultaneously
-- **Term Types**: Support for terms, half-terms, exeats, holidays, and various leave periods
-- **Smart Layout**: Automatic responsive layout adjustment based on selected filters
-
-### ✈️ Flight Management
-- **Comprehensive Flight Tracking**: Manage outbound and return flights for each term
-- **Flight Details**: Store airline, flight numbers, departure/arrival airports, dates, and times
-- **Confirmation Codes**: Track booking confirmations and notes
-- **Quick Actions**: Add, edit, and view flights with intuitive interfaces
-- **Not Travelling Status**: Mark terms when flights aren't needed
+### ✈️ Flight Tracking
+- **Flight Management**: Add, edit, and remove flight details for each term
+- **Outbound & Return**: Separate tracking for outbound and return flights
+- **Flight Details**: Store airline, flight numbers, airports, times, and confirmation codes
+- **Quick Filters**: "Show Cards with Flights to Book" feature for easy identification
 
 ### 🚗 Transport Coordination
-- **Ground Transport Planning**: Arrange pickup and drop-off transport
-- **Driver Information**: Store driver names, contact details, and vehicle information
-- **Pickup Scheduling**: Track pickup times and locations
-- **License Tracking**: Maintain driver license numbers for security
-- **Transport Status**: Mark when ground transport isn't required
+- **Ground Transportation**: Manage school coach and taxi arrangements
+- **Driver Information**: Store driver names, phone numbers, and license details
+- **Pickup Times**: Track scheduled pickup times for each term
 
-### ✅ Intelligent To-Do System
-- **Smart Recommendations**: Automatically identifies missing flight and transport arrangements
-- **Urgency Levels**: Color-coded priority system based on upcoming dates
-  - **High Priority**: Red (30 days or less for flights, 14 days or less for transport)
-  - **Medium Priority**: Orange (60 days or less for flights, 30 days or less for transport)
-  - **Low Priority**: Gray (more than 60/30 days respectively)
-- **Contextual Actions**: Click any to-do item to view the full term details in a popup modal
-- **Term Card Integration**: To-do items now show popup term cards instead of direct editing
-- **Filtering Options**: Filter to-dos by type (flights/transport) and school
-- **Live Counter**: Real-time badge showing outstanding tasks
+### 📋 Task Management
+- **To-Do List**: View all terms requiring flight or transport bookings
+- **Not Travelling Status**: Mark terms where travel isn't needed
+- **Smart Filtering**: Automatically filter out completed or marked terms
 
 ### 🎨 User Interface
-- **Modern Design**: Clean, professional interface with consistent styling
-- **Responsive Layout**: Optimized for desktop, tablet, and mobile devices
-- **Expandable Cards**: Collapsible term cards for detailed information
-- **Popup Modals**: Contextual popups for detailed term management
-- **Consistent Controls**: Uniform button sizing and styling throughout
-- **Visual Feedback**: Smooth animations and hover effects
-- **Accessibility**: Keyboard navigation and screen reader support
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Expandable Cards**: Quick expand/collapse all term cards
+- **School Branding**: Color-coded interface for each school
+- **Clean Layout**: Side-by-side school comparison view
 
-## 🚀 Getting Started
+## Tech Stack
+
+- **Frontend Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Database**: Supabase (PostgreSQL)
+- **State Management**: React Query (TanStack Query)
+- **Form Handling**: React Hook Form with Zod validation
+- **Date Handling**: date-fns
+- **Icons**: Lucide React
+
+## Project Structure
+
+```
+school-flight-sync/
+├── src/
+│   ├── components/       # React components
+│   │   ├── ui/          # Reusable UI components
+│   │   └── school-header.tsx
+│   ├── data/            # Mock data and constants
+│   ├── hooks/           # Custom React hooks
+│   ├── integrations/    # External service integrations
+│   │   └── supabase/    # Supabase client and types
+│   ├── lib/             # Utility functions
+│   ├── pages/           # Page components
+│   └── types/           # TypeScript type definitions
+├── supabase/
+│   └── migrations/      # Database migrations
+└── public/              # Static assets
+```
+
+## Installation
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Modern web browser
-- Git for version control
-- Supabase account for database (required for full functionality)
 
-### Local Development
+- Node.js (v18 or higher)
+- npm or yarn
+- Supabase account (for database)
 
+### Setup Instructions
+
+1. **Clone the repository**
 ```bash
-# Clone the repository
-git clone https://github.com/timlihk/school-flight-sync.git
-
-# Navigate to project directory
+git clone <YOUR_GIT_URL>
 cd school-flight-sync
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# View at http://localhost:8080
 ```
 
-### Building for Production
-
+2. **Install dependencies**
 ```bash
-# Create production build
-npm run build
-
-# Preview production build locally
-npm run preview
+npm install
 ```
 
-## 🏗️ Technical Architecture
+3. **Configure Supabase**
 
-### Frontend Stack
-- **React 18**: Modern React with hooks and functional components
-- **TypeScript**: Type-safe development with comprehensive type definitions
-- **Vite**: Fast build tool and development server
-- **Tailwind CSS**: Utility-first CSS framework for rapid styling
-- **shadcn/ui**: High-quality, accessible component library
-- **Radix UI**: Unstyled, accessible UI primitives
-
-### State Management
-- **React Query**: Server state management and caching
-- **React Hooks**: Local state management with useState and useEffect
-- **Custom Hooks**: Reusable logic for flights, transport, and travel status
-
-### Database Integration
-- **Supabase**: PostgreSQL database with real-time subscriptions
-- **Row Level Security**: Secure data access patterns
-- **Migrations**: Version-controlled database schema changes
-- **TypeScript Integration**: Fully typed database client
-
-### Data Models
-```typescript
-interface Term {
-  id: string;
-  name: string;
-  school: 'benenden' | 'wycombe';
-  type: 'term' | 'half-term' | 'exeat' | 'holiday' | 'short-leave' | 'long-leave';
-  startDate: Date;
-  endDate: Date;
-  academicYear: string;
-}
-
-interface FlightDetails {
-  id: string;
-  termId: string;
-  type: 'outbound' | 'return';
-  airline: string;
-  flightNumber: string;
-  departureAirport: string;
-  arrivalAirport: string;
-  departureDate: Date;
-  departureTime: string;
-  arrivalDate: Date;
-  arrivalTime: string;
-  confirmationCode?: string;
-  notes?: string;
-}
-
-interface TransportDetails {
-  id: string;
-  termId: string;
-  type: 'pickup' | 'dropoff';
-  driverName: string;
-  phoneNumber: string;
-  pickupTime: string;
-  pickupLocation: string;
-  licenseNumber: string;
-  notes?: string;
-}
-```
-
-## 🎮 User Guide
-
-### Navigation & Filtering
-1. **Academic Year Filter**: Select specific academic year or view all years
-2. **School Filter**: Choose between Benenden School, Wycombe Abbey, or both schools
-3. **Expand/Collapse**: Use "Expand All" to open all term cards simultaneously
-
-### Managing Flights
-1. **Adding Flights**: Click "Add Flight" on any term card
-2. **Viewing Flights**: Click on existing flight information to view/edit details
-3. **Flight Status**: Mark terms as "Not travelling" when flights aren't needed
-4. **Editing**: Click any flight detail to modify booking information
-
-### Managing Transport
-1. **Adding Transport**: Click "Add Transport" for ground transportation needs
-2. **Driver Details**: Store comprehensive driver and vehicle information
-3. **Scheduling**: Set pickup times and locations for seamless coordination
-4. **Transport Status**: Mark when ground transport isn't required
-
-### Using the To-Do System
-1. **Accessing To-Dos**: Click the "To Do" button to see outstanding tasks
-2. **Priority Understanding**: 
-   - Red badges indicate urgent items requiring immediate attention
-   - Orange badges show medium priority items
-   - Gray badges represent future planning items
-3. **Taking Action**: Click any to-do item to see the full term context in a popup
-4. **Filtering**: Use type and school filters to focus on specific categories
-
-### Working with Term Cards
-1. **Expanding Details**: Click term headers to expand full information
-2. **Quick Actions**: Use buttons within cards for immediate actions
-3. **Popup Context**: Access full term details via to-do system clicks
-4. **Status Indicators**: Visual badges show flight and transport completion status
-
-## 🔧 Configuration
-
-### Environment Variables
-
-**⚠️ SECURITY WARNING**: Never commit these to version control!
-
-Create a `.env.local` file in the project root:
+Create a `.env` file in the root directory with your Supabase credentials:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### Database Setup
-1. Create a new Supabase project
-2. Run the provided migrations in `/supabase/migrations/`
-3. **Important**: Review and configure Row Level Security policies (currently set to allow all access)
-4. Update environment variables with your Supabase credentials
-5. Never expose database credentials in client-side code
+4. **Run database migrations**
 
-## 📱 Deployment
+Apply the database schema using Supabase CLI or through the Supabase dashboard.
 
-### Railway Deployment
-This application is configured for Railway deployment:
-
-```toml
-# railway.toml
-[build]
-  builder = "NIXPACKS"
-
-[deploy]
-  startCommand = "npm run preview"
-  restartPolicyType = "ON_FAILURE"
-  restartPolicyMaxRetries = 10
-
-[environments.production.variables]
-  NODE_ENV = "production"
+5. **Start the development server**
+```bash
+npm run dev
 ```
 
+The application will be available at `http://localhost:5173`
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development environment
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## Database Schema
+
+### Tables
+
+#### `flights`
+- `id` (UUID): Primary key
+- `term_id` (TEXT): Reference to term
+- `type` (TEXT): 'outbound' or 'return'
+- `airline` (TEXT): Airline name
+- `flight_number` (TEXT): Flight number
+- `departure_airport` (TEXT): Departure airport code
+- `departure_date` (DATE): Departure date
+- `departure_time` (TEXT): Departure time
+- `arrival_airport` (TEXT): Arrival airport code
+- `arrival_date` (DATE): Arrival date
+- `arrival_time` (TEXT): Arrival time
+- `confirmation_code` (TEXT): Optional booking reference
+- `notes` (TEXT): Optional notes
+
+#### `transport`
+- `id` (UUID): Primary key
+- `term_id` (TEXT): Reference to term
+- `type` (TEXT): 'school-coach' or 'taxi'
+- `driver_name` (TEXT): Driver's name
+- `phone_number` (TEXT): Contact number
+- `license_number` (TEXT): Vehicle license
+- `pickup_time` (TEXT): Scheduled pickup time
+- `notes` (TEXT): Optional notes
+
+#### `not_travelling`
+- `id` (UUID): Primary key
+- `term_id` (TEXT): Reference to term
+- `no_flights` (BOOLEAN): Not taking flights
+- `no_transport` (BOOLEAN): Not using transport
+
+## Usage Guide
+
+### Adding Flight Information
+1. Click on a term card or use the "Add Flight" button
+2. Fill in flight details including airline, flight number, and times
+3. Save to store the information in the database
+
+### Managing Transport
+1. Click "Add Transport" on any term card
+2. Enter driver details and pickup times
+3. Choose between school coach or taxi options
+
+### Marking "Not Travelling"
+For terms where travel arrangements aren't needed:
+1. Click the appropriate "Not travelling" button
+2. This removes the term from the "Flights to Book" filter
+
+### Using Filters
+- **Academic Year**: Filter terms by academic year
+- **Expand/Collapse All**: Quickly expand or collapse all term cards
+- **Show Flights to Book**: Display only terms needing flight bookings
+
+## Deployment
+
+### Using Lovable
+Simply open [Lovable](https://lovable.dev) and click on Share -> Publish.
+
 ### Manual Deployment
-1. Build the application: `npm run build`
-2. Deploy the `dist` folder to your hosting provider
-3. Configure environment variables in your hosting platform
-4. Ensure proper routing for SPA (Single Page Application)
+1. Build the application:
+```bash
+npm run build
+```
 
-## 📋 Development Status
+2. Deploy the `dist` folder to your hosting service
 
-### Recent Changes (Latest Updates)
-- **Enhanced To-Do System**: Clicking to-do items now shows popup term cards instead of direct action dialogs
-- **Improved Flight Confirmation Display**: Fixed display issues with confirmation codes in travel sub-cards
-- **UI Consistency**: Standardized button sizing and alignment across all controls
-- **Navigation Improvements**: Replaced "Show Cards with Flights to Book" button with school dropdown filter
-- **Security Awareness**: Added comprehensive security documentation and warnings
+3. Ensure environment variables are configured in your deployment environment
 
-### Known Issues
-- **Critical Security**: Database credentials hardcoded in client code
-- **No Authentication**: Application lacks user authentication system
-- **Privacy Compliance**: Missing COPPA/GDPR compliance measures
-- **Testing**: No test suite implemented
-- **Performance**: No code splitting or lazy loading implemented
-
-### Upcoming Priorities
-1. **Security Hardening**: Implement proper environment variable management and authentication
-2. **Testing Infrastructure**: Add comprehensive test coverage
-3. **Performance Optimization**: Implement code splitting and bundle optimization
-4. **Privacy Compliance**: Add required privacy and consent mechanisms
-
-## 🤝 Contributing
-
-**Before contributing, please review our security documentation and ensure all changes follow security best practices.**
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Development Guidelines
-- All new features must include TypeScript types
-- Security-sensitive changes require thorough review
-- UI changes should maintain accessibility standards
-- Database changes must include proper migrations
+## License
 
-## 📄 License
+This project is private and proprietary.
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Support
 
-## 🆘 Support
-
-For questions or support:
-1. Check the GitHub Issues page
-2. Create a new issue with detailed information
-3. Include steps to reproduce any bugs
-4. Provide browser and system information for technical issues
-
-## 🎓 School Information
-
-### Benenden School
-- Official website: [benenden.school](https://www.benenden.school/)
-- Term dates: [benenden.school/news/term-dates](https://www.benenden.school/news/term-dates/)
-
-### Wycombe Abbey School  
-- Official website: [wycombeabbey.com](https://www.wycombeabbey.com/)
-- Term dates: [wycombeabbey.com/term-dates](https://www.wycombeabbey.com/term-dates/)
-
----
-
-Built with ❤️ for parents managing complex academic schedules
+For issues and questions, please contact the project maintainers or open an issue in the GitHub repository.

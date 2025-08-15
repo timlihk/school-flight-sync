@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Calendar, Plane, Car, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
+import { Calendar, Plane, Car, ChevronDown, ChevronUp, FileText, Download, LogOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { TermCard } from "@/components/ui/term-card";
 import { FlightDialog } from "@/components/ui/flight-dialog";
 import { TransportDialog } from "@/components/ui/transport-dialog";
@@ -28,6 +29,7 @@ export default function Index() {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('all');
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
   
+  const { logout } = useFamilyAuth();
   const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus } = useNotTravelling();
@@ -138,18 +140,40 @@ export default function Index() {
       {/* Header */}
       <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 sticky top-0 z-40">
         <div className="container mx-auto px-6 py-6">
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-3">
-              <div className="p-3 rounded-full bg-gradient-academic">
-                <Plane className="h-6 w-6 text-primary-foreground" />
+          <div className="flex items-center justify-between">
+            <div className="flex-1" />
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-3">
+                <div className="p-3 rounded-full bg-gradient-academic">
+                  <Plane className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  School Flight Sync
+                </h1>
               </div>
-              <h1 className="text-3xl font-bold text-foreground">
-                School Flight Sync
-              </h1>
+              <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+                Manage your daughters' school term dates and travel arrangements
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              Manage your daughters' school term dates and travel arrangements
-            </p>
+            <div className="flex-1 flex justify-end items-start">
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  <p className="text-sm font-medium flex items-center gap-1">
+                    <Home className="h-3 w-3" />
+                    Family Account
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => logout()}
+                  className="gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </header>

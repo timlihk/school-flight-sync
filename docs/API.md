@@ -1,488 +1,321 @@
 # API Documentation
 
-This document describes the data structures, hooks, and API patterns used in School Flight Sync.
-
 ## Overview
 
-The application uses a combination of:
-- **Supabase** for backend database operations
-- **React Query** for state management and caching
-- **Custom hooks** for business logic encapsulation
-- **TypeScript interfaces** for type safety
+School Flight Sync uses Supabase as its backend, providing real-time database functionality with PostgreSQL. All API interactions are handled through the Supabase JavaScript client library.
 
-## Data Models
+## Authentication
 
-### Core Types
+Currently, the application uses Supabase's anonymous authentication. Row Level Security (RLS) policies are configured to allow all operations.
 
-#### Term
-Represents an academic term or event for a school.
+## Database Tables
 
-```typescript
-interface Term {
-  id: string;                    // Unique identifier
-  name: string;                  // Display name (e.g., "Autumn Term 2024")
-  school: 'benenden' | 'wycombe'; // School identifier
-  type: TermType;                // Type of academic period
-  startDate: Date;               // Term start date
-  endDate: Date;                 // Term end date
-  academicYear: string;          // Academic year (e.g., "2024-2025")
-}
+### Flights Table
 
-type TermType = 
-  | 'term'        // Full academic term
-  | 'half-term'   // Half-term break
-  | 'exeat'       // Weekend leave
-  | 'holiday'     // School holiday
-  | 'short-leave' // Short leave period
-  | 'long-leave'; // Extended leave period
+Stores flight information for school terms.
+
+#### Schema
+
+| Column | Type | Description | Constraints |
+|--------|------|-------------|-------------|
+| `id` | UUID | Unique identifier | Primary Key, Auto-generated |
+| `term_id` | TEXT | Reference to school term | NOT NULL |
+| `type` | TEXT | Flight direction | NOT NULL, IN ('outbound', 'return') |
+| `airline` | TEXT | Airline name | NOT NULL |
+| `flight_number` | TEXT | Flight number | NOT NULL |
+| `departure_airport` | TEXT | Departure airport code | NOT NULL |
+| `departure_date` | DATE | Date of departure | NOT NULL |
+| `departure_time` | TEXT | Time of departure | NOT NULL |
+| `arrival_airport` | TEXT | Arrival airport code | NOT NULL |
+| `arrival_date` | DATE | Date of arrival | NOT NULL |
+| `arrival_time` | TEXT | Time of arrival | NOT NULL |
+| `confirmation_code` | TEXT | Booking reference | Optional |
+| `notes` | TEXT | Additional notes | Optional |
+| `created_at` | TIMESTAMP | Creation timestamp | Auto-generated |
+| `updated_at` | TIMESTAMP | Last update timestamp | Auto-updated |
+
+#### Operations
+
+##### Create Flight
+```javascript
+const { data, error } = await supabase
+  .from('flights')
+  .insert({
+    term_id: 'term-123',
+    type: 'outbound',
+    airline: 'British Airways',
+    flight_number: 'BA123',
+    departure_airport: 'LHR',
+    departure_date: '2025-09-01',
+    departure_time: '10:30',
+    arrival_airport: 'JFK',
+    arrival_date: '2025-09-01',
+    arrival_time: '14:30',
+    confirmation_code: 'ABC123',
+    notes: 'Window seat requested'
+  });
 ```
 
-#### FlightDetails
-Stores flight booking information for a specific term.
-
-```typescript
-interface FlightDetails {
-  id: string;               // Unique identifier
-  termId: string;           // Associated term ID
-  type: 'outbound' | 'return'; // Flight direction
-  airline: string;          // Airline name
-  flightNumber: string;     // Flight number
-  departureAirport: string; // IATA departure airport code
-  departureDate: Date;      // Departure date
-  departureTime: string;    // Departure time (HH:MM format)
-  arrivalAirport: string;   // IATA arrival airport code
-  arrivalDate: Date;        // Arrival date
-  arrivalTime: string;      // Arrival time (HH:MM format)
-  confirmationCode?: string; // Booking confirmation
-  notes?: string;           // Additional notes
-  createdAt: Date;          // Record creation timestamp
-  updatedAt: Date;          // Last update timestamp
-}
+##### Read Flights
+```javascript
+// Get all flights for a term
+const { data, error } = await supabase
+  .from('flights')
+  .select('*')
+  .eq('term_id', 'term-123')
+  .order('departure_date', { ascending: true });
 ```
 
-#### TransportDetails
+##### Update Flight
+```javascript
+const { data, error } = await supabase
+  .from('flights')
+  .update({
+    airline: 'Virgin Atlantic',
+    flight_number: 'VS001'
+  })
+  .eq('id', 'flight-uuid');
+```
+
+##### Delete Flight
+```javascript
+const { data, error } = await supabase
+  .from('flights')
+  .delete()
+  .eq('id', 'flight-uuid');
+```
+
+### Transport Table
+
 Manages ground transportation arrangements.
 
-```typescript
-interface TransportDetails {
-  id: string;           // Unique identifier
-  termId: string;       // Associated term ID
-  type: 'pickup' | 'dropoff'; // Transport direction
-  driverName: string;   // Driver's name
-  phoneNumber: string;  // Contact phone number
-  pickupTime: string;   // Pickup time (HH:MM format)
-  pickupLocation: string; // Pickup address/location
-  licenseNumber: string; // Driver's license number
-  notes?: string;       // Additional notes
-  createdAt: Date;      // Record creation timestamp
-  updatedAt: Date;      // Last update timestamp
+#### Schema
+
+| Column | Type | Description | Constraints |
+|--------|------|-------------|-------------|
+| `id` | UUID | Unique identifier | Primary Key, Auto-generated |
+| `term_id` | TEXT | Reference to school term | NOT NULL |
+| `type` | TEXT | Transport type | NOT NULL, IN ('school-coach', 'taxi') |
+| `driver_name` | TEXT | Driver's name | NOT NULL |
+| `phone_number` | TEXT | Contact number | NOT NULL |
+| `license_number` | TEXT | Vehicle license | NOT NULL |
+| `pickup_time` | TEXT | Scheduled pickup | NOT NULL |
+| `notes` | TEXT | Additional notes | Optional |
+| `created_at` | TIMESTAMP | Creation timestamp | Auto-generated |
+| `updated_at` | TIMESTAMP | Last update timestamp | Auto-updated |
+
+#### Operations
+
+##### Create Transport
+```javascript
+const { data, error } = await supabase
+  .from('transport')
+  .insert({
+    term_id: 'term-123',
+    type: 'taxi',
+    driver_name: 'John Smith',
+    phone_number: '+44 7700 900000',
+    license_number: 'ABC 123',
+    pickup_time: '08:00',
+    notes: 'Blue Toyota Prius'
+  });
+```
+
+##### Read Transport
+```javascript
+// Get transport for a term
+const { data, error } = await supabase
+  .from('transport')
+  .select('*')
+  .eq('term_id', 'term-123')
+  .single();
+```
+
+##### Update Transport
+```javascript
+const { data, error } = await supabase
+  .from('transport')
+  .update({
+    pickup_time: '08:30',
+    notes: 'Delayed by 30 minutes'
+  })
+  .eq('id', 'transport-uuid');
+```
+
+##### Delete Transport
+```javascript
+const { data, error } = await supabase
+  .from('transport')
+  .delete()
+  .eq('id', 'transport-uuid');
+```
+
+### Not Travelling Table
+
+Tracks terms where travel arrangements are not needed.
+
+#### Schema
+
+| Column | Type | Description | Constraints |
+|--------|------|-------------|-------------|
+| `id` | UUID | Unique identifier | Primary Key, Auto-generated |
+| `term_id` | TEXT | Reference to school term | NOT NULL, UNIQUE |
+| `no_flights` | BOOLEAN | No flights needed | Default: false |
+| `no_transport` | BOOLEAN | No transport needed | Default: false |
+| `created_at` | TIMESTAMP | Creation timestamp | Auto-generated |
+| `updated_at` | TIMESTAMP | Last update timestamp | Auto-updated |
+
+#### Operations
+
+##### Create/Update Not Travelling Status
+```javascript
+const { data, error } = await supabase
+  .from('not_travelling')
+  .upsert({
+    term_id: 'term-123',
+    no_flights: true,
+    no_transport: false
+  }, {
+    onConflict: 'term_id'
+  });
+```
+
+##### Read Not Travelling Status
+```javascript
+// Get all not travelling statuses
+const { data, error } = await supabase
+  .from('not_travelling')
+  .select('*');
+
+// Get status for specific term
+const { data, error } = await supabase
+  .from('not_travelling')
+  .select('*')
+  .eq('term_id', 'term-123')
+  .single();
+```
+
+## Hooks
+
+The application provides custom React hooks for data management:
+
+### useFlights()
+
+Manages flight data with real-time updates.
+
+```javascript
+const {
+  flights,        // Array of flight records
+  loading,        // Loading state
+  addFlight,      // Function to add a flight
+  editFlight,     // Function to edit a flight
+  removeFlight    // Function to remove a flight
+} = useFlights();
+```
+
+### useTransport()
+
+Manages transport data with real-time updates.
+
+```javascript
+const {
+  transport,          // Array of transport records
+  isLoading,          // Loading state
+  addTransport,       // Function to add transport
+  editTransport,      // Function to edit transport
+  removeTransport,    // Function to remove transport
+  getTransportForTerm // Function to get transport for a specific term
+} = useTransport();
+```
+
+### useNotTravelling()
+
+Manages not travelling status.
+
+```javascript
+const {
+  notTravelling,         // Array of not travelling records
+  loading,               // Loading state
+  setNotTravellingStatus // Function to set status
+} = useNotTravelling();
+```
+
+## Real-time Subscriptions
+
+The application uses Supabase's real-time functionality to automatically update the UI when data changes:
+
+```javascript
+// Example subscription setup
+const subscription = supabase
+  .channel('flights-channel')
+  .on('postgres_changes', {
+    event: '*',
+    schema: 'public',
+    table: 'flights'
+  }, (payload) => {
+    // Handle real-time updates
+    console.log('Change received:', payload);
+  })
+  .subscribe();
+```
+
+## Error Handling
+
+All database operations return an error object that should be checked:
+
+```javascript
+const { data, error } = await supabase
+  .from('flights')
+  .select('*');
+
+if (error) {
+  console.error('Error fetching flights:', error);
+  // Handle error appropriately
+} else {
+  // Process data
 }
 ```
 
-#### NotTravellingStatus
-Tracks when travel arrangements aren't needed.
+## Environment Variables
 
-```typescript
-interface NotTravellingStatus {
-  id: string;          // Unique identifier
-  termId: string;      // Associated term ID
-  noFlights: boolean;  // No flights needed for this term
-  noTransport: boolean; // No transport needed for this term
-  createdAt: Date;     // Record creation timestamp
-  updatedAt: Date;     // Last update timestamp
-}
+Required environment variables for Supabase connection:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-## Custom Hooks
+## Security
 
-### useFlights
+### Row Level Security (RLS)
 
-Manages flight data operations with automatic caching and synchronization.
+All tables have RLS enabled with the following policies:
 
-```typescript
-interface UseFlightsReturn {
-  flights: FlightDetails[];
-  loading: boolean;
-  error: Error | null;
-  addFlight: (flight: Omit<FlightDetails, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  editFlight: (id: string, updates: Partial<FlightDetails>) => Promise<void>;
-  removeFlight: (id: string) => Promise<void>;
-  getFlightsForTerm: (termId: string) => FlightDetails[];
-}
+- **flights**: Allow all operations (can be restricted with user authentication)
+- **transport**: Allow all operations (can be restricted with user authentication)
+- **not_travelling**: Allow all operations (can be restricted with user authentication)
 
-// Usage
-const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
+### Best Practices
 
-// Add a new flight
-await addFlight({
-  termId: 'term-123',
-  type: 'outbound',
-  airline: 'British Airways',
-  flightNumber: 'BA123',
-  departureAirport: 'LHR',
-  departureDate: new Date('2025-09-15'),
-  departureTime: '14:30',
-  arrivalAirport: 'JFK',
-  arrivalDate: new Date('2025-09-15'),
-  arrivalTime: '17:45',
-  confirmationCode: 'ABC123'
-});
+1. Always validate input data before database operations
+2. Use TypeScript types for type safety
+3. Handle errors gracefully with user-friendly messages
+4. Implement optimistic updates for better UX
+5. Use transactions for related operations
+6. Sanitize user input to prevent injection attacks
 
-// Edit existing flight
-await editFlight('flight-456', {
-  departureTime: '15:30',
-  confirmationCode: 'XYZ789'
-});
+## Migration Management
 
-// Remove flight
-await removeFlight('flight-456');
-```
+Database schema changes are managed through migration files in `/supabase/migrations/`.
 
-### useTransport
+To apply migrations:
+1. Use Supabase CLI: `supabase db push`
+2. Or apply through Supabase Dashboard
 
-Handles ground transportation management.
+## Performance Considerations
 
-```typescript
-interface UseTransportReturn {
-  transport: TransportDetails[];
-  isLoading: boolean;
-  error: Error | null;
-  addTransport: (transport: Omit<TransportDetails, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  editTransport: (id: string, updates: Partial<TransportDetails>) => Promise<void>;
-  removeTransport: (id: string) => Promise<void>;
-  getTransportForTerm: (termId: string) => TransportDetails[];
-}
-
-// Usage
-const { transport, isLoading, addTransport, getTransportForTerm } = useTransport();
-
-// Add transport arrangement
-await addTransport({
-  termId: 'term-123',
-  type: 'pickup',
-  driverName: 'John Smith',
-  phoneNumber: '+44 7700 900123',
-  pickupTime: '16:00',
-  pickupLocation: 'Heathrow Terminal 5',
-  licenseNumber: 'AB12 CDE',
-  notes: 'Please wait in arrivals hall'
-});
-```
-
-### useNotTravelling
-
-Manages "not travelling" status for terms.
-
-```typescript
-interface UseNotTravellingReturn {
-  notTravelling: NotTravellingStatus[];
-  loading: boolean;
-  error: Error | null;
-  setNotTravellingStatus: (termId: string, type: 'flights' | 'transport') => Promise<void>;
-  clearNotTravellingStatus: (termId: string, type: 'flights' | 'transport') => Promise<void>;
-  getStatusForTerm: (termId: string) => NotTravellingStatus | undefined;
-}
-
-// Usage
-const { notTravelling, setNotTravellingStatus } = useNotTravelling();
-
-// Mark term as not requiring flights
-await setNotTravellingStatus('term-123', 'flights');
-
-// Mark term as not requiring transport
-await setNotTravellingStatus('term-123', 'transport');
-```
-
-## Database Schema
-
-### Tables
-
-#### flights
-```sql
-CREATE TABLE public.flights (
-  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  term_id TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('outbound', 'return')),
-  airline TEXT NOT NULL,
-  flight_number TEXT NOT NULL,
-  departure_airport TEXT NOT NULL,
-  departure_date DATE NOT NULL,
-  departure_time TEXT NOT NULL,
-  arrival_airport TEXT NOT NULL,
-  arrival_date DATE NOT NULL,
-  arrival_time TEXT NOT NULL,
-  confirmation_code TEXT,
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-);
-```
-
-#### transport
-```sql
-CREATE TABLE public.transport (
-  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  term_id TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('pickup', 'dropoff')),
-  driver_name TEXT NOT NULL,
-  phone_number TEXT NOT NULL,
-  pickup_time TEXT NOT NULL,
-  pickup_location TEXT NOT NULL,
-  license_number TEXT NOT NULL,
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-);
-```
-
-#### not_travelling
-```sql
-CREATE TABLE public.not_travelling (
-  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  term_id TEXT NOT NULL UNIQUE,
-  no_flights BOOLEAN NOT NULL DEFAULT false,
-  no_transport BOOLEAN NOT NULL DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-);
-```
-
-### Row Level Security
-
-All tables implement Row Level Security (RLS) with appropriate policies:
-
-```sql
--- Enable RLS
-ALTER TABLE public.flights ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.transport ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.not_travelling ENABLE ROW LEVEL SECURITY;
-
--- Create policies (example for flights table)
-CREATE POLICY "Allow all operations on flights" 
-ON public.flights 
-FOR ALL 
-USING (true)
-WITH CHECK (true);
-```
-
-## Component Props Interfaces
-
-### TermCard
-```typescript
-interface TermCardProps {
-  term: Term;
-  flights?: FlightDetails[];
-  transport?: TransportDetails[];
-  onAddFlight: (termId: string) => void;
-  onViewFlights: (termId: string) => void;
-  onAddTransport: (termId: string) => void;
-  onViewTransport: (termId: string) => void;
-  onSetNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
-  notTravellingStatus?: NotTravellingStatus;
-  className?: string;
-  isExpanded?: boolean;
-  onExpandedChange?: (expanded: boolean) => void;
-}
-```
-
-### ToDoDialog
-```typescript
-interface ToDoDialogProps {
-  terms: Term[];
-  flights: FlightDetails[];
-  transport: TransportDetails[];
-  notTravelling: NotTravellingStatus[];
-  onAddFlight: (termId: string) => void;
-  onAddTransport: (termId: string) => void;
-  onShowTerm?: (termId: string) => void;
-  children?: React.ReactNode;
-}
-```
-
-### FlightDialog
-```typescript
-interface FlightDialogProps {
-  term: Term;
-  flights: FlightDetails[];
-  onAddFlight: (flight: Omit<FlightDetails, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  onEditFlight: (id: string, updates: Partial<FlightDetails>) => void;
-  onRemoveFlight: (id: string) => void;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-```
-
-## API Patterns
-
-### Error Handling
-```typescript
-// Custom error types
-class APIError extends Error {
-  constructor(
-    message: string, 
-    public status: number, 
-    public code?: string
-  ) {
-    super(message);
-    this.name = 'APIError';
-  }
-}
-
-// Error handling in hooks
-const { data, error, isLoading } = useQuery({
-  queryKey: ['flights'],
-  queryFn: async () => {
-    const { data, error } = await supabase
-      .from('flights')
-      .select('*');
-    
-    if (error) {
-      throw new APIError(error.message, 500, error.code);
-    }
-    
-    return data;
-  },
-  retry: (failureCount, error) => {
-    // Don't retry on client errors
-    if (error instanceof APIError && error.status < 500) {
-      return false;
-    }
-    return failureCount < 3;
-  }
-});
-```
-
-### Optimistic Updates
-```typescript
-const addFlightMutation = useMutation({
-  mutationFn: async (newFlight: Omit<FlightDetails, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const { data, error } = await supabase
-      .from('flights')
-      .insert([newFlight])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-  onMutate: async (newFlight) => {
-    // Cancel any outgoing refetches
-    await queryClient.cancelQueries({ queryKey: ['flights'] });
-    
-    // Snapshot the previous value
-    const previousFlights = queryClient.getQueryData<FlightDetails[]>(['flights']);
-    
-    // Optimistically update to the new value
-    queryClient.setQueryData<FlightDetails[]>(['flights'], old => [
-      ...(old || []),
-      { ...newFlight, id: 'temp-id', createdAt: new Date(), updatedAt: new Date() }
-    ]);
-    
-    return { previousFlights };
-  },
-  onError: (err, newFlight, context) => {
-    // Rollback on error
-    queryClient.setQueryData(['flights'], context?.previousFlights);
-  },
-  onSettled: () => {
-    // Always refetch after error or success
-    queryClient.invalidateQueries({ queryKey: ['flights'] });
-  }
-});
-```
-
-### Data Validation
-```typescript
-import { z } from 'zod';
-
-// Zod schemas for validation
-const FlightSchema = z.object({
-  termId: z.string().min(1, 'Term ID is required'),
-  type: z.enum(['outbound', 'return']),
-  airline: z.string().min(1, 'Airline is required'),
-  flightNumber: z.string().min(1, 'Flight number is required'),
-  departureAirport: z.string().length(3, 'Airport code must be 3 characters'),
-  departureDate: z.date(),
-  departureTime: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be in HH:MM format'),
-  arrivalAirport: z.string().length(3, 'Airport code must be 3 characters'),
-  arrivalDate: z.date(),
-  arrivalTime: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be in HH:MM format'),
-  confirmationCode: z.string().optional(),
-  notes: z.string().optional()
-});
-
-// Usage in forms
-const validateFlight = (data: unknown) => {
-  try {
-    return FlightSchema.parse(data);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new APIError('Validation failed', 400, 'VALIDATION_ERROR');
-    }
-    throw error;
-  }
-};
-```
-
-## Utility Functions
-
-### Date Formatting
-```typescript
-import { format, formatDistanceToNow } from 'date-fns';
-
-// Format date for display
-export const formatDate = (date: Date): string => {
-  return format(date, 'MMM dd, yyyy');
-};
-
-// Format time for display
-export const formatTime = (time: string): string => {
-  return time; // Already in HH:MM format
-};
-
-// Calculate urgency based on date proximity
-export const calculateUrgency = (
-  targetDate: Date, 
-  type: 'flight' | 'transport'
-): 'high' | 'medium' | 'low' => {
-  const daysUntil = Math.ceil((targetDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  const thresholds = type === 'flight' ? { high: 30, medium: 60 } : { high: 14, medium: 30 };
-  
-  if (daysUntil <= thresholds.high) return 'high';
-  if (daysUntil <= thresholds.medium) return 'medium';
-  return 'low';
-};
-```
-
-### Local Storage Utilities
-```typescript
-// Type-safe localStorage wrapper
-export const storage = {
-  get<T>(key: string, defaultValue: T): T {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch {
-      return defaultValue;
-    }
-  },
-  
-  set<T>(key: string, value: T): void {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.warn('Failed to save to localStorage:', error);
-    }
-  },
-  
-  remove(key: string): void {
-    localStorage.removeItem(key);
-  }
-};
-
-// Usage
-const expandedCards = storage.get<string[]>('expandedCards', []);
-storage.set('expandedCards', [...expandedCards, newCardId]);
-```
-
-This API documentation provides comprehensive coverage of the data structures, hooks, and patterns used throughout the School Flight Sync application. For implementation examples, refer to the actual component files in the `src/` directory.
+1. **Indexing**: Primary keys are automatically indexed
+2. **Query Optimization**: Use specific selects instead of `*` when possible
+3. **Pagination**: Implement pagination for large datasets
+4. **Caching**: React Query handles caching automatically
+5. **Real-time**: Subscribe only to necessary changes
