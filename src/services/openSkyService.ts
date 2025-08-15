@@ -74,8 +74,23 @@ class OpenSkyService {
   // Get flight schedule information from OpenSky flights API
   async getFlightSchedule(flightNumber: string, date: string): Promise<FlightStatusResponse> {
     try {
+      // Validate inputs
+      if (!flightNumber || !date) {
+        return {
+          success: false,
+          error: 'Missing flight number or date'
+        };
+      }
+
       // Convert date to Unix timestamps for the day
       const flightDate = new Date(date);
+      if (isNaN(flightDate.getTime())) {
+        return {
+          success: false,
+          error: 'Invalid date format'
+        };
+      }
+
       const dayStart = new Date(flightDate);
       dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date(flightDate);

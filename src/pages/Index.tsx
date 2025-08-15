@@ -13,6 +13,7 @@ const ToDoDialog = lazy(() => import("@/components/ui/todo-dialog").then(module 
 const ExportDialog = lazy(() => import("@/components/ui/export-dialog").then(module => ({ default: module.ExportDialog })));
 import { EventSections } from "@/components/ui/event-sections";
 import { ApiStatusDebug } from "@/components/debug/api-status";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
@@ -180,15 +181,20 @@ export default function Index() {
         }
       };
 
-      // Initial update
-      performUpdate();
+      // Delay initial update to avoid interfering with page load
+      const timeoutId = setTimeout(() => {
+        performUpdate();
+      }, 5000); // Wait 5 seconds after page load
       
       // Set up interval for automatic updates
       const interval = setInterval(() => {
         performUpdate();
       }, 4 * 60 * 60 * 1000); // 4 hours
       
-      return () => clearInterval(interval);
+      return () => {
+        clearTimeout(timeoutId);
+        clearInterval(interval);
+      };
     }
   }, [loading, flights.length, updateNearFlightStatuses]);
 
@@ -312,7 +318,13 @@ export default function Index() {
         {/* Debug API Status - only show in development */}
         {import.meta.env.DEV && (
           <div className="mt-4">
-            <ApiStatusDebug />
+            <ErrorBoundary fallback={
+              <div className="p-2 text-xs text-muted-foreground border border-dashed rounded">
+                API Status debug component failed to load
+              </div>
+            }>
+              <ApiStatusDebug />
+            </ErrorBoundary>
           </div>
         )}
       </div>

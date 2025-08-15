@@ -10,6 +10,14 @@ class HybridFlightService {
 
   async getFlightStatus(flightNumber: string, date: string): Promise<FlightStatusResponse> {
     try {
+      // Validate inputs
+      if (!flightNumber || !date) {
+        return {
+          success: false,
+          error: 'Missing flight number or date'
+        };
+      }
+
       // Try primary service first (OpenSky)
       console.log('Attempting flight status check with OpenSky Network...');
       const primaryResult = await this.primaryService.getFlightStatus(flightNumber, date);

@@ -27,7 +27,12 @@ export function ApiStatusDebug() {
 
   useEffect(() => {
     if (isOpen && !authInfo) {
-      checkAuthStatus();
+      // Add a small delay to avoid blocking the main render
+      const timeoutId = setTimeout(() => {
+        checkAuthStatus();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [isOpen]);
 

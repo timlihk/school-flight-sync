@@ -61,16 +61,20 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleGoHome = () => {
-    // Reset error boundary state before navigating
+    // Clear any cached errors and reset state
     this.setState({
       hasError: false,
       error: null,
       errorInfo: null,
     });
-    // Use a small delay to ensure state is reset before navigation
-    setTimeout(() => {
+    
+    // Clear any React Query errors that might be cached
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
       window.location.href = '/';
-    }, 100);
+    } else {
+      // If already on home page, just reload
+      window.location.reload();
+    }
   };
 
   public render() {
