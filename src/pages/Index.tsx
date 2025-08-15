@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, Suspense, lazy } from "react";
 import { Calendar, Plane, Car, ChevronDown, ChevronUp, FileText, Download, LogOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { TermCard } from "@/components/ui/term-card";
-import { FlightDialog } from "@/components/ui/flight-dialog";
-import { TransportDialog } from "@/components/ui/transport-dialog";
-import { ToDoDialog } from "@/components/ui/todo-dialog";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
-import { ExportDialog } from "@/components/ui/export-dialog";
 import { SchoolHeader } from "@/components/school-header";
+
+// Lazy load heavy dialog components for better initial bundle size
+const FlightDialog = lazy(() => import("@/components/ui/flight-dialog").then(module => ({ default: module.FlightDialog })));
+const TransportDialog = lazy(() => import("@/components/ui/transport-dialog").then(module => ({ default: module.TransportDialog })));
+const ToDoDialog = lazy(() => import("@/components/ui/todo-dialog").then(module => ({ default: module.ToDoDialog })));
+const ExportDialog = lazy(() => import("@/components/ui/export-dialog").then(module => ({ default: module.ExportDialog })));
 import { EventSections } from "@/components/ui/event-sections";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
@@ -125,6 +127,13 @@ export default function Index() {
   };
 
 
+  // Component loading fallback for lazy-loaded dialogs
+  const DialogLoader = () => (
+    <div className="flex items-center justify-center p-4">
+      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+    </div>
+  );
+
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
@@ -221,21 +230,25 @@ export default function Index() {
               </>
             )}
           </Button>
-          <ToDoDialog 
-            terms={filteredTerms}
-            flights={flights}
-            transport={transport}
-            notTravelling={notTravelling}
-            onAddFlight={handleAddFlight}
-            onAddTransport={handleAddTransport}
-            onShowTerm={handleShowTerm}
-          />
-          <ExportDialog
-            flights={flights}
-            transport={transport}
-            notTravelling={notTravelling}
-            terms={mockTerms}
-          />
+          <Suspense fallback={<DialogLoader />}>
+            <ToDoDialog 
+              terms={filteredTerms}
+              flights={flights}
+              transport={transport}
+              notTravelling={notTravelling}
+              onAddFlight={handleAddFlight}
+              onAddTransport={handleAddTransport}
+              onShowTerm={handleShowTerm}
+            />
+          </Suspense>
+          <Suspense fallback={<DialogLoader />}>
+            <ExportDialog
+              flights={flights}
+              transport={transport}
+              notTravelling={notTravelling}
+              terms={mockTerms}
+            />
+          </Suspense>
         </div>
       </div>
 
@@ -332,25 +345,29 @@ export default function Index() {
 
         {selectedTerm && (
           <>
-            <FlightDialog
-              term={selectedTerm}
-              flights={flights.filter(f => f.termId === selectedTerm.id)}
-              onAddFlight={addFlight}
-              onEditFlight={editFlight}
-              onRemoveFlight={removeFlight}
-              open={showFlightDialog}
-              onOpenChange={setShowFlightDialog}
-            />
+            <Suspense fallback={<DialogLoader />}>
+              <FlightDialog
+                term={selectedTerm}
+                flights={flights.filter(f => f.termId === selectedTerm.id)}
+                onAddFlight={addFlight}
+                onEditFlight={editFlight}
+                onRemoveFlight={removeFlight}
+                open={showFlightDialog}
+                onOpenChange={setShowFlightDialog}
+              />
+            </Suspense>
             
-            <TransportDialog
-              term={selectedTerm}
-              transport={getTransportForTerm(selectedTerm.id)}
-              onAddTransport={addTransport}
-              onEditTransport={editTransport}
-              onRemoveTransport={removeTransport}
-              open={showTransportDialog}
-              onOpenChange={setShowTransportDialog}
-            />
+            <Suspense fallback={<DialogLoader />}>
+              <TransportDialog
+                term={selectedTerm}
+                transport={getTransportForTerm(selectedTerm.id)}
+                onAddTransport={addTransport}
+                onEditTransport={editTransport}
+                onRemoveTransport={removeTransport}
+                open={showTransportDialog}
+                onOpenChange={setShowTransportDialog}
+              />
+            </Suspense>
 
             <TermDetailsDialog
               term={selectedTerm}
