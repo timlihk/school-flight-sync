@@ -9,7 +9,7 @@ import { hybridFlightService } from '@/services/hybridFlightService';
 // Debug component to show API authentication status
 export function ApiStatusDebug() {
   const [isOpen, setIsOpen] = useState(false);
-  const [authInfo, setAuthInfo] = useState<any>(null);
+  const [authInfo, setAuthInfo] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
 
   const checkAuthStatus = async () => {
@@ -18,7 +18,6 @@ export function ApiStatusDebug() {
       const info = await hybridFlightService.getAuthenticationInfo();
       setAuthInfo(info);
     } catch (error) {
-      console.error('Error checking auth status:', error);
       setAuthInfo(null);
     } finally {
       setLoading(false);
@@ -34,7 +33,7 @@ export function ApiStatusDebug() {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [isOpen]);
+  }, [isOpen, authInfo]);
 
   const getStatusBadge = (method: string, available: boolean, recommended?: boolean) => {
     if (!available) {

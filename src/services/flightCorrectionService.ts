@@ -79,7 +79,6 @@ class FlightCorrectionService {
       try {
         flightCacheService.cacheFlight(flightNumber, originalDate, correctedLookupData);
         stats.cacheUpdated = true;
-        console.log(`✅ Updated cache for ${flightNumber} on ${originalDate}`);
       } catch (error) {
         stats.errors.push(`Cache update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
@@ -93,7 +92,6 @@ class FlightCorrectionService {
           const updated = await this.updateFlightInDatabase(flight, correctedLookupData);
           if (updated) {
             stats.databaseFlightsUpdated++;
-            console.log(`✅ Updated database flight ${flight.id} (${flightNumber})`);
           }
         } catch (error) {
           stats.errors.push(`Database update failed for flight ${flight.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -103,13 +101,6 @@ class FlightCorrectionService {
       // 4. Cache corrected data for future similar date lookups
       await this.cacheForSimilarDates(flightNumber, originalDate, correctedLookupData);
 
-      console.log(`🔧 Flight correction completed for ${flightNumber}:`, {
-        ...stats,
-        originalDate,
-        correctedAirline: correctedFlight.airline,
-        correctedDeparture: `${correctedFlight.departure.airport} at ${correctedFlight.departure.time}`,
-        correctedArrival: `${correctedFlight.arrival.airport} at ${correctedFlight.arrival.time}`
-      });
 
       return stats;
 
@@ -130,13 +121,11 @@ class FlightCorrectionService {
         .eq('flight_number', flightNumber.toUpperCase());
 
       if (error) {
-        console.error('Error finding similar flights:', error);
         return [];
       }
 
       return data?.map(dbFlight => this.transformDbToFlight(dbFlight)) || [];
     } catch (error) {
-      console.error('Error in findSimilarFlights:', error);
       return [];
     }
   }
@@ -174,13 +163,11 @@ class FlightCorrectionService {
         .eq('id', flight.id);
 
       if (error) {
-        console.error('Error updating flight in database:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error in updateFlightInDatabase:', error);
       return false;
     }
   }
@@ -228,7 +215,7 @@ class FlightCorrectionService {
 
         flightCacheService.cacheFlight(flightNumber, date, futureCorrectedData);
       } catch (error) {
-        console.error(`Error caching for future date ${date}:`, error);
+        // Ignore cache errors for future dates
       }
     }
   }
@@ -262,7 +249,7 @@ class FlightCorrectionService {
   /**
    * Transform database record to FlightDetails format
    */
-  private transformDbToFlight(dbFlight: any): FlightDetails {
+  private transformDbToFlight(dbFlight: Record<string, unknown>): FlightDetails {
     return {
       id: dbFlight.id,
       termId: dbFlight.term_id,

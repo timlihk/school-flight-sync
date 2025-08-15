@@ -4,7 +4,7 @@
 interface CachedFlightData {
   flightNumber: string;
   date: string;
-  data: any;
+  data: unknown;
   timestamp: number;
 }
 
@@ -14,7 +14,7 @@ class FlightCacheService {
   private readonly MAX_CACHE_SIZE = 200; // Increased to store more flights for longer period
 
   // Get cached flight data
-  getCachedFlight(flightNumber: string, date: string): any | null {
+  getCachedFlight(flightNumber: string, date: string): unknown | null {
     try {
       const cache = this.getAllCached();
       const cacheKey = this.getCacheKey(flightNumber, date);
@@ -33,16 +33,14 @@ class FlightCacheService {
         return null;
       }
 
-      console.log(`Using cached data for ${flightNumber} on ${date}`);
       return cached.data;
     } catch (error) {
-      console.error('Error reading flight cache:', error);
       return null;
     }
   }
 
   // Cache flight data
-  cacheFlight(flightNumber: string, date: string, data: any): void {
+  cacheFlight(flightNumber: string, date: string, data: unknown): void {
     try {
       const cache = this.getAllCached();
       const cacheKey = this.getCacheKey(flightNumber, date);
@@ -68,9 +66,8 @@ class FlightCacheService {
       }
 
       this.saveCache(cache);
-      console.log(`Cached data for ${flightNumber} on ${date}`);
     } catch (error) {
-      console.error('Error caching flight data:', error);
+      // Ignore cache errors in production
     }
   }
 
@@ -90,10 +87,9 @@ class FlightCacheService {
 
       if (hasChanges) {
         this.saveCache(cache);
-        console.log('Cleared expired cache entries');
       }
     } catch (error) {
-      console.error('Error clearing expired cache:', error);
+      // Ignore cache errors in production
     }
   }
 
@@ -101,9 +97,8 @@ class FlightCacheService {
   clearAllCache(): void {
     try {
       localStorage.removeItem(this.CACHE_KEY);
-      console.log('Cleared all flight cache');
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      // Ignore cache errors in production
     }
   }
 
@@ -115,7 +110,7 @@ class FlightCacheService {
       let expired = 0;
       let valid = 0;
 
-      Object.values(cache).forEach((entry: any) => {
+      Object.values(cache).forEach((entry: CachedFlightData) => {
         if (now - entry.timestamp > this.CACHE_DURATION) {
           expired++;
         } else {
@@ -129,7 +124,6 @@ class FlightCacheService {
         valid
       };
     } catch (error) {
-      console.error('Error getting cache stats:', error);
       return { total: 0, expired: 0, valid: 0 };
     }
   }
@@ -144,7 +138,6 @@ class FlightCacheService {
       const cached = localStorage.getItem(this.CACHE_KEY);
       return cached ? JSON.parse(cached) : {};
     } catch (error) {
-      console.error('Error parsing cache:', error);
       return {};
     }
   }
@@ -153,14 +146,13 @@ class FlightCacheService {
     try {
       localStorage.setItem(this.CACHE_KEY, JSON.stringify(cache));
     } catch (error) {
-      console.error('Error saving cache:', error);
       // If localStorage is full, clear old entries and try again
       if (error instanceof Error && error.name === 'QuotaExceededError') {
         this.clearExpiredCache();
         try {
           localStorage.setItem(this.CACHE_KEY, JSON.stringify(cache));
         } catch (retryError) {
-          console.error('Failed to save cache after clearing:', retryError);
+          // Final fallback - ignore storage errors
         }
       }
     }

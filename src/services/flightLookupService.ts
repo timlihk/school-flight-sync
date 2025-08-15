@@ -131,7 +131,6 @@ class FlightLookupService {
     try {
       return await openSkyService.getFlightSchedule(flightNumber, date);
     } catch (error) {
-      console.error('OpenSky schedule lookup failed:', error);
       return { success: false, error: 'OpenSky lookup failed' };
     }
   }
@@ -169,7 +168,11 @@ class FlightLookupService {
     arrival: { time: string, airport: string },
     daysOfWeek?: number[] // 0=Sunday, 1=Monday, etc. If not specified, operates daily
   } | null {
-    const schedules: Record<string, any> = {
+    const schedules: Record<string, {
+      departure: { time: string, airport: string }, 
+      arrival: { time: string, airport: string },
+      daysOfWeek?: number[]
+    }> = {
       // Cathay Pacific Hong Kong routes
       'CX238': {
         departure: { time: '11:05', airport: 'HKG' },

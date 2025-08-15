@@ -44,8 +44,6 @@ class AviationStackService {
       // Use correct API parameters: flight_iata for flight number, flight_date for date
       const url = `${this.baseUrl}/flights?access_key=${this.apiKey}&flight_iata=${flightNumber}&flight_date=${dateString}&limit=1`;
 
-      console.log('🌐 Fetching flight status from AviationStack:', flightNumber, dateString);
-      console.log('📡 AviationStack URL:', url.replace(this.apiKey, '[API_KEY_HIDDEN]'));
 
       const response = await fetch(url);
 
@@ -54,7 +52,6 @@ class AviationStackService {
         let errorDetails = `${response.status} ${response.statusText}`;
         try {
           const errorData = await response.text();
-          console.error('AviationStack error response:', errorData);
           errorDetails += ` - ${errorData}`;
         } catch (e) {
           // Ignore errors reading response body
@@ -86,7 +83,6 @@ class AviationStackService {
       return this.transformAviationStackResponse(flight, flightNumber);
 
     } catch (error) {
-      console.error('AviationStack API error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch flight schedule'
@@ -94,7 +90,7 @@ class AviationStackService {
     }
   }
 
-  private transformAviationStackResponse(flightData: any, originalFlightNumber: string): FlightStatusResponse {
+  private transformAviationStackResponse(flightData: Record<string, unknown>, originalFlightNumber: string): FlightStatusResponse {
     try {
       const {
         flight_status,

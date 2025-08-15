@@ -6,18 +6,11 @@ import { TermCard } from "@/components/ui/term-card";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { SchoolHeader } from "@/components/school-header";
 
-// Direct imports temporarily to debug lazy loading issues
 import FlightDialog from "@/components/ui/flight-dialog";
 import TransportDialog from "@/components/ui/transport-dialog";
 import ToDoDialog from "@/components/ui/todo-dialog";
 import ExportDialog from "@/components/ui/export-dialog";
-
-// const FlightDialog = lazy(() => import("@/components/ui/flight-dialog"));
-// const TransportDialog = lazy(() => import("@/components/ui/transport-dialog"));
-// const ToDoDialog = lazy(() => import("@/components/ui/todo-dialog"));
-// const ExportDialog = lazy(() => import("@/components/ui/export-dialog"));
 import { EventSections } from "@/components/ui/event-sections";
-import { ApiStatusDebug } from "@/components/debug/api-status";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
@@ -154,12 +147,6 @@ export default function Index() {
   }, [termLookup]);
 
 
-  // Memoize DialogLoader component to prevent unnecessary re-renders
-  const DialogLoader = useMemo(() => (
-    <div className="flex items-center justify-center p-4">
-      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-    </div>
-  ), []);
 
   // Optimize expanded card change handler with useCallback
   const handleExpandedChange = useCallback((termId: string, expanded: boolean) => {
@@ -177,40 +164,8 @@ export default function Index() {
   // Clean up expired cache on component mount
   React.useEffect(() => {
     flightLookupService.clearExpiredCache();
-    const stats = flightLookupService.getCacheStats();
-    console.log('Flight cache stats (60-day cache):', stats);
   }, []);
 
-  // Auto-update flight statuses every 4 hours for flights within 24 hours (API limit friendly)
-  // DISABLED temporarily to troubleshoot errors
-  // React.useEffect(() => {
-  //   if (!loading && flights.length > 0) {
-  //     // Wrap in try-catch to prevent errors from breaking the component
-  //     const performUpdate = async () => {
-  //       try {
-  //         await updateNearFlightStatuses();
-  //       } catch (error) {
-  //         console.error('Flight status update failed:', error);
-  //         // Don't throw the error, just log it
-  //       }
-  //     };
-
-  //     // Delay initial update to avoid interfering with page load
-  //     const timeoutId = setTimeout(() => {
-  //       performUpdate();
-  //     }, 5000); // Wait 5 seconds after page load
-      
-  //     // Set up interval for automatic updates
-  //     const interval = setInterval(() => {
-  //       performUpdate();
-  //     }, 4 * 60 * 60 * 1000); // 4 hours
-      
-  //     return () => {
-  //       clearTimeout(timeoutId);
-  //       clearInterval(interval);
-  //     };
-  //   }
-  // }, [loading, flights.length, updateNearFlightStatuses]);
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
@@ -324,19 +279,6 @@ export default function Index() {
             terms={mockTerms}
           />
         </div>
-        
-        {/* Debug API Status - DISABLED temporarily to troubleshoot errors */}
-        {/* {import.meta.env.DEV && (
-          <div className="mt-4">
-            <ErrorBoundary fallback={
-              <div className="p-2 text-xs text-muted-foreground border border-dashed rounded">
-                API Status debug component failed to load
-              </div>
-            }>
-              <ApiStatusDebug />
-            </ErrorBoundary>
-          </div>
-        )} */}
       </div>
 
       {/* Main Content */}

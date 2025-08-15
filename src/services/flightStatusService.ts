@@ -18,7 +18,6 @@ class FlightStatusService {
       if (this.lastApiCall) {
         const timeSinceLastCall = Date.now() - this.lastApiCall.getTime();
         if (timeSinceLastCall < this.rateLimitDelay) {
-          console.log('Rate limit: Using cached data or mock data');
           return this.getMockFlightStatus(flightNumber, date);
         }
       }
@@ -54,7 +53,6 @@ class FlightStatusService {
         data: flightStatus
       };
     } catch (error) {
-      console.error('Flight status API error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch flight status'
@@ -62,7 +60,7 @@ class FlightStatusService {
     }
   }
 
-  private transformApiResponse(apiData: any): FlightStatus {
+  private transformApiResponse(apiData: Record<string, unknown>): FlightStatus {
     const departure = apiData.departure || {};
     const arrival = apiData.arrival || {};
     

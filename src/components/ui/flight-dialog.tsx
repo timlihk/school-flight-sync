@@ -30,7 +30,7 @@ interface FlightDialogProps {
   onAddFlight: (flight: Omit<FlightDetails, 'id'>) => void;
   onRemoveFlight: (flightId: string) => void;
   onEditFlight?: (flightId: string, flight: Omit<FlightDetails, 'id'>) => void;
-  onApplyCorrection?: (flightNumber: string, originalDate: string, correctedFlight: FlightDetails) => Promise<any>;
+  onApplyCorrection?: (flightNumber: string, originalDate: string, correctedFlight: FlightDetails) => Promise<unknown>;
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;

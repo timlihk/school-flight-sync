@@ -24,7 +24,6 @@ class OpenSkyService {
   // OAuth2 token management
   private async getAccessToken(): Promise<string | null> {
     // Skip OAuth2 in browser environment due to CORS restrictions
-    console.log('🚫 Skipping OAuth2 in browser due to CORS policy - using anonymous access');
     return null;
 
     // Note: OAuth2 Client Credentials flow is blocked by CORS in browsers
@@ -109,7 +108,6 @@ class OpenSkyService {
       
       // Normalize callsign for search
       const callsign = this.normalizeCallsign(flightNumber);
-      console.log(`🔄 Converting flight number ${flightNumber} to callsign ${callsign} for OpenSky flights API`);
       
       // Get authentication
       const headers: HeadersInit = {};
@@ -122,7 +120,6 @@ class OpenSkyService {
 
       // Prioritize airports based on flight number for more targeted search
       const airportsByFlight = this.getRelevantAirports(flightNumber);
-      console.log(`🎯 Searching ${airportsByFlight.length} prioritized airports for ${flightNumber}`);
       
       for (const airport of airportsByFlight) {
         try {
@@ -130,7 +127,6 @@ class OpenSkyService {
           if (this.lastApiCall) {
             const timeSinceLastCall = Date.now() - this.lastApiCall.getTime();
             if (timeSinceLastCall < 5000) { // 5 second delay between airport searches
-              console.log(`⏱️ Waiting ${5000 - timeSinceLastCall}ms before next airport search...`);
               await new Promise(resolve => setTimeout(resolve, 5000 - timeSinceLastCall));
             }
           }
@@ -138,35 +134,30 @@ class OpenSkyService {
 
           // Check departures from this airport
           const departureUrl = `${this.baseUrl}/flights/departure?airport=${airport}&begin=${beginTime}&end=${endTime}`;
-          console.log(`🔍 Searching departures from ${airport} for ${callsign}`);
           
           const depResponse = await fetch(departureUrl, { headers });
           
           if (depResponse.status === 429) {
-            console.log(`⚠️ Rate limited at ${airport}, stopping search to preserve quota`);
             break; // Stop searching if we hit rate limits
           }
           
           if (depResponse.ok) {
             const depFlights = await depResponse.json();
-            console.log(`📊 Found ${depFlights.length} departures from ${airport}`);
             
-            const matchingFlight = depFlights.find((flight: any) => 
-              flight.callsign?.trim().toUpperCase() === callsign.toUpperCase()
+            const matchingFlight = depFlights.find((flight: Record<string, unknown>) => 
+              (flight.callsign as string)?.trim().toUpperCase() === callsign.toUpperCase()
             );
             
             if (matchingFlight) {
-              console.log(`✅ Found matching departure flight at ${airport}`);
               return this.transformOpenSkyFlightData(matchingFlight, flightNumber, 'departure');
             }
           } else {
-            console.log(`❌ Failed to fetch departures from ${airport}: ${depResponse.status}`);
+            // Failed to fetch departures - continue to next airport
           }
           
           // For past flights only, check arrivals
           if (flightDate < new Date()) {
             const arrivalUrl = `${this.baseUrl}/flights/arrival?airport=${airport}&begin=${beginTime}&end=${endTime}`;
-            console.log(`🔍 Searching arrivals at ${airport} for ${callsign}`);
             
             // Add small delay between departure and arrival requests
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -174,28 +165,24 @@ class OpenSkyService {
             const arrResponse = await fetch(arrivalUrl, { headers });
             
             if (arrResponse.status === 429) {
-              console.log(`⚠️ Rate limited at ${airport} arrivals, stopping search`);
               break;
             }
             
             if (arrResponse.ok) {
               const arrFlights = await arrResponse.json();
-              console.log(`📊 Found ${arrFlights.length} arrivals at ${airport}`);
               
-              const matchingFlight = arrFlights.find((flight: any) => 
-                flight.callsign?.trim().toUpperCase() === callsign.toUpperCase()
+              const matchingFlight = arrFlights.find((flight: Record<string, unknown>) => 
+                (flight.callsign as string)?.trim().toUpperCase() === callsign.toUpperCase()
               );
               
               if (matchingFlight) {
-                console.log(`✅ Found matching arrival flight at ${airport}`);
                 return this.transformOpenSkyFlightData(matchingFlight, flightNumber, 'arrival');
               }
             } else {
-              console.log(`❌ Failed to fetch arrivals at ${airport}: ${arrResponse.status}`);
+              // Failed to fetch arrivals - continue
             }
           }
         } catch (error) {
-          console.log(`❌ Error searching ${airport}:`, error);
           continue;
         }
       }
@@ -268,7 +255,6 @@ class OpenSkyService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-      console.log('🌐 Making OpenSky API request...');
       const response = await fetch(statesUrl, { 
         headers,
         signal: controller.signal
@@ -277,49 +263,36 @@ class OpenSkyService {
       });
 
       if (!response.ok) {
-        console.error(`❌ OpenSky API request failed: ${response.status} ${response.statusText}`);
         throw new Error(`OpenSky API request failed: ${response.status}`);
       }
 
-      console.log('✅ OpenSky API request successful');
 
       const data = await response.json();
-      console.log(`📊 OpenSky API returned ${data.states?.length || 0} flight states`);
 
       if (!data.states || data.states.length === 0) {
-        console.log('❌ No flight states in OpenSky response');
         return {
           success: false,
           error: 'No flight data available'
         };
       }
 
-      console.log(`🔍 Looking for callsign: ${callsign.toUpperCase()}`);
       
       // Log first few callsigns for debugging
-      const sampleCallsigns = data.states.slice(0, 10).map((state: any[]) => state[1]?.trim()).filter(Boolean);
-      console.log('📝 Sample callsigns from OpenSky:', sampleCallsigns);
+      const sampleCallsigns = data.states.slice(0, 10).map((state: unknown[]) => (state[1] as string)?.trim()).filter(Boolean);
 
       // Find flight by callsign - with detailed logging
-      const flightState = data.states.find((state: any[]) => {
-        const stateCallsign = state[1]?.trim().toUpperCase();
+      const flightState = data.states.find((state: unknown[]) => {
+        const stateCallsign = (state[1] as string)?.trim().toUpperCase();
         const matches = stateCallsign === callsign.toUpperCase();
-        if (stateCallsign && (stateCallsign.includes('CPA') || stateCallsign.includes('CX'))) {
-          console.log(`🔍 Checking ${stateCallsign} vs ${callsign.toUpperCase()} = ${matches}`);
-        }
         return matches;
       });
 
       if (!flightState) {
         // Additional search patterns for debugging
-        const partialMatches = data.states.filter((state: any[]) => {
-          const stateCallsign = state[1]?.trim().toUpperCase();
+        const partialMatches = data.states.filter((state: unknown[]) => {
+          const stateCallsign = (state[1] as string)?.trim().toUpperCase();
           return stateCallsign && (stateCallsign.includes('CPA') || stateCallsign.includes('239'));
         });
-        
-        if (partialMatches.length > 0) {
-          console.log('🔍 Partial matches found:', partialMatches.map(state => state[1]?.trim()));
-        }
         
         return {
           success: false,
@@ -334,7 +307,6 @@ class OpenSkyService {
         data: flightStatus
       };
     } catch (error) {
-      console.error('OpenSky API error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch flight status'
@@ -373,7 +345,6 @@ class OpenSkyService {
     
     // For CX flights, prioritize Hong Kong heavily
     if (airline === 'CX') {
-      console.log(`🎯 CX flight detected - prioritizing Hong Kong (VHHH) and limiting search`);
       return ['VHHH', 'EGLL', 'EGKK']; // HK + London only for Cathay Pacific
     }
     
@@ -415,7 +386,7 @@ class OpenSkyService {
     return flightNumber;
   }
 
-  private transformOpenSkyFlightData(flightData: any, originalFlightNumber: string, type: 'departure' | 'arrival'): FlightStatusResponse {
+  private transformOpenSkyFlightData(flightData: Record<string, unknown>, originalFlightNumber: string, type: 'departure' | 'arrival'): FlightStatusResponse {
     try {
       // OpenSky flight data structure
       const {
@@ -484,7 +455,7 @@ class OpenSkyService {
     }
   }
 
-  private transformOpenSkyResponse(stateVector: any[], originalFlightNumber: string): FlightStatus {
+  private transformOpenSkyResponse(stateVector: unknown[], originalFlightNumber: string): FlightStatus {
     // OpenSky state vector format:
     // [0] icao24, [1] callsign, [2] origin_country, [3] time_position, 
     // [4] last_contact, [5] longitude, [6] latitude, [7] baro_altitude,
@@ -495,7 +466,7 @@ class OpenSkyService {
       icao24, callsign, originCountry, timePosition, lastContact,
       longitude, latitude, baroAltitude, onGround, velocity,
       trueTrack, verticalRate
-    ] = stateVector;
+    ] = stateVector as [string, string, string, number, number, number, number, number, boolean, number, number, number];
 
     // Determine flight status based on available data
     let status: FlightStatus['status'] = 'unknown';
