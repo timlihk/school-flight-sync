@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FlightDetails } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
 import { transformFlightToDb, transformDbToFlight, transformDbFlightsArray } from '@/utils/flightTransforms';
-import { flightStatusService } from '@/services/flightStatusService';
+import { hybridFlightService } from '@/services/hybridFlightService';
 
 // Query keys for React Query
 const QUERY_KEYS = {
@@ -216,7 +216,7 @@ export function useFlights() {
   const checkFlightStatus = async (flight: FlightDetails): Promise<FlightDetails> => {
     try {
       const dateStr = flight.departure.date.toISOString().split('T')[0];
-      const statusResponse = await flightStatusService.getFlightStatus(flight.flightNumber, dateStr);
+      const statusResponse = await hybridFlightService.getFlightStatus(flight.flightNumber, dateStr);
       
       if (statusResponse.success && statusResponse.data) {
         const updatedFlight: FlightDetails = {

@@ -22,6 +22,14 @@ export interface FlightStatus {
     type: string;
     registration: string;
   };
+  // Additional position data for OpenSky API
+  position?: {
+    longitude: number;
+    latitude: number;
+    altitude?: number;
+    velocity: number;
+    heading: number;
+  };
   lastUpdated: string;
 }
 
