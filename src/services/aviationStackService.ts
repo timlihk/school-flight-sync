@@ -150,6 +150,8 @@ class AviationStackService {
         arrivalAirport: arrival?.iata,
         gate: departure?.gate,
         terminal: departure?.terminal,
+        arrivalGate: arrival?.gate,
+        arrivalTerminal: arrival?.terminal,
         airline: airline?.name
       };
 

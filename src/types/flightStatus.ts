@@ -18,6 +18,8 @@ export interface FlightStatus {
   };
   gate?: string;
   terminal?: string;
+  arrivalGate?: string;
+  arrivalTerminal?: string;
   aircraft?: {
     type: string;
     registration: string;

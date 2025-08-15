@@ -245,7 +245,7 @@ class FlightLookupService {
             airport: this.formatAirportWithTerminal(arrivalAirport, airlineCode),
             date: scheduleResponse.data.actualArrival?.date || this.calculateArrivalDate(date),
             time: scheduleResponse.data.actualArrival?.time || scheduleResponse.data.estimatedArrival?.time || '14:00',
-            terminal: this.getTerminalInfo(arrivalAirport, airlineCode)
+            terminal: scheduleResponse.data.arrivalTerminal || this.getTerminalInfo(arrivalAirport, airlineCode)
           },
           aircraft: scheduleResponse.data.aircraft
         };
