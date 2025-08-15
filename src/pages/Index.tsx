@@ -12,6 +12,7 @@ const TransportDialog = lazy(() => import("@/components/ui/transport-dialog").th
 const ToDoDialog = lazy(() => import("@/components/ui/todo-dialog").then(module => ({ default: module.ToDoDialog })));
 const ExportDialog = lazy(() => import("@/components/ui/export-dialog").then(module => ({ default: module.ExportDialog })));
 import { EventSections } from "@/components/ui/event-sections";
+import { ApiStatusDebug } from "@/components/debug/api-status";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
@@ -297,6 +298,13 @@ export default function Index() {
             />
           </Suspense>
         </div>
+        
+        {/* Debug API Status - only show in development */}
+        {import.meta.env.DEV && (
+          <div className="mt-4">
+            <ApiStatusDebug />
+          </div>
+        )}
       </div>
 
       {/* Main Content */}

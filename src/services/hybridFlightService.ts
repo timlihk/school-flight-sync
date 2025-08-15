@@ -57,6 +57,35 @@ class HybridFlightService {
     }
   }
 
+  // Get detailed authentication status
+  async getAuthenticationInfo(): Promise<{
+    opensky: {
+      available: boolean;
+      method: 'oauth2' | 'basic' | 'anonymous';
+      tokenValid?: boolean;
+      recommended: boolean;
+    };
+    aviationstack: {
+      available: boolean;
+      method: 'api_key' | 'anonymous';
+    };
+  }> {
+    const openskyStatus = await this.primaryService.getAuthenticationStatus();
+    
+    return {
+      opensky: {
+        available: openskyStatus.hasOAuth2 || openskyStatus.hasBasicAuth,
+        method: openskyStatus.currentMethod,
+        tokenValid: openskyStatus.tokenValid,
+        recommended: openskyStatus.currentMethod === 'oauth2'
+      },
+      aviationstack: {
+        available: !!(import.meta.env.VITE_AVIATION_API_KEY),
+        method: import.meta.env.VITE_AVIATION_API_KEY ? 'api_key' : 'anonymous'
+      }
+    };
+  }
+
   // Method to check service availability
   async checkServiceAvailability(): Promise<{
     opensky: boolean;

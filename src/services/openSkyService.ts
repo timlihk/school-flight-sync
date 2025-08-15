@@ -2,12 +2,68 @@ import { FlightStatus, FlightStatusResponse } from '@/types/flightStatus';
 
 // OpenSky Network API service for real-time flight tracking
 // Provides significantly better rate limits (4000 daily credits vs 100/month)
+// Uses OAuth2 Client Credentials Flow (recommended) with Basic Auth fallback
 class OpenSkyService {
   private lastApiCall: Date | null = null;
   private readonly rateLimitDelay = 10000; // 10 seconds between API calls for OpenSky
   private readonly baseUrl = 'https://opensky-network.org/api';
+  private readonly authUrl = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
+  
+  // OAuth2 Client Credentials (preferred method)
+  private readonly clientId = import.meta.env.VITE_OPENSKY_CLIENT_ID || '';
+  private readonly clientSecret = import.meta.env.VITE_OPENSKY_CLIENT_SECRET || '';
+  
+  // Basic Auth (legacy, being deprecated)
   private readonly username = import.meta.env.VITE_OPENSKY_USERNAME || '';
   private readonly password = import.meta.env.VITE_OPENSKY_PASSWORD || '';
+  
+  // Token management
+  private accessToken: string | null = null;
+  private tokenExpiry: Date | null = null;
+
+  // OAuth2 token management
+  private async getAccessToken(): Promise<string | null> {
+    // Check if we have a valid token
+    if (this.accessToken && this.tokenExpiry && new Date() < this.tokenExpiry) {
+      return this.accessToken;
+    }
+
+    // Only try OAuth2 if we have client credentials
+    if (!this.clientId || !this.clientSecret) {
+      return null;
+    }
+
+    try {
+      const response = await fetch(this.authUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to obtain OAuth2 token:', response.status);
+        return null;
+      }
+
+      const tokenData = await response.json();
+      this.accessToken = tokenData.access_token;
+      
+      // Tokens expire after 30 minutes, set expiry to 25 minutes for safety
+      this.tokenExpiry = new Date(Date.now() + 25 * 60 * 1000);
+      
+      console.log('Successfully obtained OpenSky OAuth2 token');
+      return this.accessToken;
+    } catch (error) {
+      console.error('Error obtaining OAuth2 token:', error);
+      return null;
+    }
+  }
 
   async getFlightStatus(flightNumber: string, date: string): Promise<FlightStatusResponse> {
     try {
@@ -23,19 +79,23 @@ class OpenSkyService {
       this.lastApiCall = new Date();
 
       // OpenSky doesn't use flight numbers directly, so we need to search by callsign
-      // First, try to get all flights and filter by callsign
       const callsign = this.normalizeCallsign(flightNumber);
       
       // Get current flight states
-      const statesUrl = this.username && this.password 
-        ? `${this.baseUrl}/states/all` 
-        : `${this.baseUrl}/states/all`;
-
+      const statesUrl = `${this.baseUrl}/states/all`;
       const headers: HeadersInit = {};
       
-      // Add authentication if credentials are provided (for higher rate limits)
-      if (this.username && this.password) {
+      // Try OAuth2 first (preferred method)
+      const token = await this.getAccessToken();
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+        console.log('Using OAuth2 authentication for OpenSky API');
+      } else if (this.username && this.password) {
+        // Fallback to Basic Auth (legacy)
         headers.Authorization = `Basic ${btoa(`${this.username}:${this.password}`)}`;
+        console.log('Using Basic Auth for OpenSky API (legacy method)');
+      } else {
+        console.log('No authentication credentials available, using anonymous access');
       }
 
       const response = await fetch(statesUrl, { headers });
@@ -164,6 +224,43 @@ class OpenSkyService {
         heading: trueTrack || 0
       } : undefined
     };
+  }
+
+  // Check authentication status and method
+  async getAuthenticationStatus(): Promise<{
+    hasOAuth2: boolean;
+    hasBasicAuth: boolean;
+    currentMethod: 'oauth2' | 'basic' | 'anonymous';
+    tokenValid: boolean;
+  }> {
+    const hasOAuth2 = !!(this.clientId && this.clientSecret);
+    const hasBasicAuth = !!(this.username && this.password);
+    
+    let tokenValid = false;
+    if (hasOAuth2) {
+      const token = await this.getAccessToken();
+      tokenValid = !!token;
+    }
+    
+    let currentMethod: 'oauth2' | 'basic' | 'anonymous' = 'anonymous';
+    if (hasOAuth2 && tokenValid) {
+      currentMethod = 'oauth2';
+    } else if (hasBasicAuth) {
+      currentMethod = 'basic';
+    }
+    
+    return {
+      hasOAuth2,
+      hasBasicAuth,
+      currentMethod,
+      tokenValid
+    };
+  }
+
+  // Clear cached token (useful for testing or force refresh)
+  clearToken(): void {
+    this.accessToken = null;
+    this.tokenExpiry = null;
   }
 
   // Mock data for demonstration when API fails
