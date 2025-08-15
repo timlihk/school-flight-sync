@@ -180,6 +180,17 @@ class OpenSkyService {
   async getFlightStatus(flightNumber: string, date: string): Promise<FlightStatusResponse> {
     console.log(`🔍 OpenSky: Checking status for ${flightNumber} on ${date}`);
     
+    // Check if the flight date is in the future - OpenSky /states/all only shows current flights
+    const flightDate = new Date(date);
+    const now = new Date();
+    const isFlightInFuture = flightDate.getTime() > (now.getTime() + 24 * 60 * 60 * 1000); // More than 24 hours in future
+    
+    if (isFlightInFuture) {
+      console.log(`⏰ Flight ${flightNumber} on ${date} is more than 24 hours in the future. Trying flight schedules instead of current states.`);
+      // For future flights, try to get schedule information instead
+      return await this.getFlightSchedule(flightNumber, date);
+    }
+    
     try {
       // Rate limiting: ensure minimum delay between API calls
       if (this.lastApiCall) {
@@ -236,24 +247,46 @@ class OpenSkyService {
       console.log('✅ OpenSky API request successful');
 
       const data = await response.json();
+      console.log(`📊 OpenSky API returned ${data.states?.length || 0} flight states`);
 
       if (!data.states || data.states.length === 0) {
+        console.log('❌ No flight states in OpenSky response');
         return {
           success: false,
           error: 'No flight data available'
         };
       }
 
-      // Find flight by callsign
+      console.log(`🔍 Looking for callsign: ${callsign.toUpperCase()}`);
+      
+      // Log first few callsigns for debugging
+      const sampleCallsigns = data.states.slice(0, 10).map((state: any[]) => state[1]?.trim()).filter(Boolean);
+      console.log('📝 Sample callsigns from OpenSky:', sampleCallsigns);
+
+      // Find flight by callsign - with detailed logging
       const flightState = data.states.find((state: any[]) => {
         const stateCallsign = state[1]?.trim().toUpperCase();
-        return stateCallsign === callsign.toUpperCase();
+        const matches = stateCallsign === callsign.toUpperCase();
+        if (stateCallsign && (stateCallsign.includes('CPA') || stateCallsign.includes('CX'))) {
+          console.log(`🔍 Checking ${stateCallsign} vs ${callsign.toUpperCase()} = ${matches}`);
+        }
+        return matches;
       });
 
       if (!flightState) {
+        // Additional search patterns for debugging
+        const partialMatches = data.states.filter((state: any[]) => {
+          const stateCallsign = state[1]?.trim().toUpperCase();
+          return stateCallsign && (stateCallsign.includes('CPA') || stateCallsign.includes('239'));
+        });
+        
+        if (partialMatches.length > 0) {
+          console.log('🔍 Partial matches found:', partialMatches.map(state => state[1]?.trim()));
+        }
+        
         return {
           success: false,
-          error: 'Flight not found'
+          error: `Flight not found. Searched for: ${callsign.toUpperCase()}. Found ${data.states.length} total flights.`
         };
       }
 
