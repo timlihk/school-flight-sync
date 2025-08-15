@@ -169,34 +169,35 @@ export default function Index() {
   }, []);
 
   // Auto-update flight statuses every 4 hours for flights within 24 hours (API limit friendly)
-  React.useEffect(() => {
-    if (!loading && flights.length > 0) {
-      // Wrap in try-catch to prevent errors from breaking the component
-      const performUpdate = async () => {
-        try {
-          await updateNearFlightStatuses();
-        } catch (error) {
-          console.error('Flight status update failed:', error);
-          // Don't throw the error, just log it
-        }
-      };
+  // DISABLED temporarily to troubleshoot errors
+  // React.useEffect(() => {
+  //   if (!loading && flights.length > 0) {
+  //     // Wrap in try-catch to prevent errors from breaking the component
+  //     const performUpdate = async () => {
+  //       try {
+  //         await updateNearFlightStatuses();
+  //       } catch (error) {
+  //         console.error('Flight status update failed:', error);
+  //         // Don't throw the error, just log it
+  //       }
+  //     };
 
-      // Delay initial update to avoid interfering with page load
-      const timeoutId = setTimeout(() => {
-        performUpdate();
-      }, 5000); // Wait 5 seconds after page load
+  //     // Delay initial update to avoid interfering with page load
+  //     const timeoutId = setTimeout(() => {
+  //       performUpdate();
+  //     }, 5000); // Wait 5 seconds after page load
       
-      // Set up interval for automatic updates
-      const interval = setInterval(() => {
-        performUpdate();
-      }, 4 * 60 * 60 * 1000); // 4 hours
+  //     // Set up interval for automatic updates
+  //     const interval = setInterval(() => {
+  //       performUpdate();
+  //     }, 4 * 60 * 60 * 1000); // 4 hours
       
-      return () => {
-        clearTimeout(timeoutId);
-        clearInterval(interval);
-      };
-    }
-  }, [loading, flights.length, updateNearFlightStatuses]);
+  //     return () => {
+  //       clearTimeout(timeoutId);
+  //       clearInterval(interval);
+  //     };
+  //   }
+  // }, [loading, flights.length, updateNearFlightStatuses]);
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
@@ -315,8 +316,8 @@ export default function Index() {
           </Suspense>
         </div>
         
-        {/* Debug API Status - only show in development */}
-        {import.meta.env.DEV && (
+        {/* Debug API Status - DISABLED temporarily to troubleshoot errors */}
+        {/* {import.meta.env.DEV && (
           <div className="mt-4">
             <ErrorBoundary fallback={
               <div className="p-2 text-xs text-muted-foreground border border-dashed rounded">
@@ -326,7 +327,7 @@ export default function Index() {
               <ApiStatusDebug />
             </ErrorBoundary>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Main Content */}
@@ -404,29 +405,47 @@ export default function Index() {
 
         {selectedTerm && (
           <>
-            <Suspense fallback={<DialogLoader />}>
-              <FlightDialog
-                term={selectedTerm}
-                flights={flights.filter(f => f.termId === selectedTerm.id)}
-                onAddFlight={addFlight}
-                onEditFlight={editFlight}
-                onRemoveFlight={removeFlight}
-                open={showFlightDialog}
-                onOpenChange={setShowFlightDialog}
-              />
-            </Suspense>
+            <ErrorBoundary fallback={
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white p-4 rounded-lg">
+                  <p>Flight dialog failed to load</p>
+                  <button onClick={() => setShowFlightDialog(false)}>Close</button>
+                </div>
+              </div>
+            }>
+              <Suspense fallback={<DialogLoader />}>
+                <FlightDialog
+                  term={selectedTerm}
+                  flights={flights.filter(f => f.termId === selectedTerm.id)}
+                  onAddFlight={addFlight}
+                  onEditFlight={editFlight}
+                  onRemoveFlight={removeFlight}
+                  open={showFlightDialog}
+                  onOpenChange={setShowFlightDialog}
+                />
+              </Suspense>
+            </ErrorBoundary>
             
-            <Suspense fallback={<DialogLoader />}>
-              <TransportDialog
-                term={selectedTerm}
-                transport={getTransportForTerm(selectedTerm.id)}
-                onAddTransport={addTransport}
-                onEditTransport={editTransport}
-                onRemoveTransport={removeTransport}
-                open={showTransportDialog}
-                onOpenChange={setShowTransportDialog}
-              />
-            </Suspense>
+            <ErrorBoundary fallback={
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white p-4 rounded-lg">
+                  <p>Transport dialog failed to load</p>
+                  <button onClick={() => setShowTransportDialog(false)}>Close</button>
+                </div>
+              </div>
+            }>
+              <Suspense fallback={<DialogLoader />}>
+                <TransportDialog
+                  term={selectedTerm}
+                  transport={getTransportForTerm(selectedTerm.id)}
+                  onAddTransport={addTransport}
+                  onEditTransport={editTransport}
+                  onRemoveTransport={removeTransport}
+                  open={showTransportDialog}
+                  onOpenChange={setShowTransportDialog}
+                />
+              </Suspense>
+            </ErrorBoundary>
 
             <TermDetailsDialog
               term={selectedTerm}

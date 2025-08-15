@@ -199,6 +199,9 @@ export function FlightDialog({
 
     setIsLookingUp(true);
     try {
+      // Add a small delay to ensure state updates are processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const result = await flightLookupService.lookupFlight(
         newFlight.flightNumber,
         newFlight.departureDate

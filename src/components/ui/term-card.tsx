@@ -446,9 +446,13 @@ const TermCard = memo(function TermCard({
                                        variant="ghost"
                                        size="sm"
                                        className="h-6 w-6 p-0"
-                                       onClick={(e) => {
+                                       onClick={async (e) => {
                                          e.stopPropagation();
-                                         onUpdateFlightStatus(flight.id);
+                                         try {
+                                           await onUpdateFlightStatus(flight.id);
+                                         } catch (error) {
+                                           console.error('Flight status update failed:', error);
+                                         }
                                        }}
                                        title="Update flight status"
                                      >
