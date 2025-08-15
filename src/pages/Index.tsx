@@ -7,6 +7,7 @@ import { FlightDialog } from "@/components/ui/flight-dialog";
 import { TransportDialog } from "@/components/ui/transport-dialog";
 import { ToDoDialog } from "@/components/ui/todo-dialog";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
+import { ExportDialog } from "@/components/ui/export-dialog";
 import { SchoolHeader } from "@/components/school-header";
 import { EventSections } from "@/components/ui/event-sections";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
@@ -228,6 +229,12 @@ export default function Index() {
             onAddFlight={handleAddFlight}
             onAddTransport={handleAddTransport}
             onShowTerm={handleShowTerm}
+          />
+          <ExportDialog
+            flights={flights}
+            transport={transport}
+            notTravelling={notTravelling}
+            terms={mockTerms}
           />
         </div>
       </div>
