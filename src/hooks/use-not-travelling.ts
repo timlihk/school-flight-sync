@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { NotTravellingStatus } from '@/types/school';
@@ -38,13 +39,16 @@ export function useNotTravelling() {
     staleTime: 5 * 60 * 1000, // 5 minutes - changes less frequently
   });
 
-  if (error) {
-    toast({
-      title: "Error Loading Status",
-      description: "Failed to load travel status from database.",
-      variant: "destructive",
-    });
-  }
+  React.useEffect(() => {
+    if (error) {
+      console.error('Error loading not travelling status:', error);
+      toast({
+        title: "Error Loading Status",
+        description: "Failed to load travel status from database.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
 
   // Simplified not travelling status update with invalidation

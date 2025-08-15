@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TransportDetails } from '@/types/school';
@@ -45,14 +46,16 @@ export function useTransport() {
     staleTime: 3 * 60 * 1000, // 3 minutes
   });
 
-  // Show error toast when query fails
-  if (error) {
-    toast({
-      title: "Error Loading Transport",
-      description: "Failed to load transport data from database.",
-      variant: "destructive",
-    });
-  }
+  React.useEffect(() => {
+    if (error) {
+      console.error('Error loading transport:', error);
+      toast({
+        title: "Error Loading Transport",
+        description: "Failed to load transport data from database.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
 
   // Add transport mutation with optimistic updates

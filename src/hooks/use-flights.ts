@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FlightDetails } from '@/types/school';
@@ -35,14 +36,17 @@ export function useFlights() {
     staleTime: 2 * 60 * 1000, // 2 minutes for flights data
   });
 
-  // Show error toast when query fails
-  if (error) {
-    toast({
-      title: "Error Loading Flights",
-      description: "Failed to load flight data from database.",
-      variant: "destructive",
-    });
-  }
+  // Handle errors with useEffect to avoid rendering issues
+  React.useEffect(() => {
+    if (error) {
+      console.error('Error loading flights:', error);
+      toast({
+        title: "Error Loading Flights",
+        description: "Failed to load flight data from database.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
 
   // Add flight mutation with optimistic updates

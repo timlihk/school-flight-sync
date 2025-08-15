@@ -16,17 +16,19 @@ const Print = lazy(() => import("./pages/Print"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      retry: 1, // Reduce retries to prevent multiple error states
+      retryDelay: 1000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      gcTime: 10 * 60 * 1000, // 10 minutes
       refetchInterval: false,
+      throwOnError: false, // Prevent errors from throwing to error boundary
     },
     mutations: {
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      retry: 1,
+      retryDelay: 1000,
+      throwOnError: false, // Handle errors gracefully
     },
   },
 });
