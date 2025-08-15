@@ -43,7 +43,7 @@ class FlightLookupService {
     // London Heathrow
     'LHR': {
       'BA': 'T5', 'IB': 'T5', 'EI': 'T5', // Terminal 5 (BA hub)
-      'VS': 'T3', 'DL': 'T3', // Terminal 3
+      'CX': 'T3', 'VS': 'T3', 'DL': 'T3', // Terminal 3 (Cathay Pacific, Virgin Atlantic)
       'AF': 'T4', 'KL': 'T4', 'EY': 'T4', // Terminal 4  
       'UA': 'T2', 'LH': 'T2', 'SQ': 'T2', // Terminal 2
       'default': 'T2'
