@@ -25,6 +25,7 @@ interface TermCardProps {
   isExpanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
   onUpdateFlightStatus?: (flightId: string) => void;
+  isUpdatingFlightStatus?: (flightId: string) => boolean;
 }
 
 const TermCard = memo(function TermCard({ 
@@ -41,7 +42,8 @@ const TermCard = memo(function TermCard({
   onCardClick,
   isExpanded,
   onExpandedChange,
-  onUpdateFlightStatus
+  onUpdateFlightStatus,
+  isUpdatingFlightStatus
 }: TermCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [isOpen, setIsOpen] = useState(isExpanded || false);
@@ -241,16 +243,51 @@ const TermCard = memo(function TermCard({
                 <div key={flight.id} className="p-2 bg-muted/30 rounded-md">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-medium">{flight.airline} {flight.flightNumber}</span>
-                    <span className="text-muted-foreground">
-                      {format(flight.departure.date, 'MMM dd')} {flight.departure.time}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">
+                        {format(flight.departure.date, 'MMM dd')} {flight.departure.time}
+                      </span>
+                      {onUpdateFlightStatus && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-4 p-0"
+                          disabled={isUpdatingFlightStatus?.(flight.id) || false}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await onUpdateFlightStatus(flight.id);
+                          }}
+                          title="Update flight status"
+                        >
+                          <RefreshCw className={`h-2 w-2 ${isUpdatingFlightStatus?.(flight.id) ? 'animate-spin' : ''}`} />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="flex justify-between items-center text-xs text-muted-foreground">
                     <span>{flight.departure.airport} → {flight.arrival.airport}</span>
-                    {flight.confirmationCode && (
-                      <span className="font-medium">{flight.confirmationCode}</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(flight)}
+                      {flight.confirmationCode && (
+                        <span className="font-medium">{flight.confirmationCode}</span>
+                      )}
+                    </div>
                   </div>
+                  {flight.status && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {flight.status.gate && (
+                        <span className="mr-3">Gate: {flight.status.gate}</span>
+                      )}
+                      {flight.status.estimatedArrival && (
+                        <span>Est. arrival: {flight.status.estimatedArrival.time}</span>
+                      )}
+                      {flight.status.lastUpdated && (
+                        <div className="text-xs text-muted-foreground/70 mt-1">
+                          Updated: {format(new Date(flight.status.lastUpdated), 'HH:mm')}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -446,17 +483,14 @@ const TermCard = memo(function TermCard({
                                        variant="ghost"
                                        size="sm"
                                        className="h-6 w-6 p-0"
+                                       disabled={isUpdatingFlightStatus?.(flight.id) || false}
                                        onClick={async (e) => {
                                          e.stopPropagation();
-                                         try {
-                                           await onUpdateFlightStatus(flight.id);
-                                         } catch (error) {
-                                           console.error('Flight status update failed:', error);
-                                         }
+                                         await onUpdateFlightStatus(flight.id);
                                        }}
                                        title="Update flight status"
                                      >
-                                       <RefreshCw className="h-3 w-3" />
+                                       <RefreshCw className={`h-3 w-3 ${isUpdatingFlightStatus?.(flight.id) ? 'animate-spin' : ''}`} />
                                      </Button>
                                    )}
                                  </div>

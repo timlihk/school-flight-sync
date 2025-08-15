@@ -41,7 +41,7 @@ export default function Index() {
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
   
   const { logout } = useFamilyAuth();
-  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, updateNearFlightStatuses, applyFlightCorrection } = useFlights();
+  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, updateNearFlightStatuses, applyFlightCorrection, isUpdatingFlightStatus } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus } = useNotTravelling();
 
@@ -370,6 +370,7 @@ export default function Index() {
                   isExpanded={expandedCards.has(term.id)}
                   onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
                   onUpdateFlightStatus={updateFlightStatus}
+                  isUpdatingFlightStatus={isUpdatingFlightStatus}
                 />
                 ))}
               </div>
@@ -404,6 +405,7 @@ export default function Index() {
                   isExpanded={expandedCards.has(term.id)}
                   onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
                   onUpdateFlightStatus={updateFlightStatus}
+                  isUpdatingFlightStatus={isUpdatingFlightStatus}
                 />
                 ))}
               </div>
@@ -486,6 +488,7 @@ export default function Index() {
                   onExpandedChange={() => {}}
                   className="border-0 shadow-none bg-transparent"
                   onUpdateFlightStatus={updateFlightStatus}
+                  isUpdatingFlightStatus={isUpdatingFlightStatus}
                 />
               </div>
             </DialogContent>

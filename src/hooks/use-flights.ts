@@ -241,30 +241,81 @@ export function useFlights() {
     }
   };
 
-  // Update flight with status information
+  // Track which flights are currently being updated to prevent double-clicks
+  const [updatingFlights, setUpdatingFlights] = React.useState<Set<string>>(new Set());
+
+  // Update flight with status information and propagate to similar flights
   const updateFlightStatus = async (flightId: string) => {
     const flight = flights.find(f => f.id === flightId);
     if (!flight) return;
 
+    // Prevent double-clicks
+    if (updatingFlights.has(flightId)) {
+      console.log('Flight status update already in progress for', flightId);
+      return;
+    }
+
+    // Mark as updating
+    setUpdatingFlights(prev => new Set([...prev, flightId]));
+
     try {
       const updatedFlight = await checkFlightStatus(flight);
       
-      // Update the flight in the cache
-      queryClient.setQueryData<FlightDetails[]>(QUERY_KEYS.flights, (old = []) =>
-        old.map(f => f.id === flightId ? updatedFlight : f)
-      );
-
       if (updatedFlight.status) {
+        // Find all flights with same flight number and similar date
+        const similarFlights = flights.filter(f => 
+          f.flightNumber === flight.flightNumber &&
+          f.departure.date.toDateString() === flight.departure.date.toDateString()
+        );
+
+        console.log(`📊 Updating status for ${flight.flightNumber} and ${similarFlights.length - 1} similar flight(s)`);
+
+        // Update all similar flights in the cache
+        queryClient.setQueryData<FlightDetails[]>(QUERY_KEYS.flights, (old = []) =>
+          old.map(f => {
+            // Update flights with same flight number and date
+            if (f.flightNumber === flight.flightNumber && 
+                f.departure.date.toDateString() === flight.departure.date.toDateString()) {
+              return {
+                ...f,
+                status: updatedFlight.status
+              };
+            }
+            return f;
+          })
+        );
+
         toast({
           title: "Flight Status Updated",
-          description: `${updatedFlight.flightNumber} is ${updatedFlight.status.current}`,
+          description: similarFlights.length > 1 
+            ? `${updatedFlight.flightNumber} is ${updatedFlight.status.current} (updated ${similarFlights.length} flights)`
+            : `${updatedFlight.flightNumber} is ${updatedFlight.status.current}`,
+        });
+      } else {
+        // Still update the specific flight even if no status found
+        queryClient.setQueryData<FlightDetails[]>(QUERY_KEYS.flights, (old = []) =>
+          old.map(f => f.id === flightId ? updatedFlight : f)
+        );
+
+        toast({
+          title: "Status Check Complete",
+          description: `No status update available for ${flight.flightNumber}`,
+          variant: "default",
         });
       }
     } catch (error) {
+      console.error('Flight status update error:', error);
       toast({
         title: "Status Update Failed",
         description: "Could not update flight status",
         variant: "destructive",
+      });
+    } finally {
+      // Remove from updating set
+      setUpdatingFlights(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(flightId);
+        return newSet;
       });
     }
   };
@@ -340,6 +391,7 @@ export function useFlights() {
     updateFlightStatus,
     updateNearFlightStatuses,
     checkFlightStatus,
+    isUpdatingFlightStatus: (flightId: string) => updatingFlights.has(flightId),
     // Flight correction functionality
     applyFlightCorrection,
     // Expose mutation states for better UX
