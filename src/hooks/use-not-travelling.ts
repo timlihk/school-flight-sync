@@ -1,82 +1,68 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { NotTravellingStatus } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
 
+// Query keys for React Query
+const QUERY_KEYS = {
+  notTravelling: ['notTravelling'] as const,
+} as const;
+
 export function useNotTravelling() {
-  const [notTravelling, setNotTravelling] = useState<NotTravellingStatus[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Load not travelling status from database
-  const loadNotTravelling = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('not_travelling')
-        .select('*');
+  // Fetch not travelling status with React Query
+  const fetchNotTravelling = async (): Promise<NotTravellingStatus[]> => {
+    const { data, error } = await supabase
+      .from('not_travelling')
+      .select('*');
 
-      if (error) throw error;
+    if (error) throw error;
 
-      // Transform database format to NotTravellingStatus format
-      const transformedData: NotTravellingStatus[] = data?.map((item) => ({
-        termId: item.term_id,
-        noFlights: item.no_flights || undefined,
-        noTransport: item.no_transport || undefined,
-      })) || [];
+    return data?.map((item) => ({
+      termId: item.term_id,
+      noFlights: item.no_flights || undefined,
+      noTransport: item.no_transport || undefined,
+    })) || [];
+  };
 
-      setNotTravelling(transformedData);
-    } catch (error) {
-      console.error('Error loading not travelling status:', error);
-      toast({
-        title: "Error Loading Status",
-        description: "Failed to load travel status from database.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  const {
+    data: notTravelling = [],
+    isLoading: loading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: QUERY_KEYS.notTravelling,
+    queryFn: fetchNotTravelling,
+    staleTime: 5 * 60 * 1000, // 5 minutes - changes less frequently
+  });
 
-  useEffect(() => {
-    loadNotTravelling();
-  }, [loadNotTravelling]);
+  if (error) {
+    toast({
+      title: "Error Loading Status",
+      description: "Failed to load travel status from database.",
+      variant: "destructive",
+    });
+  }
 
 
+  // Simplified not travelling status update with invalidation
   const setNotTravellingStatus = async (termId: string, type: 'flights' | 'transport') => {
     try {
-      // Use upsert to either insert new record or update existing one
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('not_travelling')
         .upsert({
           term_id: termId,
           ...(type === 'flights' ? { no_flights: true } : { no_transport: true })
         }, {
           onConflict: 'term_id'
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      // Update local state
-      setNotTravelling(prev => {
-        const existing = prev.find(nt => nt.termId === termId);
-        if (existing) {
-          return prev.map(nt => 
-            nt.termId === termId 
-              ? { 
-                  ...nt, 
-                  ...(type === 'flights' ? { noFlights: true } : { noTransport: true })
-                }
-              : nt
-          );
-        } else {
-          return [...prev, { 
-            termId, 
-            ...(type === 'flights' ? { noFlights: true } : { noTransport: true })
-          }];
-        }
-      });
+      // Invalidate and refetch to get fresh data
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notTravelling });
 
       toast({
         title: "Status Updated",
@@ -147,6 +133,6 @@ export function useNotTravelling() {
     loading,
     setNotTravellingStatus,
     clearNotTravellingStatus,
-    refetch: loadNotTravelling,
+    refetch,
   };
 }
