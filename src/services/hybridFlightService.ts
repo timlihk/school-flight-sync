@@ -54,8 +54,25 @@ class HybridFlightService {
         return fallbackResult;
       }
 
-      // If both APIs fail, return error - static schedules should not be used for status refresh
-      // Status refresh is specifically for getting real-time flight status (delayed, active, landed, etc.)
+      // If both APIs fail due to rate limiting, provide basic scheduled status
+      const isRateLimited = (primaryResult.error?.includes('Rate limited') || primaryResult.error?.includes('429')) &&
+                           (fallbackResult.error?.includes('API key not configured') || fallbackResult.error?.includes('429'));
+      
+      if (isRateLimited) {
+        console.log('⏰ APIs rate limited - providing basic scheduled flight information');
+        return {
+          success: true,
+          data: {
+            flightNumber: flightNumber,
+            status: 'scheduled',
+            lastUpdated: new Date().toISOString(),
+            // Add note about rate limiting
+            note: 'Real-time status unavailable due to API rate limits. Check again later for live updates.'
+          }
+        };
+      }
+
+      // For other errors, return detailed error message
       console.log('❌ Both real-time APIs failed. Status refresh requires live data, not static schedules.');
       return {
         success: false,

@@ -36,6 +36,8 @@ export interface FlightStatus {
   departureAirport?: string;
   arrivalAirport?: string;
   lastUpdated: string;
+  // Optional note for status messages (e.g., rate limiting info)
+  note?: string;
 }
 
 export interface FlightStatusResponse {

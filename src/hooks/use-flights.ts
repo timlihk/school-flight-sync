@@ -244,80 +244,62 @@ export function useFlights() {
   // Track which flights are currently being updated to prevent double-clicks
   const [updatingFlights, setUpdatingFlights] = React.useState<Set<string>>(new Set());
 
-  // Update flight with status information and propagate to similar flights
+  // Open FlightAware for flight status instead of API calls
   const updateFlightStatus = async (flightId: string) => {
     const flight = flights.find(f => f.id === flightId);
     if (!flight) return;
 
     // Prevent double-clicks
     if (updatingFlights.has(flightId)) {
-      console.log('Flight status update already in progress for', flightId);
+      console.log('FlightAware already opening for', flightId);
       return;
     }
 
-    // Mark as updating
+    // Mark as updating (briefly, just for UI feedback)
     setUpdatingFlights(prev => new Set([...prev, flightId]));
 
     try {
-      console.log(`🔄 Updating flight status for ${flight.flightNumber} (ID: ${flightId})`);
-      const updatedFlight = await checkFlightStatus(flight);
+      console.log(`🌐 Opening FlightAware for ${flight.flightNumber}`);
       
-      if (updatedFlight.status) {
-        // Find all flights with same flight number and similar date
-        const similarFlights = flights.filter(f => 
-          f.flightNumber === flight.flightNumber &&
-          f.departure.date.toDateString() === flight.departure.date.toDateString()
-        );
-
-        console.log(`📊 Updating status for ${flight.flightNumber} and ${similarFlights.length - 1} similar flight(s)`);
-
-        // Update all similar flights in the cache
-        queryClient.setQueryData<FlightDetails[]>(QUERY_KEYS.flights, (old = []) =>
-          old.map(f => {
-            // Update flights with same flight number and date
-            if (f.flightNumber === flight.flightNumber && 
-                f.departure.date.toDateString() === flight.departure.date.toDateString()) {
-              return {
-                ...f,
-                status: updatedFlight.status
-              };
-            }
-            return f;
-          })
-        );
-
-        toast({
-          title: "Flight Status Updated",
-          description: similarFlights.length > 1 
-            ? `${updatedFlight.flightNumber} is ${updatedFlight.status.current} (updated ${similarFlights.length} flights)`
-            : `${updatedFlight.flightNumber} is ${updatedFlight.status.current}`,
-        });
-      } else {
-        // Still update the specific flight even if no status found
-        queryClient.setQueryData<FlightDetails[]>(QUERY_KEYS.flights, (old = []) =>
-          old.map(f => f.id === flightId ? updatedFlight : f)
-        );
-
-        toast({
-          title: "Status Check Complete",
-          description: `No status update available for ${flight.flightNumber}. Check browser console for details.`,
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error('Flight status update error:', error);
+      // Format date for FlightAware URL (YYYY-MM-DD)
+      const flightDate = flight.departure.date.toISOString().split('T')[0];
+      
+      // FlightAware URL formats to try:
+      // Option 1: Direct flight search with date
+      // const flightAwareUrl = `https://flightaware.com/live/flight/${flight.flightNumber}/${flightDate.replace(/-/g, '')}`;
+      
+      // Option 2: Flight finder page with prefilled search
+      // const flightAwareUrl = `https://flightaware.com/live/findflight/?flight=${flight.flightNumber}&date=${flightDate}`;
+      
+      // Option 3: Simple flight search (most reliable)
+      const flightAwareUrl = `https://flightaware.com/live/flight/${flight.flightNumber}`;
+      
+      console.log(`🔗 Opening: ${flightAwareUrl}`);
+      
+      // Open FlightAware in new tab
+      window.open(flightAwareUrl, '_blank', 'noopener,noreferrer');
+      
       toast({
-        title: "Status Update Failed",
-        description: "Could not update flight status",
+        title: "Flight Status",
+        description: `Opening FlightAware for ${flight.flightNumber} on ${flightDate}`,
+      });
+      
+    } catch (error) {
+      console.error('Error opening FlightAware:', error);
+      toast({
+        title: "Error",
+        description: "Could not open FlightAware",
         variant: "destructive",
       });
     } finally {
-      // Remove from updating set
-      setUpdatingFlights(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(flightId);
-        return newSet;
-      });
+      // Remove from updating set after brief delay for UI feedback
+      setTimeout(() => {
+        setUpdatingFlights(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(flightId);
+          return newSet;
+        });
+      }, 1000);
     }
   };
 
