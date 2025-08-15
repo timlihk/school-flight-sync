@@ -5,7 +5,7 @@ import { FlightStatus, FlightStatusResponse } from '@/types/flightStatus';
 // Uses OAuth2 Client Credentials Flow (recommended) with Basic Auth fallback
 class OpenSkyService {
   private lastApiCall: Date | null = null;
-  private readonly rateLimitDelay = 10000; // 10 seconds between API calls for OpenSky
+  private readonly rateLimitDelay = 30000; // 30 seconds between API calls for OpenSky (stricter rate limiting)
   private readonly baseUrl = 'https://opensky-network.org/api';
   private readonly authUrl = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
   
@@ -120,45 +120,82 @@ class OpenSkyService {
         headers.Authorization = `Basic ${btoa(`${this.username}:${this.password}`)}`;
       }
 
-      // Try to find the flight by searching major airports
-      const majorAirports = ['VHHH', 'EGLL', 'EGKK', 'LFPG', 'EDDF', 'EHAM', 'OMDB', 'WSSS', 'RJAA', 'RJTT'];
+      // Prioritize airports based on flight number for more targeted search
+      const airportsByFlight = this.getRelevantAirports(flightNumber);
+      console.log(`🎯 Searching ${airportsByFlight.length} prioritized airports for ${flightNumber}`);
       
-      for (const airport of majorAirports) {
+      for (const airport of airportsByFlight) {
         try {
+          // Add delay between airport requests to prevent rate limiting
+          if (this.lastApiCall) {
+            const timeSinceLastCall = Date.now() - this.lastApiCall.getTime();
+            if (timeSinceLastCall < 5000) { // 5 second delay between airport searches
+              console.log(`⏱️ Waiting ${5000 - timeSinceLastCall}ms before next airport search...`);
+              await new Promise(resolve => setTimeout(resolve, 5000 - timeSinceLastCall));
+            }
+          }
+          this.lastApiCall = new Date();
+
           // Check departures from this airport
           const departureUrl = `${this.baseUrl}/flights/departure?airport=${airport}&begin=${beginTime}&end=${endTime}`;
+          console.log(`🔍 Searching departures from ${airport} for ${callsign}`);
+          
           const depResponse = await fetch(departureUrl, { headers });
+          
+          if (depResponse.status === 429) {
+            console.log(`⚠️ Rate limited at ${airport}, stopping search to preserve quota`);
+            break; // Stop searching if we hit rate limits
+          }
           
           if (depResponse.ok) {
             const depFlights = await depResponse.json();
+            console.log(`📊 Found ${depFlights.length} departures from ${airport}`);
+            
             const matchingFlight = depFlights.find((flight: any) => 
               flight.callsign?.trim().toUpperCase() === callsign.toUpperCase()
             );
             
             if (matchingFlight) {
+              console.log(`✅ Found matching departure flight at ${airport}`);
               return this.transformOpenSkyFlightData(matchingFlight, flightNumber, 'departure');
             }
+          } else {
+            console.log(`❌ Failed to fetch departures from ${airport}: ${depResponse.status}`);
           }
           
-          // Check arrivals at this airport (only for previous day or earlier)
+          // For past flights only, check arrivals
           if (flightDate < new Date()) {
             const arrivalUrl = `${this.baseUrl}/flights/arrival?airport=${airport}&begin=${beginTime}&end=${endTime}`;
+            console.log(`🔍 Searching arrivals at ${airport} for ${callsign}`);
+            
+            // Add small delay between departure and arrival requests
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             const arrResponse = await fetch(arrivalUrl, { headers });
+            
+            if (arrResponse.status === 429) {
+              console.log(`⚠️ Rate limited at ${airport} arrivals, stopping search`);
+              break;
+            }
             
             if (arrResponse.ok) {
               const arrFlights = await arrResponse.json();
+              console.log(`📊 Found ${arrFlights.length} arrivals at ${airport}`);
+              
               const matchingFlight = arrFlights.find((flight: any) => 
                 flight.callsign?.trim().toUpperCase() === callsign.toUpperCase()
               );
               
               if (matchingFlight) {
+                console.log(`✅ Found matching arrival flight at ${airport}`);
                 return this.transformOpenSkyFlightData(matchingFlight, flightNumber, 'arrival');
               }
+            } else {
+              console.log(`❌ Failed to fetch arrivals at ${airport}: ${arrResponse.status}`);
             }
           }
         } catch (error) {
-          // Continue to next airport if this one fails
-          console.log(`No flights found at ${airport}:`, error);
+          console.log(`❌ Error searching ${airport}:`, error);
           continue;
         }
       }
@@ -303,6 +340,44 @@ class OpenSkyService {
         error: error instanceof Error ? error.message : 'Failed to fetch flight status'
       };
     }
+  }
+
+  private getRelevantAirports(flightNumber: string): string[] {
+    // Prioritize airports based on airline to reduce API calls
+    const airline = flightNumber.match(/^([A-Z]{2})/)?.[1];
+    
+    const airlineHubs: Record<string, string[]> = {
+      'CX': ['VHHH'], // Cathay Pacific - Hong Kong
+      'BA': ['EGLL', 'EGKK'], // British Airways - Heathrow, Gatwick
+      'VS': ['EGLL', 'EGKK'], // Virgin Atlantic - Heathrow, Gatwick  
+      'AF': ['LFPG'], // Air France - Charles de Gaulle
+      'LH': ['EDDF'], // Lufthansa - Frankfurt
+      'KL': ['EHAM'], // KLM - Amsterdam
+      'EK': ['OMDB'], // Emirates - Dubai
+      'SQ': ['WSSS'], // Singapore Airlines - Singapore
+      'JL': ['RJAA', 'RJTT'], // Japan Airlines - Narita, Haneda
+      'NH': ['RJAA', 'RJTT'], // ANA - Narita, Haneda
+    };
+
+    // Get airline-specific airports first, then add major hubs as fallback
+    const airlineAirports = airlineHubs[airline || ''] || [];
+    const majorHubs = ['VHHH', 'EGLL', 'EGKK', 'LFPG', 'EDDF', 'EHAM', 'OMDB', 'WSSS', 'RJAA', 'RJTT'];
+    
+    // Combine airline hubs first, then remaining major hubs
+    const prioritized = [...airlineAirports];
+    majorHubs.forEach(hub => {
+      if (!prioritized.includes(hub)) {
+        prioritized.push(hub);
+      }
+    });
+    
+    // For CX flights, prioritize Hong Kong heavily
+    if (airline === 'CX') {
+      console.log(`🎯 CX flight detected - prioritizing Hong Kong (VHHH) and limiting search`);
+      return ['VHHH', 'EGLL', 'EGKK']; // HK + London only for Cathay Pacific
+    }
+    
+    return prioritized.slice(0, 5); // Limit to 5 airports maximum to prevent rate limiting
   }
 
   private normalizeCallsign(flightNumber: string): string {
