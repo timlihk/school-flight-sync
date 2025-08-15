@@ -61,7 +61,16 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleGoHome = () => {
-    window.location.href = '/';
+    // Reset error boundary state before navigating
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null,
+    });
+    // Use a small delay to ensure state is reset before navigation
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
   };
 
   public render() {

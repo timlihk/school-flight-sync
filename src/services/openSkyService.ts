@@ -47,11 +47,17 @@ class OpenSkyService {
       });
 
       if (!response.ok) {
-        console.error('Failed to obtain OAuth2 token:', response.status);
+        console.error('Failed to obtain OAuth2 token:', response.status, response.statusText);
         return null;
       }
 
       const tokenData = await response.json();
+      
+      if (!tokenData.access_token) {
+        console.error('OAuth2 response missing access_token:', tokenData);
+        return null;
+      }
+
       this.accessToken = tokenData.access_token;
       
       // Tokens expire after 30 minutes, set expiry to 25 minutes for safety

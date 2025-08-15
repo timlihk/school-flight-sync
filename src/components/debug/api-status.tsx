@@ -19,6 +19,7 @@ export function ApiStatusDebug() {
       setAuthInfo(info);
     } catch (error) {
       console.error('Error checking auth status:', error);
+      setAuthInfo(null);
     } finally {
       setLoading(false);
     }

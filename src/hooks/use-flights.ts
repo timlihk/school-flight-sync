@@ -270,20 +270,35 @@ export function useFlights() {
 
   // Auto-update flight statuses for flights within 24 hours (every 4 hours to respect API limits)
   const updateNearFlightStatuses = async () => {
-    const now = new Date();
-    const nearFlights = flights.filter(flight => {
-      const flightTime = new Date(flight.departure.date);
-      const hoursDiff = Math.abs(now.getTime() - flightTime.getTime()) / (1000 * 60 * 60);
-      return hoursDiff <= 24; // Within 24 hours
-    });
+    try {
+      const now = new Date();
+      const nearFlights = flights.filter(flight => {
+        try {
+          const flightTime = new Date(flight.departure.date);
+          const hoursDiff = Math.abs(now.getTime() - flightTime.getTime()) / (1000 * 60 * 60);
+          return hoursDiff <= 24; // Within 24 hours
+        } catch (error) {
+          console.error('Error processing flight date:', error, flight);
+          return false;
+        }
+      });
 
-    for (const flight of nearFlights) {
-      const updatedFlight = await checkFlightStatus(flight);
-      if (updatedFlight.status) {
-        queryClient.setQueryData<FlightDetails[]>(QUERY_KEYS.flights, (old = []) =>
-          old.map(f => f.id === flight.id ? updatedFlight : f)
-        );
+      for (const flight of nearFlights) {
+        try {
+          const updatedFlight = await checkFlightStatus(flight);
+          if (updatedFlight.status) {
+            queryClient.setQueryData<FlightDetails[]>(QUERY_KEYS.flights, (old = []) =>
+              old.map(f => f.id === flight.id ? updatedFlight : f)
+            );
+          }
+        } catch (error) {
+          console.error('Error updating flight status for flight:', flight.id, error);
+          // Continue with next flight instead of breaking
+        }
       }
+    } catch (error) {
+      console.error('Error in updateNearFlightStatuses:', error);
+      // Don't throw the error, just log it
     }
   };
 

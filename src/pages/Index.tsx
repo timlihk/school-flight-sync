@@ -170,12 +170,22 @@ export default function Index() {
   // Auto-update flight statuses every 4 hours for flights within 24 hours (API limit friendly)
   React.useEffect(() => {
     if (!loading && flights.length > 0) {
+      // Wrap in try-catch to prevent errors from breaking the component
+      const performUpdate = async () => {
+        try {
+          await updateNearFlightStatuses();
+        } catch (error) {
+          console.error('Flight status update failed:', error);
+          // Don't throw the error, just log it
+        }
+      };
+
       // Initial update
-      updateNearFlightStatuses();
+      performUpdate();
       
       // Set up interval for automatic updates
       const interval = setInterval(() => {
-        updateNearFlightStatuses();
+        performUpdate();
       }, 4 * 60 * 60 * 1000); // 4 hours
       
       return () => clearInterval(interval);
