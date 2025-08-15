@@ -166,7 +166,7 @@ export default function Index() {
     });
   }, []);
 
-  // Auto-update flight statuses every 5 minutes for flights within 24 hours
+  // Auto-update flight statuses every 4 hours for flights within 24 hours (API limit friendly)
   React.useEffect(() => {
     if (!loading && flights.length > 0) {
       // Initial update
@@ -175,7 +175,7 @@ export default function Index() {
       // Set up interval for automatic updates
       const interval = setInterval(() => {
         updateNearFlightStatuses();
-      }, 5 * 60 * 1000); // 5 minutes
+      }, 4 * 60 * 60 * 1000); // 4 hours
       
       return () => clearInterval(interval);
     }

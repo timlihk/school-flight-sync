@@ -1,7 +1,9 @@
 import { FlightStatus, FlightStatusResponse } from '@/types/flightStatus';
 
-// Mock service for demonstration - replace with real API
+// Flight status service with API rate limiting considerations
 class FlightStatusService {
+  private lastApiCall: Date | null = null;
+  private readonly rateLimitDelay = 60000; // 1 minute between API calls
   private readonly baseUrl = 'https://api.aviationstack.com/v1';
   private readonly apiKey = import.meta.env.VITE_AVIATION_API_KEY || '';
 
@@ -11,6 +13,17 @@ class FlightStatusService {
       if (!this.apiKey) {
         return this.getMockFlightStatus(flightNumber, date);
       }
+
+      // Rate limiting: ensure minimum delay between API calls
+      if (this.lastApiCall) {
+        const timeSinceLastCall = Date.now() - this.lastApiCall.getTime();
+        if (timeSinceLastCall < this.rateLimitDelay) {
+          console.log('Rate limit: Using cached data or mock data');
+          return this.getMockFlightStatus(flightNumber, date);
+        }
+      }
+
+      this.lastApiCall = new Date();
 
       const response = await fetch(
         `${this.baseUrl}/flights?access_key=${this.apiKey}&flight_iata=${flightNumber}&flight_date=${date}&limit=1`

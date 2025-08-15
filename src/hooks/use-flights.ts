@@ -268,7 +268,7 @@ export function useFlights() {
     }
   };
 
-  // Auto-update flight statuses for flights within 24 hours
+  // Auto-update flight statuses for flights within 24 hours (every 4 hours to respect API limits)
   const updateNearFlightStatuses = async () => {
     const now = new Date();
     const nearFlights = flights.filter(flight => {
