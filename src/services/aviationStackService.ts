@@ -41,9 +41,11 @@ class AviationStackService {
       const dateString = flightDate.toISOString().split('T')[0];
 
       // AviationStack flights endpoint - get flights for specific date
-      const url = `${this.baseUrl}/flights?access_key=${this.apiKey}&flight_number=${flightNumber}&flight_date=${dateString}`;
+      // Use correct API parameters: flight_iata for flight number, flight_date for date
+      const url = `${this.baseUrl}/flights?access_key=${this.apiKey}&flight_iata=${flightNumber}&flight_date=${dateString}&limit=1`;
 
-      console.log('Fetching flight schedule from AviationStack:', flightNumber, dateString);
+      console.log('🌐 Fetching flight status from AviationStack:', flightNumber, dateString);
+      console.log('📡 AviationStack URL:', url.replace(this.apiKey, '[API_KEY_HIDDEN]'));
 
       const response = await fetch(url);
 

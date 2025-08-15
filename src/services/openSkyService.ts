@@ -197,7 +197,7 @@ class OpenSkyService {
       // OpenSky doesn't use flight numbers directly, so we need to search by callsign
       const callsign = this.normalizeCallsign(flightNumber);
       
-      // Get current flight states
+      // Get current flight states (anonymous access has limited success)
       const statesUrl = `${this.baseUrl}/states/all`;
       const headers: HeadersInit = {};
       
