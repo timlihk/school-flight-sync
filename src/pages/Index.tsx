@@ -178,7 +178,7 @@ export default function Index() {
   React.useEffect(() => {
     flightLookupService.clearExpiredCache();
     const stats = flightLookupService.getCacheStats();
-    console.log('Flight cache stats:', stats);
+    console.log('Flight cache stats (60-day cache):', stats);
   }, []);
 
   // Auto-update flight statuses every 4 hours for flights within 24 hours (API limit friendly)

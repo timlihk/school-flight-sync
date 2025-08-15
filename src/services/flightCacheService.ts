@@ -10,8 +10,8 @@ interface CachedFlightData {
 
 class FlightCacheService {
   private readonly CACHE_KEY = 'flight_lookup_cache';
-  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-  private readonly MAX_CACHE_SIZE = 50; // Maximum number of cached flights
+  private readonly CACHE_DURATION = 60 * 24 * 60 * 60 * 1000; // 60 days (2 months) in milliseconds
+  private readonly MAX_CACHE_SIZE = 200; // Increased to store more flights for longer period
 
   // Get cached flight data
   getCachedFlight(flightNumber: string, date: string): any | null {

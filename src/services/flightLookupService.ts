@@ -205,16 +205,61 @@ class FlightLookupService {
 
   async lookupFlight(flightNumber: string, date: string): Promise<FlightLookupResult> {
     try {
-      // Check cache first to reduce API calls
+      // Check cache first - 60 day cache to maximize API efficiency
       const cachedData = flightCacheService.getCachedFlight(flightNumber, date);
       if (cachedData) {
+        console.log(`Using cached data for ${flightNumber} on ${date} (avoiding API call)`);
         return {
           success: true,
           data: cachedData
         };
       }
 
-      // First, check if we have known schedule data for this flight
+      // Try AviationStack API first for real-time schedule data
+      let scheduleResponse = { success: false, data: null, error: '' };
+      
+      if (aviationStackService.isConfigured) {
+        scheduleResponse = await aviationStackService.getFlightSchedule(flightNumber, date);
+        console.log('AviationStack lookup result:', scheduleResponse.success ? 'Found - caching for 60 days' : scheduleResponse.error);
+      }
+      
+      if (scheduleResponse.success && scheduleResponse.data) {
+        // We found real schedule data from API - cache it for 60 days
+        const airline = scheduleResponse.data.airline || this.getAirlineFromCode(flightNumber);
+        const airlineCode = flightNumber.substring(0, 2).toUpperCase();
+        
+        // Use API data for airports, but add terminal info
+        const departureAirport = scheduleResponse.data.departureAirport || this.getDefaultAirport(flightNumber, 'departure');
+        const arrivalAirport = scheduleResponse.data.arrivalAirport || this.getDefaultAirport(flightNumber, 'arrival');
+        
+        const flightData = {
+          airline,
+          flightNumber: flightNumber.toUpperCase(),
+          departure: {
+            airport: this.formatAirportWithTerminal(departureAirport, airlineCode),
+            date: date,
+            time: scheduleResponse.data.actualDeparture?.time || '12:00',
+            terminal: scheduleResponse.data.terminal || this.getTerminalInfo(departureAirport, airlineCode)
+          },
+          arrival: {
+            airport: this.formatAirportWithTerminal(arrivalAirport, airlineCode),
+            date: scheduleResponse.data.actualArrival?.date || this.calculateArrivalDate(date),
+            time: scheduleResponse.data.actualArrival?.time || scheduleResponse.data.estimatedArrival?.time || '14:00',
+            terminal: this.getTerminalInfo(arrivalAirport, airlineCode)
+          },
+          aircraft: scheduleResponse.data.aircraft
+        };
+
+        // Cache the API result for 60 days
+        flightCacheService.cacheFlight(flightNumber, date, flightData);
+
+        return {
+          success: true,
+          data: flightData
+        };
+      }
+
+      // If AviationStack fails, check if we have known schedule data for this flight
       const knownSchedule = this.getKnownFlightSchedule(flightNumber);
       
       if (knownSchedule) {
@@ -255,7 +300,7 @@ class FlightLookupService {
           }
         };
 
-        // Cache the result
+        // Cache the static schedule for 60 days
         flightCacheService.cacheFlight(flightNumber, date, flightData);
 
         return {
@@ -264,104 +309,10 @@ class FlightLookupService {
         };
       }
 
-      // Try to get real flight schedule data from AviationStack API first (more reliable for schedules)
-      let scheduleResponse = { success: false, data: null, error: '' };
-      
-      if (aviationStackService.isConfigured) {
-        scheduleResponse = await aviationStackService.getFlightSchedule(flightNumber, date);
-        console.log('AviationStack lookup result:', scheduleResponse.success ? 'Found' : scheduleResponse.error);
-      }
-      
-      // If AviationStack fails, try OpenSky as backup
-      if (!scheduleResponse.success) {
-        scheduleResponse = await this.getOpenSkySchedule(flightNumber, date);
-        console.log('OpenSky lookup result:', scheduleResponse.success ? 'Found' : scheduleResponse.error);
-      }
-      
-      if (scheduleResponse.success && scheduleResponse.data) {
-        // We found real schedule data from API, use it as the secondary source
-        const airline = scheduleResponse.data.airline || this.getAirlineFromCode(flightNumber);
-        const airlineCode = flightNumber.substring(0, 2).toUpperCase();
-        
-        // Use API data for airports, but add terminal info
-        const departureAirport = scheduleResponse.data.departureAirport || this.getDefaultAirport(flightNumber, 'departure');
-        const arrivalAirport = scheduleResponse.data.arrivalAirport || this.getDefaultAirport(flightNumber, 'arrival');
-        
-        const flightData = {
-          airline,
-          flightNumber: flightNumber.toUpperCase(),
-          departure: {
-            airport: this.formatAirportWithTerminal(departureAirport, airlineCode),
-            date: date,
-            time: scheduleResponse.data.actualDeparture?.time || '12:00',
-            terminal: scheduleResponse.data.terminal || this.getTerminalInfo(departureAirport, airlineCode)
-          },
-          arrival: {
-            airport: this.formatAirportWithTerminal(arrivalAirport, airlineCode),
-            date: scheduleResponse.data.actualArrival?.date || this.calculateArrivalDate(date),
-            time: scheduleResponse.data.actualArrival?.time || scheduleResponse.data.estimatedArrival?.time || '14:00',
-            terminal: this.getTerminalInfo(arrivalAirport, airlineCode)
-          },
-          aircraft: scheduleResponse.data.aircraft
-        };
-
-        // Cache the API result
-        flightCacheService.cacheFlight(flightNumber, date, flightData);
-
-        return {
-          success: true,
-          data: flightData
-        };
-      }
       
       // Fall back to structured data with intelligent defaults
-      const structuredData = this.generateStructuredFlightData(flightNumber, date);
-      
-      // Try to enhance with real-time status data
-      const statusResponse = await hybridFlightService.getFlightStatus(flightNumber, date);
-      
-      if (!statusResponse.success || !statusResponse.data) {
-        return structuredData;
-      }
-
-      // Extract airline from flight number
-      const airline = this.getAirlineFromCode(flightNumber);
-      const airlineCode = flightNumber.substring(0, 2).toUpperCase();
-
-      // Enhance structured data with API information if available
-      const flightData = statusResponse.data;
-      const enhancedData = { ...structuredData.data! };
-
-      // Update times with actual API data if available
-      if (flightData.actualDeparture) {
-        enhancedData.departure.time = flightData.actualDeparture.time;
-      }
-      
-      if (flightData.actualArrival) {
-        enhancedData.arrival.time = flightData.actualArrival.time;
-        enhancedData.arrival.date = flightData.actualArrival.date;
-      } else if (flightData.estimatedArrival) {
-        enhancedData.arrival.time = flightData.estimatedArrival.time;
-        enhancedData.arrival.date = flightData.estimatedArrival.date;
-      }
-
-      // Add gate/terminal info if available
-      if (flightData.gate) {
-        enhancedData.departure.terminal = flightData.gate;
-      }
-
-      // Add aircraft info if available
-      if (flightData.aircraft) {
-        enhancedData.aircraft = flightData.aircraft;
-      }
-
-      // Cache the enhanced data
-      flightCacheService.cacheFlight(flightNumber, date, enhancedData);
-
-      return {
-        success: true,
-        data: enhancedData
-      };
+      console.log('Using fallback defaults for', flightNumber);
+      return this.generateStructuredFlightData(flightNumber, date);
 
     } catch (error) {
       console.error('Flight lookup error:', error);
