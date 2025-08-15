@@ -103,6 +103,14 @@ class FlightCorrectionService {
       // 4. Cache corrected data for future similar date lookups
       await this.cacheForSimilarDates(flightNumber, originalDate, correctedLookupData);
 
+      console.log(`🔧 Flight correction completed for ${flightNumber}:`, {
+        ...stats,
+        originalDate,
+        correctedAirline: correctedFlight.airline,
+        correctedDeparture: `${correctedFlight.departure.airport} at ${correctedFlight.departure.time}`,
+        correctedArrival: `${correctedFlight.arrival.airport} at ${correctedFlight.arrival.time}`
+      });
+
       return stats;
 
     } catch (error) {

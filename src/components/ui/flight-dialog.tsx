@@ -204,6 +204,34 @@ export function FlightDialog({
       return;
     }
 
+    // For existing flights, first save the current edit
+    if (editingFlight && onEditFlight) {
+      const flightData = {
+        termId: term.id,
+        type: newFlight.type,
+        airline: newFlight.airline,
+        flightNumber: newFlight.flightNumber,
+        departure: {
+          airport: newFlight.departureAirport,
+          date: new Date(newFlight.departureDate),
+          time: newFlight.departureTime
+        },
+        arrival: {
+          airport: newFlight.arrivalAirport,
+          date: new Date(newFlight.arrivalDate),
+          time: newFlight.arrivalTime
+        },
+        confirmationCode: newFlight.confirmationCode,
+        notes: newFlight.notes
+      };
+      
+      // Save the edit first
+      onEditFlight(editingFlight.id, flightData);
+      
+      // Wait a moment for the edit to be processed
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
     setIsSavingCorrection(true);
     try {
       // Create corrected flight data
@@ -241,11 +269,15 @@ export function FlightDialog({
       if (stats.databaseFlightsUpdated > 0) successMessages.push(`✅ ${stats.databaseFlightsUpdated} database flight(s) updated`);
       if (stats.similarFlightsFound > 0) successMessages.push(`🔍 Found ${stats.similarFlightsFound} similar flight(s)`);
 
+      const actionDescription = editingFlight 
+        ? "Applied corrections to similar flights and updated cache"
+        : "Saved correction for future lookups";
+
       toast({
-        title: "Flight Correction Saved",
+        title: editingFlight ? "Flight Updated & Corrections Applied" : "Flight Correction Saved",
         description: stats.errors.length > 0 
           ? `Partially successful. ${successMessages.join(', ')}. Errors: ${stats.errors.join(', ')}`
-          : `${successMessages.join(', ')}. Future lookups will use this corrected data.`,
+          : `${successMessages.join(', ')}. ${actionDescription}.`,
         variant: stats.errors.length > 0 ? "destructive" : "default",
       });
 
@@ -590,8 +622,8 @@ export function FlightDialog({
               <Button onClick={handleAddFlight} variant="flight">
                 {editingFlight ? 'Update Flight' : 'Add Flight'}
               </Button>
-              {/* Save Correction Button - shown when user manually edits auto-filled data */}
-              {wasAutoFilled && showAdvancedForm && (
+              {/* Save Correction Button - shown when editing flights with flight numbers */}
+              {(wasAutoFilled && showAdvancedForm || editingFlight) && newFlight.flightNumber && (
                 <Button 
                   onClick={handleSaveCorrection}
                   variant="outline"
@@ -603,7 +635,7 @@ export function FlightDialog({
                   ) : (
                     <Database className="h-4 w-4" />
                   )}
-                  {isSavingCorrection ? 'Saving...' : 'Save Correction'}
+                  {isSavingCorrection ? 'Saving...' : editingFlight ? 'Save & Apply to Similar Flights' : 'Save Correction'}
                 </Button>
               )}
               <Button 
