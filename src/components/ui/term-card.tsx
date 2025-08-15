@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Calendar, Plane, Plus, Car, User, Phone, Clock, CreditCard, ChevronDown, ArrowRight } from "lucide-react";
+import { Calendar, Plane, Plus, Car, User, Phone, Clock, CreditCard, ChevronDown, ArrowRight, RefreshCw, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ interface TermCardProps {
   onCardClick?: (term: Term) => void;
   isExpanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
+  onUpdateFlightStatus?: (flightId: string) => void;
 }
 
 const TermCard = memo(function TermCard({ 
@@ -39,7 +40,8 @@ const TermCard = memo(function TermCard({
   className,
   onCardClick,
   isExpanded,
-  onExpandedChange
+  onExpandedChange,
+  onUpdateFlightStatus
 }: TermCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [isOpen, setIsOpen] = useState(isExpanded || false);
@@ -54,6 +56,49 @@ const TermCard = memo(function TermCard({
   }), [term.type]);
   
   const { isHoliday, isHalfTerm, isExeat, isShortLeave, isLongLeave } = termTypeFlags;
+
+  // Helper function to get flight status badge
+  const getStatusBadge = (flight: FlightDetails) => {
+    if (!flight.status) return null;
+    
+    const statusConfig = {
+      scheduled: { color: 'bg-blue-100 text-blue-800', text: 'Scheduled' },
+      active: { color: 'bg-green-100 text-green-800', text: 'In Flight' },
+      landed: { color: 'bg-gray-100 text-gray-800', text: 'Landed' },
+      cancelled: { color: 'bg-red-100 text-red-800', text: 'Cancelled' },
+      delayed: { color: 'bg-orange-100 text-orange-800', text: 'Delayed' },
+      diverted: { color: 'bg-purple-100 text-purple-800', text: 'Diverted' },
+      unknown: { color: 'bg-gray-100 text-gray-600', text: 'Unknown' }
+    };
+    
+    const config = statusConfig[flight.status.current] || statusConfig.unknown;
+    
+    return (
+      <Badge className={`${config.color} text-xs px-2 py-0.5`}>
+        {config.text}
+        {flight.status.actualArrival?.delay && flight.status.actualArrival.delay > 0 && (
+          <span className="ml-1">+{flight.status.actualArrival.delay}m</span>
+        )}
+      </Badge>
+    );
+  };
+
+  // Helper function to get status icon
+  const getStatusIcon = (flight: FlightDetails) => {
+    if (!flight.status) return null;
+    
+    switch (flight.status.current) {
+      case 'delayed':
+      case 'cancelled':
+        return <AlertCircle className="h-3 w-3 text-orange-500" />;
+      case 'active':
+        return <Plane className="h-3 w-3 text-green-500" />;
+      case 'landed':
+        return <span className="text-green-500">✓</span>;
+      default:
+        return null;
+    }
+  };
   const hasFlights = flights.length > 0;
   const hasTransport = transport.length > 0;
   const isAutumnTermStart = term.type === 'term' && term.name.toLowerCase().includes('autumn');
@@ -392,6 +437,24 @@ const TermCard = memo(function TermCard({
                                    <span className="text-xs font-medium text-foreground">
                                      {flight.type === 'outbound' ? 'Outbound' : 'Return'}
                                    </span>
+                                   {getStatusIcon(flight)}
+                                 </div>
+                                 <div className="flex items-center gap-2">
+                                   {getStatusBadge(flight)}
+                                   {onUpdateFlightStatus && (
+                                     <Button
+                                       variant="ghost"
+                                       size="sm"
+                                       className="h-6 w-6 p-0"
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         onUpdateFlightStatus(flight.id);
+                                       }}
+                                       title="Update flight status"
+                                     >
+                                       <RefreshCw className="h-3 w-3" />
+                                     </Button>
+                                   )}
                                  </div>
                                </div>
                                
@@ -410,6 +473,21 @@ const TermCard = memo(function TermCard({
                                      <span className="font-medium">{flight.confirmationCode}</span>
                                    )}
                                  </div>
+                                 {flight.status && (
+                                   <div className="text-xs text-muted-foreground mt-1">
+                                     {flight.status.gate && (
+                                       <span className="mr-3">Gate: {flight.status.gate}</span>
+                                     )}
+                                     {flight.status.estimatedArrival && (
+                                       <span>Est. arrival: {flight.status.estimatedArrival.time}</span>
+                                     )}
+                                     {flight.status.lastUpdated && (
+                                       <div className="text-xs text-muted-foreground/70 mt-1">
+                                         Updated: {format(new Date(flight.status.lastUpdated), 'HH:mm')}
+                                       </div>
+                                     )}
+                                   </div>
+                                 )}
                                </div>
                             </div>
                           ))}

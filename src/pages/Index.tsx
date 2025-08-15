@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy, useMemo, useCallback } from "react";
+import React, { useState, Suspense, lazy, useMemo, useCallback } from "react";
 import { Calendar, Plane, Car, ChevronDown, ChevronUp, FileText, Download, LogOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
@@ -33,7 +33,7 @@ export default function Index() {
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
   
   const { logout } = useFamilyAuth();
-  const { flights, loading, addFlight, editFlight, removeFlight } = useFlights();
+  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, updateNearFlightStatuses } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus } = useNotTravelling();
 
@@ -165,6 +165,21 @@ export default function Index() {
       return newSet;
     });
   }, []);
+
+  // Auto-update flight statuses every 5 minutes for flights within 24 hours
+  React.useEffect(() => {
+    if (!loading && flights.length > 0) {
+      // Initial update
+      updateNearFlightStatuses();
+      
+      // Set up interval for automatic updates
+      const interval = setInterval(() => {
+        updateNearFlightStatuses();
+      }, 5 * 60 * 1000); // 5 minutes
+      
+      return () => clearInterval(interval);
+    }
+  }, [loading, flights.length, updateNearFlightStatuses]);
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
@@ -314,6 +329,7 @@ export default function Index() {
                   className="h-full"
                   isExpanded={expandedCards.has(term.id)}
                   onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
+                  onUpdateFlightStatus={updateFlightStatus}
                 />
                 ))}
               </div>
@@ -347,6 +363,7 @@ export default function Index() {
                   className="h-full"
                   isExpanded={expandedCards.has(term.id)}
                   onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
+                  onUpdateFlightStatus={updateFlightStatus}
                 />
                 ))}
               </div>
@@ -413,6 +430,7 @@ export default function Index() {
                   isExpanded={true}
                   onExpandedChange={() => {}}
                   className="border-0 shadow-none bg-transparent"
+                  onUpdateFlightStatus={updateFlightStatus}
                 />
               </div>
             </DialogContent>

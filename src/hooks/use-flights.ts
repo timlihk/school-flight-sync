@@ -4,10 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { FlightDetails } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
 import { transformFlightToDb, transformDbToFlight, transformDbFlightsArray } from '@/utils/flightTransforms';
+import { flightStatusService } from '@/services/flightStatusService';
 
 // Query keys for React Query
 const QUERY_KEYS = {
   flights: ['flights'] as const,
+  flightStatus: (flightNumber: string, date: string) => ['flightStatus', flightNumber, date] as const,
 } as const;
 
 export function useFlights() {
@@ -210,6 +212,81 @@ export function useFlights() {
     return flights.filter(flight => flight.termId === termId);
   };
 
+  // Flight status checking functionality
+  const checkFlightStatus = async (flight: FlightDetails): Promise<FlightDetails> => {
+    try {
+      const dateStr = flight.departure.date.toISOString().split('T')[0];
+      const statusResponse = await flightStatusService.getFlightStatus(flight.flightNumber, dateStr);
+      
+      if (statusResponse.success && statusResponse.data) {
+        const updatedFlight: FlightDetails = {
+          ...flight,
+          status: {
+            current: statusResponse.data.status,
+            actualDeparture: statusResponse.data.actualDeparture,
+            actualArrival: statusResponse.data.actualArrival,
+            estimatedArrival: statusResponse.data.estimatedArrival,
+            gate: statusResponse.data.gate,
+            terminal: statusResponse.data.terminal,
+            lastUpdated: statusResponse.data.lastUpdated
+          }
+        };
+        return updatedFlight;
+      }
+      return flight;
+    } catch (error) {
+      console.error('Error checking flight status:', error);
+      return flight;
+    }
+  };
+
+  // Update flight with status information
+  const updateFlightStatus = async (flightId: string) => {
+    const flight = flights.find(f => f.id === flightId);
+    if (!flight) return;
+
+    try {
+      const updatedFlight = await checkFlightStatus(flight);
+      
+      // Update the flight in the cache
+      queryClient.setQueryData<FlightDetails[]>(QUERY_KEYS.flights, (old = []) =>
+        old.map(f => f.id === flightId ? updatedFlight : f)
+      );
+
+      if (updatedFlight.status) {
+        toast({
+          title: "Flight Status Updated",
+          description: `${updatedFlight.flightNumber} is ${updatedFlight.status.current}`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Status Update Failed",
+        description: "Could not update flight status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Auto-update flight statuses for flights within 24 hours
+  const updateNearFlightStatuses = async () => {
+    const now = new Date();
+    const nearFlights = flights.filter(flight => {
+      const flightTime = new Date(flight.departure.date);
+      const hoursDiff = Math.abs(now.getTime() - flightTime.getTime()) / (1000 * 60 * 60);
+      return hoursDiff <= 24; // Within 24 hours
+    });
+
+    for (const flight of nearFlights) {
+      const updatedFlight = await checkFlightStatus(flight);
+      if (updatedFlight.status) {
+        queryClient.setQueryData<FlightDetails[]>(QUERY_KEYS.flights, (old = []) =>
+          old.map(f => f.id === flight.id ? updatedFlight : f)
+        );
+      }
+    }
+  };
+
   return {
     flights,
     loading,
@@ -218,6 +295,10 @@ export function useFlights() {
     removeFlight,
     getFlightsForTerm,
     refetch,
+    // Flight status functionality
+    updateFlightStatus,
+    updateNearFlightStatuses,
+    checkFlightStatus,
     // Expose mutation states for better UX
     isAddingFlight: addFlightMutation.isPending,
     isEditingFlight: editFlightMutation.isPending,

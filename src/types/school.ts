@@ -44,6 +44,27 @@ export interface FlightDetails {
   };
   confirmationCode?: string;
   notes?: string;
+  // Flight status tracking
+  status?: {
+    current: 'scheduled' | 'active' | 'landed' | 'cancelled' | 'delayed' | 'diverted' | 'unknown';
+    actualDeparture?: {
+      date: string;
+      time: string;
+      delay?: number;
+    };
+    actualArrival?: {
+      date: string;
+      time: string;
+      delay?: number;
+    };
+    estimatedArrival?: {
+      date: string;
+      time: string;
+    };
+    gate?: string;
+    terminal?: string;
+    lastUpdated?: string;
+  };
 }
 
 export interface TransportDetails {
