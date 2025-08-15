@@ -109,6 +109,7 @@ class OpenSkyService {
       
       // Normalize callsign for search
       const callsign = this.normalizeCallsign(flightNumber);
+      console.log(`🔄 Converting flight number ${flightNumber} to callsign ${callsign} for OpenSky flights API`);
       
       // Get authentication
       const headers: HeadersInit = {};
@@ -196,6 +197,7 @@ class OpenSkyService {
 
       // OpenSky doesn't use flight numbers directly, so we need to search by callsign
       const callsign = this.normalizeCallsign(flightNumber);
+      console.log(`🔄 Converting flight number ${flightNumber} to callsign ${callsign} for OpenSky`);
       
       // Get current flight states (anonymous access has limited success)
       const statesUrl = `${this.baseUrl}/states/all`;
@@ -275,16 +277,24 @@ class OpenSkyService {
     // Example: "BA123" -> "BAW123" (British Airways uses BAW as callsign)
     const airlineMap: Record<string, string> = {
       'BA': 'BAW',  // British Airways
-      'VS': 'VIR',  // Virgin Atlantic
+      'VS': 'VIR',  // Virgin Atlantic  
       'AF': 'AFR',  // Air France
       'LH': 'DLH',  // Lufthansa
       'KL': 'KLM',  // KLM
       'EK': 'UAE',  // Emirates
       'QR': 'QTR',  // Qatar Airways
       'SQ': 'SIA',  // Singapore Airlines
-      'CX': 'CPA',  // Cathay Pacific
+      'CX': 'CPA',  // Cathay Pacific Airways (key mapping!)
+      'KA': 'HDA',  // Cathay Dragon (HK Dragon Airlines)
       'JL': 'JAL',  // Japan Airlines
       'NH': 'ANA',  // All Nippon Airways
+      'UA': 'UAL',  // United Airlines
+      'DL': 'DAL',  // Delta Air Lines
+      'AA': 'AAL',  // American Airlines
+      'TK': 'THY',  // Turkish Airlines
+      'IB': 'IBE',  // Iberia
+      'EY': 'ETD',  // Etihad Airways
+      'TG': 'THA',  // Thai Airways
     };
 
     const match = flightNumber.match(/^([A-Z]{2})(\d+)$/);
