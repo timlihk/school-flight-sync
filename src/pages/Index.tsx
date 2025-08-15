@@ -6,11 +6,16 @@ import { TermCard } from "@/components/ui/term-card";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { SchoolHeader } from "@/components/school-header";
 
-// Lazy load heavy dialog components for better initial bundle size
-const FlightDialog = lazy(() => import("@/components/ui/flight-dialog").then(module => ({ default: module.FlightDialog })));
-const TransportDialog = lazy(() => import("@/components/ui/transport-dialog").then(module => ({ default: module.TransportDialog })));
-const ToDoDialog = lazy(() => import("@/components/ui/todo-dialog").then(module => ({ default: module.ToDoDialog })));
-const ExportDialog = lazy(() => import("@/components/ui/export-dialog").then(module => ({ default: module.ExportDialog })));
+// Direct imports temporarily to debug lazy loading issues
+import FlightDialog from "@/components/ui/flight-dialog";
+import TransportDialog from "@/components/ui/transport-dialog";
+import ToDoDialog from "@/components/ui/todo-dialog";
+import ExportDialog from "@/components/ui/export-dialog";
+
+// const FlightDialog = lazy(() => import("@/components/ui/flight-dialog"));
+// const TransportDialog = lazy(() => import("@/components/ui/transport-dialog"));
+// const ToDoDialog = lazy(() => import("@/components/ui/todo-dialog"));
+// const ExportDialog = lazy(() => import("@/components/ui/export-dialog"));
 import { EventSections } from "@/components/ui/event-sections";
 import { ApiStatusDebug } from "@/components/debug/api-status";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -295,25 +300,21 @@ export default function Index() {
               </>
             )}
           </Button>
-          <Suspense fallback={<DialogLoader />}>
-            <ToDoDialog 
-              terms={filteredTerms}
-              flights={flights}
-              transport={transport}
-              notTravelling={notTravelling}
-              onAddFlight={handleAddFlight}
-              onAddTransport={handleAddTransport}
-              onShowTerm={handleShowTerm}
-            />
-          </Suspense>
-          <Suspense fallback={<DialogLoader />}>
-            <ExportDialog
-              flights={flights}
-              transport={transport}
-              notTravelling={notTravelling}
-              terms={mockTerms}
-            />
-          </Suspense>
+          <ToDoDialog 
+            terms={filteredTerms}
+            flights={flights}
+            transport={transport}
+            notTravelling={notTravelling}
+            onAddFlight={handleAddFlight}
+            onAddTransport={handleAddTransport}
+            onShowTerm={handleShowTerm}
+          />
+          <ExportDialog
+            flights={flights}
+            transport={transport}
+            notTravelling={notTravelling}
+            terms={mockTerms}
+          />
         </div>
         
         {/* Debug API Status - DISABLED temporarily to troubleshoot errors */}
@@ -413,17 +414,15 @@ export default function Index() {
                 </div>
               </div>
             }>
-              <Suspense fallback={<DialogLoader />}>
-                <FlightDialog
-                  term={selectedTerm}
-                  flights={flights.filter(f => f.termId === selectedTerm.id)}
-                  onAddFlight={addFlight}
-                  onEditFlight={editFlight}
-                  onRemoveFlight={removeFlight}
-                  open={showFlightDialog}
-                  onOpenChange={setShowFlightDialog}
-                />
-              </Suspense>
+              <FlightDialog
+                term={selectedTerm}
+                flights={flights.filter(f => f.termId === selectedTerm.id)}
+                onAddFlight={addFlight}
+                onEditFlight={editFlight}
+                onRemoveFlight={removeFlight}
+                open={showFlightDialog}
+                onOpenChange={setShowFlightDialog}
+              />
             </ErrorBoundary>
             
             <ErrorBoundary fallback={
@@ -434,17 +433,15 @@ export default function Index() {
                 </div>
               </div>
             }>
-              <Suspense fallback={<DialogLoader />}>
-                <TransportDialog
-                  term={selectedTerm}
-                  transport={getTransportForTerm(selectedTerm.id)}
-                  onAddTransport={addTransport}
-                  onEditTransport={editTransport}
-                  onRemoveTransport={removeTransport}
-                  open={showTransportDialog}
-                  onOpenChange={setShowTransportDialog}
-                />
-              </Suspense>
+              <TransportDialog
+                term={selectedTerm}
+                transport={getTransportForTerm(selectedTerm.id)}
+                onAddTransport={addTransport}
+                onEditTransport={editTransport}
+                onRemoveTransport={removeTransport}
+                open={showTransportDialog}
+                onOpenChange={setShowTransportDialog}
+              />
             </ErrorBoundary>
 
             <TermDetailsDialog

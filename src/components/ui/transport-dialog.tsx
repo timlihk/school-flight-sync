@@ -291,3 +291,5 @@ export function TransportDialog({
     </Dialog>
   );
 }
+
+export default TransportDialog;

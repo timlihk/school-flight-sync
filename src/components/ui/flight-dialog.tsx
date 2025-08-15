@@ -551,3 +551,5 @@ export function FlightDialog({
     </Dialog>
   );
 }
+
+export default FlightDialog;

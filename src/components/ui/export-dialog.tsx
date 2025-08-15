@@ -298,3 +298,5 @@ export function ExportDialog({ flights, transport, notTravelling, terms }: Expor
     </Dialog>
   );
 }
+
+export default ExportDialog;
