@@ -259,6 +259,7 @@ export function useFlights() {
     setUpdatingFlights(prev => new Set([...prev, flightId]));
 
     try {
+      console.log(`🔄 Updating flight status for ${flight.flightNumber} (ID: ${flightId})`);
       const updatedFlight = await checkFlightStatus(flight);
       
       if (updatedFlight.status) {
@@ -299,7 +300,7 @@ export function useFlights() {
 
         toast({
           title: "Status Check Complete",
-          description: `No status update available for ${flight.flightNumber}`,
+          description: `No status update available for ${flight.flightNumber}. Check browser console for details.`,
           variant: "default",
         });
       }

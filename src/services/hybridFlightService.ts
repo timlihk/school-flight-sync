@@ -9,6 +9,8 @@ class HybridFlightService {
   private lastServiceUsed: 'opensky' | 'aviationstack' | null = null;
 
   async getFlightStatus(flightNumber: string, date: string): Promise<FlightStatusResponse> {
+    console.log(`🚀 Hybrid Service: Starting flight status check for ${flightNumber} on ${date}`);
+    
     try {
       // Validate inputs
       if (!flightNumber || !date) {
@@ -19,29 +21,44 @@ class HybridFlightService {
       }
 
       // Try primary service first (OpenSky)
-      console.log('Attempting flight status check with OpenSky Network...');
-      const primaryResult = await this.primaryService.getFlightStatus(flightNumber, date);
+      console.log('🔄 Step 1: Attempting flight status check with OpenSky Network...');
+      let primaryResult;
+      try {
+        primaryResult = await this.primaryService.getFlightStatus(flightNumber, date);
+        console.log('OpenSky result:', primaryResult.success ? '✅ Success' : `❌ Failed: ${primaryResult.error}`);
+      } catch (error) {
+        console.error('OpenSky service threw error:', error);
+        primaryResult = { success: false, error: error instanceof Error ? error.message : 'OpenSky service error' };
+      }
       
       if (primaryResult.success && primaryResult.data) {
         this.lastServiceUsed = 'opensky';
-        console.log('Successfully retrieved flight status from OpenSky Network');
+        console.log('✅ Successfully retrieved flight status from OpenSky Network');
         return primaryResult;
       }
 
       // If primary service fails, try fallback (Aviation Stack)
-      console.log('OpenSky failed, trying Aviation Stack as fallback...');
-      const fallbackResult = await this.fallbackService.getFlightStatus(flightNumber, date);
+      console.log('🔄 Step 2: OpenSky failed, trying Aviation Stack as fallback...');
+      let fallbackResult;
+      try {
+        fallbackResult = await this.fallbackService.getFlightStatus(flightNumber, date);
+        console.log('AviationStack result:', fallbackResult.success ? '✅ Success' : `❌ Failed: ${fallbackResult.error}`);
+      } catch (error) {
+        console.error('AviationStack service threw error:', error);
+        fallbackResult = { success: false, error: error instanceof Error ? error.message : 'AviationStack service error' };
+      }
       
       if (fallbackResult.success && fallbackResult.data) {
         this.lastServiceUsed = 'aviationstack';
-        console.log('Successfully retrieved flight status from Aviation Stack');
+        console.log('✅ Successfully retrieved flight status from Aviation Stack');
         return fallbackResult;
       }
 
       // If both fail, return the most informative error
+      console.log('❌ Both services failed. Primary error:', primaryResult.error, 'Fallback error:', fallbackResult.error);
       return {
         success: false,
-        error: 'Flight status unavailable from all sources'
+        error: `All sources failed. OpenSky: ${primaryResult.error}. AviationStack: ${fallbackResult.error}`
       };
 
     } catch (error) {

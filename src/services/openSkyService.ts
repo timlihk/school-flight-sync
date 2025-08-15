@@ -169,13 +169,18 @@ class OpenSkyService {
   }
 
   async getFlightStatus(flightNumber: string, date: string): Promise<FlightStatusResponse> {
+    console.log(`🔍 OpenSky: Checking status for ${flightNumber} on ${date}`);
+    
     try {
       // Rate limiting: ensure minimum delay between API calls
       if (this.lastApiCall) {
         const timeSinceLastCall = Date.now() - this.lastApiCall.getTime();
         if (timeSinceLastCall < this.rateLimitDelay) {
-          console.log('OpenSky rate limit: Using cached data or mock data');
-          return this.getMockFlightStatus(flightNumber, date);
+          console.log(`⏱️ OpenSky rate limit: ${timeSinceLastCall}ms since last call, need ${this.rateLimitDelay}ms. Skipping to fallback.`);
+          return {
+            success: false,
+            error: 'Rate limited - too soon since last call'
+          };
         }
       }
 
@@ -201,11 +206,24 @@ class OpenSkyService {
         console.log('No authentication credentials available, using anonymous access');
       }
 
-      const response = await fetch(statesUrl, { headers });
+      // Add timeout to prevent hanging on first call
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      console.log('🌐 Making OpenSky API request...');
+      const response = await fetch(statesUrl, { 
+        headers,
+        signal: controller.signal
+      }).finally(() => {
+        clearTimeout(timeoutId);
+      });
 
       if (!response.ok) {
+        console.error(`❌ OpenSky API request failed: ${response.status} ${response.statusText}`);
         throw new Error(`OpenSky API request failed: ${response.status}`);
       }
+
+      console.log('✅ OpenSky API request successful');
 
       const data = await response.json();
 
