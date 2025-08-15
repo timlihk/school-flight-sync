@@ -23,6 +23,7 @@ import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
+import { flightLookupService } from "@/services/flightLookupService";
 import { Term, NotTravellingStatus } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -171,6 +172,13 @@ export default function Index() {
       }
       return newSet;
     });
+  }, []);
+
+  // Clean up expired cache on component mount
+  React.useEffect(() => {
+    flightLookupService.clearExpiredCache();
+    const stats = flightLookupService.getCacheStats();
+    console.log('Flight cache stats:', stats);
   }, []);
 
   // Auto-update flight statuses every 4 hours for flights within 24 hours (API limit friendly)

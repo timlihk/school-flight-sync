@@ -1,6 +1,7 @@
 import { hybridFlightService } from './hybridFlightService';
 import { openSkyService } from './openSkyService';
 import { aviationStackService } from './aviationStackService';
+import { flightCacheService } from './flightCacheService';
 
 // Enhanced flight lookup service that uses real-time APIs to get actual flight schedules
 // instead of hard-coded data
@@ -204,6 +205,15 @@ class FlightLookupService {
 
   async lookupFlight(flightNumber: string, date: string): Promise<FlightLookupResult> {
     try {
+      // Check cache first to reduce API calls
+      const cachedData = flightCacheService.getCachedFlight(flightNumber, date);
+      if (cachedData) {
+        return {
+          success: true,
+          data: cachedData
+        };
+      }
+
       // First, check if we have known schedule data for this flight
       const knownSchedule = this.getKnownFlightSchedule(flightNumber);
       
@@ -228,24 +238,29 @@ class FlightLookupService {
           arrivalDate.setDate(arrivalDate.getDate() + 1);
         }
         
+        const flightData = {
+          airline,
+          flightNumber: flightNumber.toUpperCase(),
+          departure: {
+            airport: this.formatAirportWithTerminal(knownSchedule.departure.airport, airlineCode),
+            date: date,
+            time: knownSchedule.departure.time,
+            terminal: this.getTerminalInfo(knownSchedule.departure.airport, airlineCode)
+          },
+          arrival: {
+            airport: this.formatAirportWithTerminal(knownSchedule.arrival.airport, airlineCode),
+            date: arrivalDate.toISOString().split('T')[0],
+            time: knownSchedule.arrival.time,
+            terminal: this.getTerminalInfo(knownSchedule.arrival.airport, airlineCode)
+          }
+        };
+
+        // Cache the result
+        flightCacheService.cacheFlight(flightNumber, date, flightData);
+
         return {
           success: true,
-          data: {
-            airline,
-            flightNumber: flightNumber.toUpperCase(),
-            departure: {
-              airport: this.formatAirportWithTerminal(knownSchedule.departure.airport, airlineCode),
-              date: date,
-              time: knownSchedule.departure.time,
-              terminal: this.getTerminalInfo(knownSchedule.departure.airport, airlineCode)
-            },
-            arrival: {
-              airport: this.formatAirportWithTerminal(knownSchedule.arrival.airport, airlineCode),
-              date: arrivalDate.toISOString().split('T')[0],
-              time: knownSchedule.arrival.time,
-              terminal: this.getTerminalInfo(knownSchedule.arrival.airport, airlineCode)
-            }
-          }
+          data: flightData
         };
       }
 
@@ -272,25 +287,30 @@ class FlightLookupService {
         const departureAirport = scheduleResponse.data.departureAirport || this.getDefaultAirport(flightNumber, 'departure');
         const arrivalAirport = scheduleResponse.data.arrivalAirport || this.getDefaultAirport(flightNumber, 'arrival');
         
+        const flightData = {
+          airline,
+          flightNumber: flightNumber.toUpperCase(),
+          departure: {
+            airport: this.formatAirportWithTerminal(departureAirport, airlineCode),
+            date: date,
+            time: scheduleResponse.data.actualDeparture?.time || '12:00',
+            terminal: scheduleResponse.data.terminal || this.getTerminalInfo(departureAirport, airlineCode)
+          },
+          arrival: {
+            airport: this.formatAirportWithTerminal(arrivalAirport, airlineCode),
+            date: scheduleResponse.data.actualArrival?.date || this.calculateArrivalDate(date),
+            time: scheduleResponse.data.actualArrival?.time || scheduleResponse.data.estimatedArrival?.time || '14:00',
+            terminal: this.getTerminalInfo(arrivalAirport, airlineCode)
+          },
+          aircraft: scheduleResponse.data.aircraft
+        };
+
+        // Cache the API result
+        flightCacheService.cacheFlight(flightNumber, date, flightData);
+
         return {
           success: true,
-          data: {
-            airline,
-            flightNumber: flightNumber.toUpperCase(),
-            departure: {
-              airport: this.formatAirportWithTerminal(departureAirport, airlineCode),
-              date: date,
-              time: scheduleResponse.data.actualDeparture?.time || '12:00',
-              terminal: scheduleResponse.data.terminal || this.getTerminalInfo(departureAirport, airlineCode)
-            },
-            arrival: {
-              airport: this.formatAirportWithTerminal(arrivalAirport, airlineCode),
-              date: scheduleResponse.data.actualArrival?.date || this.calculateArrivalDate(date),
-              time: scheduleResponse.data.actualArrival?.time || scheduleResponse.data.estimatedArrival?.time || '14:00',
-              terminal: this.getTerminalInfo(arrivalAirport, airlineCode)
-            },
-            aircraft: scheduleResponse.data.aircraft
-          }
+          data: flightData
         };
       }
       
@@ -334,6 +354,9 @@ class FlightLookupService {
       if (flightData.aircraft) {
         enhancedData.aircraft = flightData.aircraft;
       }
+
+      // Cache the enhanced data
+      flightCacheService.cacheFlight(flightNumber, date, enhancedData);
 
       return {
         success: true,
@@ -401,6 +424,19 @@ class FlightLookupService {
         }
       }
     };
+  }
+
+  // Clear cache methods for maintenance
+  clearCache(): void {
+    flightCacheService.clearAllCache();
+  }
+
+  clearExpiredCache(): void {
+    flightCacheService.clearExpiredCache();
+  }
+
+  getCacheStats(): { total: number; expired: number; valid: number } {
+    return flightCacheService.getCacheStats();
   }
 }
 

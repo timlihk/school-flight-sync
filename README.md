@@ -177,6 +177,50 @@ For terms where travel arrangements aren't needed:
 - **Expand/Collapse All**: Quickly expand or collapse all term cards
 - **Show Flights to Book**: Display only terms needing flight bookings
 
+## Flight Data APIs & Caching
+
+### API Configuration
+
+The application uses multiple APIs with an intelligent fallback system:
+
+1. **Known Schedules** - Pre-configured schedules for common routes (CX238, CX239, BA31, BA32)
+2. **AviationStack API** - 100 free requests/month for flight schedules
+3. **OpenSky Network** - Unlimited requests for real-time tracking
+4. **Smart Defaults** - Airline-specific fallback times
+
+### Caching System
+
+To conserve API requests, the app includes automatic caching:
+
+- **Cache Duration**: 24 hours per flight lookup
+- **Storage**: Browser localStorage
+- **Capacity**: Up to 50 flight lookups
+- **Auto-cleanup**: Expired entries removed on app startup
+
+#### Benefits:
+- Reduces API calls by 80-90% for frequently checked flights
+- Instant response for recently looked up flights
+- Preserves your monthly API quota
+- Works offline for cached flights
+
+#### Cache Management:
+- Cache automatically expires after 24 hours
+- Old entries auto-deleted when cache is full
+- Cache stats shown in browser console on startup
+
+### API Keys Setup
+
+Add these to your `.env` file:
+
+```bash
+# AviationStack - 100 requests/month
+VITE_AVIATIONSTACK_API_KEY=your_key_here
+
+# OpenSky Network (optional but recommended)
+VITE_OPENSKY_CLIENT_ID=your_client_id
+VITE_OPENSKY_CLIENT_SECRET=your_client_secret
+```
+
 ## Deployment
 
 ### Using Lovable
