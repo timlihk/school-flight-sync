@@ -261,18 +261,55 @@ export function useFlights() {
     try {
       console.log(`🌐 Opening FlightAware for ${flight.flightNumber}`);
       
+      // Convert airline codes to FlightAware format
+      const airlineCodeMap: Record<string, string> = {
+        'CX': 'CPA',    // Cathay Pacific
+        'BA': 'BAW',    // British Airways
+        'AY': 'FIN',    // Finnair
+        'AA': 'AAL',    // American Airlines
+        'EK': 'UAE',    // Emirates
+        'QF': 'QFA',    // Qantas
+        'SQ': 'SIA',    // Singapore Airlines
+        'LH': 'DLH',    // Lufthansa
+        'AF': 'AFR',    // Air France
+        'KL': 'KLM',    // KLM
+        'UA': 'UAL',    // United Airlines
+        'DL': 'DAL',    // Delta Airlines
+        'VS': 'VIR',    // Virgin Atlantic
+        'JL': 'JAL',    // Japan Airlines
+        'NH': 'ANA',    // All Nippon Airways
+        'LX': 'SWR',    // Swiss
+        'QR': 'QTR',    // Qatar Airways
+        'EY': 'ETD',    // Etihad
+        'TG': 'THA',    // Thai Airways
+        'MH': 'MAS',    // Malaysia Airlines
+      };
+      
+      // Extract airline code and flight number
+      const flightNumberMatch = flight.flightNumber.match(/^([A-Z]{2})(\d+)$/);
+      let flightAwareFlightNumber = flight.flightNumber;
+      
+      if (flightNumberMatch) {
+        const [, airlineCode, flightNum] = flightNumberMatch;
+        const flightAwareCode = airlineCodeMap[airlineCode];
+        if (flightAwareCode) {
+          flightAwareFlightNumber = `${flightAwareCode}${flightNum}`;
+          console.log(`Converted ${flight.flightNumber} to ${flightAwareFlightNumber} for FlightAware`);
+        }
+      }
+      
       // Format date for FlightAware URL (YYYY-MM-DD)
       const flightDate = flight.departure.date.toISOString().split('T')[0];
       
       // FlightAware URL formats to try:
       // Option 1: Direct flight search with date
-      // const flightAwareUrl = `https://flightaware.com/live/flight/${flight.flightNumber}/${flightDate.replace(/-/g, '')}`;
+      // const flightAwareUrl = `https://flightaware.com/live/flight/${flightAwareFlightNumber}/${flightDate.replace(/-/g, '')}`;
       
       // Option 2: Flight finder page with prefilled search
-      // const flightAwareUrl = `https://flightaware.com/live/findflight/?flight=${flight.flightNumber}&date=${flightDate}`;
+      // const flightAwareUrl = `https://flightaware.com/live/findflight/?flight=${flightAwareFlightNumber}&date=${flightDate}`;
       
       // Option 3: Simple flight search (most reliable)
-      const flightAwareUrl = `https://flightaware.com/live/flight/${flight.flightNumber}`;
+      const flightAwareUrl = `https://flightaware.com/live/flight/${flightAwareFlightNumber}`;
       
       console.log(`🔗 Opening: ${flightAwareUrl}`);
       

@@ -191,21 +191,12 @@ export default function Index() {
                   <Plane className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  School Flight Sync
+                  UK Schedules
                 </h1>
               </div>
-              <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-                Manage your daughters' school term dates and travel arrangements
-              </p>
             </div>
             <div className="flex-1 flex justify-end items-start">
               <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <p className="text-sm font-medium flex items-center gap-1">
-                    <Home className="h-3 w-3" />
-                    Family Account
-                  </p>
-                </div>
                 <Button
                   variant="ghost"
                   size="sm"
