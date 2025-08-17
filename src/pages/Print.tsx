@@ -23,17 +23,16 @@ export default function Print() {
     const year = searchParams.get('year');
     const layout = searchParams.get('layout');
 
-    if (schools || year || layout) {
-      const options: PrintOptions = {
-        schools: {
-          benenden: schools ? schools.includes('benenden') : true,
-          wycombe: schools ? schools.includes('wycombe') : true,
-        },
-        year: year || '2025-2026',
-        layout: (layout === 'side-by-side' ? 'side-by-side' : 'separate') as 'separate' | 'side-by-side'
-      };
-      setPrintOptions(options);
-    }
+    // Always create print options with defaults if not specified
+    const options: PrintOptions = {
+      schools: {
+        benenden: schools ? schools.includes('benenden') : true,
+        wycombe: schools ? schools.includes('wycombe') : true,
+      },
+      year: year || '2025-2026',
+      layout: (layout === 'side-by-side' ? 'side-by-side' : 'separate') as 'separate' | 'side-by-side'
+    };
+    setPrintOptions(options);
   }, [searchParams]);
 
   useEffect(() => {
