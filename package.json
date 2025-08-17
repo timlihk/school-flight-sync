@@ -8,7 +8,11 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview --host 0.0.0.0 --port $PORT"
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview --host 0.0.0.0 --port $PORT",
+    "test": "echo \"No tests configured yet\" && exit 1",
+    "check": "npm run typecheck && npm run lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
