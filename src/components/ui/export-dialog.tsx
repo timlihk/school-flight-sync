@@ -20,6 +20,7 @@ import {
   createCompleteBackup
 } from '@/utils/exportUtils';
 import { format } from 'date-fns';
+import { PrintOptionsDialog, PrintOptions } from './print-options-dialog';
 
 interface ExportDialogProps {
   flights: FlightDetails[];
@@ -31,7 +32,11 @@ interface ExportDialogProps {
 export function ExportDialog({ flights, transport, notTravelling, terms }: ExportDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showPrintOptions, setShowPrintOptions] = useState(false);
   const { toast } = useToast();
+
+  // Get unique academic years from terms
+  const availableYears = [...new Set(terms.map(t => t.academicYear))].sort();
 
   const handleExportFlightsCSV = async () => {
     try {
@@ -120,9 +125,22 @@ export function ExportDialog({ flights, transport, notTravelling, terms }: Expor
     }
   };
 
-  const handlePrintView = () => {
-    // Open print-friendly view in new window
-    window.open('/print', '_blank');
+  const handlePrintView = (options: PrintOptions) => {
+    // Build query parameters based on selected options
+    const params = new URLSearchParams();
+    
+    // Add schools to query
+    const selectedSchools = [];
+    if (options.schools.benenden) selectedSchools.push('benenden');
+    if (options.schools.wycombe) selectedSchools.push('wycombe');
+    params.set('schools', selectedSchools.join(','));
+    
+    // Add year and layout
+    params.set('year', options.year);
+    params.set('layout', options.layout);
+    
+    // Open print-friendly view in new window with parameters
+    window.open(`/print?${params.toString()}`, '_blank');
   };
 
   const getTotalStats = () => {
@@ -137,6 +155,7 @@ export function ExportDialog({ flights, transport, notTravelling, terms }: Expor
   const stats = getTotalStats();
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
@@ -281,7 +300,7 @@ export function ExportDialog({ flights, transport, notTravelling, terms }: Expor
                     </div>
                   </div>
                   <Button
-                    onClick={handlePrintView}
+                    onClick={() => setShowPrintOptions(true)}
                     disabled={isExporting}
                     size="sm"
                     variant="outline"
@@ -296,6 +315,15 @@ export function ExportDialog({ flights, transport, notTravelling, terms }: Expor
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Print Options Dialog */}
+    <PrintOptionsDialog
+      open={showPrintOptions}
+      onOpenChange={setShowPrintOptions}
+      onPrint={handlePrintView}
+      availableYears={availableYears}
+    />
+    </>
   );
 }
 
