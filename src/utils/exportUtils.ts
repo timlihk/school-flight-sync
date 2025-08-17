@@ -138,7 +138,7 @@ export function transformForPrint(
     }
     
     const termFlights = flights.filter(f => f.termId === term.id);
-    const termTransport = transport.find(t => t.termId === term.id);
+    const termTransport = transport.filter(t => t.termId === term.id);
     const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
     
     acc[term.school].push({
@@ -152,7 +152,7 @@ export function transformForPrint(
   }, {} as Record<string, Array<{
     term: Term;
     flights: FlightDetails[];
-    transport?: TransportDetails;
+    transport: TransportDetails[];
     notTravelling?: NotTravellingStatus;
   }>>);
 

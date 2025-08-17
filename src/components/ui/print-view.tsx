@@ -17,7 +17,7 @@ export function PrintView({ flights, transport, notTravelling, terms, printOptio
   const [printData, setPrintData] = useState<Record<string, Array<{
     term: Term;
     flights: FlightDetails[];
-    transport?: TransportDetails;
+    transport: TransportDetails[];
     notTravelling?: NotTravellingStatus;
   }>>>({});
 
@@ -79,12 +79,12 @@ export function PrintView({ flights, transport, notTravelling, terms, printOptio
   const renderSchoolTerms = (schoolTerms: Array<{
     term: Term;
     flights: FlightDetails[];
-    transport?: TransportDetails;
+    transport: TransportDetails[];
     notTravelling?: NotTravellingStatus;
   }>) => {
     return schoolTerms
       .sort((a, b) => a.term.startDate.getTime() - b.term.startDate.getTime())
-      .map(({ term, flights: termFlights, transport: termTransport, notTravelling: termNotTravelling }) => (
+      .map(({ term, flights: termFlights, transport: termTransportList, notTravelling: termNotTravelling }) => (
         <div key={term.id} className="term-section">
           {/* Term Header */}
           <div className="mb-3">
@@ -166,33 +166,37 @@ export function PrintView({ flights, transport, notTravelling, terms, printOptio
               <div className="text-sm text-gray-600 italic">
                 No ground transport needed for this term
               </div>
-            ) : termTransport ? (
-              <div className="transport-row">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div><strong>Type:</strong> {termTransport.type === 'school-coach' ? 'School Coach' : 'Taxi'}</div>
-                    <div className="icon-text">
-                      <User className="h-3 w-3" />
-                      {termTransport.driverName}
+            ) : termTransportList.length > 0 ? (
+              <div className="space-y-2">
+                {termTransportList.map((termTransport, index) => (
+                  <div key={index} className="transport-row">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <div><strong>Type:</strong> {termTransport.type === 'school-coach' ? 'School Coach' : 'Taxi'}</div>
+                        <div className="icon-text">
+                          <User className="h-3 w-3" />
+                          {termTransport.driverName}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="icon-text">
+                          <Phone className="h-3 w-3" />
+                          {termTransport.phoneNumber}
+                        </div>
+                        <div><strong>License:</strong> {termTransport.licenseNumber}</div>
+                        <div className="icon-text">
+                          <Clock className="h-3 w-3" />
+                          Pickup: {termTransport.pickupTime}
+                        </div>
+                      </div>
                     </div>
+                    {termTransport.notes && (
+                      <div className="text-sm text-gray-600 mt-1">
+                        <strong>Notes:</strong> {termTransport.notes}
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <div className="icon-text">
-                      <Phone className="h-3 w-3" />
-                      {termTransport.phoneNumber}
-                    </div>
-                    <div><strong>License:</strong> {termTransport.licenseNumber}</div>
-                    <div className="icon-text">
-                      <Clock className="h-3 w-3" />
-                      Pickup: {termTransport.pickupTime}
-                    </div>
-                  </div>
-                </div>
-                {termTransport.notes && (
-                  <div className="text-sm text-gray-600 mt-1">
-                    <strong>Notes:</strong> {termTransport.notes}
-                  </div>
-                )}
+                ))}
               </div>
             ) : (
               <div className="text-sm text-gray-600 italic">
@@ -297,7 +301,7 @@ export function PrintView({ flights, transport, notTravelling, terms, printOptio
             <strong>Total Flights:</strong> {Object.values(printData).flat().reduce((acc, t) => acc + t.flights.length, 0)}
           </div>
           <div>
-            <strong>Transport Arrangements:</strong> {Object.values(printData).flat().filter(t => t.transport).length}
+            <strong>Transport Arrangements:</strong> {Object.values(printData).flat().reduce((acc, t) => acc + t.transport.length, 0)}
           </div>
           <div>
             <strong>Schools:</strong> {Object.keys(printData).length}
