@@ -1,10 +1,10 @@
-# School Flight Sync
+# UK Schedules
 
 A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
 ## Overview
 
-School Flight Sync is designed to help parents efficiently manage and track:
+UK Schedules is designed to help parents efficiently manage and track:
 - School term dates for multiple UK boarding schools
 - Flight bookings for term start/end dates
 - Ground transportation arrangements
@@ -21,12 +21,14 @@ School Flight Sync is designed to help parents efficiently manage and track:
 
 ### ✈️ Flight Tracking
 - **Flight Management**: Add, edit, and remove flight details for each term
-- **Auto-Fill**: Intelligent flight lookup using flight number and date
+- **FlightAware Integration**: Direct link to FlightAware for real-time flight status
+- **Airline Code Conversion**: Automatic conversion of IATA codes to FlightAware's ICAO format (CX→CPA, BA→BAW, etc.)
+- **Smart Flight Lookup**: Pre-configured schedules for common routes (CX238, CX239, BA31, BA32)
 - **Manual Corrections**: Save corrected flight information to improve future lookups
 - **Database Updates**: Automatically update similar flights when corrections are saved
 - **Outbound & Return**: Separate tracking for outbound and return flights
 - **Flight Details**: Store airline, flight numbers, airports, times, and confirmation codes
-- **Quick Filters**: "Show Cards with Flights to Book" feature for easy identification
+- **Quick Status Check**: Refresh button opens FlightAware with converted airline codes
 
 ### 🚗 Transport Coordination
 - **Ground Transportation**: Manage school coach and taxi arrangements
@@ -39,8 +41,10 @@ School Flight Sync is designed to help parents efficiently manage and track:
 - **Smart Filtering**: Automatically filter out completed or marked terms
 
 ### 🎨 User Interface
+- **Minimalist Design**: Clean, simplified interface with "UK Schedules" branding
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Expandable Cards**: Quick expand/collapse all term cards
+- **School Filtering**: Dropdown to view specific schools or both
 - **School Branding**: Color-coded interface for each school
 - **Clean Layout**: Side-by-side school comparison view
 
@@ -87,7 +91,7 @@ school-flight-sync/
 
 1. **Clone the repository**
 ```bash
-git clone <YOUR_GIT_URL>
+git clone https://github.com/timlihk/school-flight-sync.git
 cd school-flight-sync
 ```
 
@@ -193,15 +197,19 @@ For terms where travel arrangements aren't needed:
 - **Expand/Collapse All**: Quickly expand or collapse all term cards
 - **Show Flights to Book**: Display only terms needing flight bookings
 
-## Flight Data APIs & Caching
+## Flight Data & Status Tracking
 
-### API Configuration
+### FlightAware Integration
 
-The application uses multiple APIs with an intelligent fallback system:
+The application now uses FlightAware for real-time flight status:
 
-1. **Known Schedules** - Pre-configured schedules for common routes (CX238, CX239, BA31, BA32)
-2. **AviationStack API** - 100 free requests/month for flight schedules
-3. **OpenSky Network** - Unlimited requests for real-time tracking
+1. **Direct Status Links** - Click refresh button to open FlightAware for any flight
+2. **Airline Code Conversion** - Automatic conversion of 20+ airline codes:
+   - Cathay Pacific: CX → CPA
+   - British Airways: BA → BAW
+   - Finnair: AY → FIN
+   - And 17 more major airlines
+3. **Known Schedules** - Pre-configured schedules for common routes
 4. **Smart Defaults** - Airline-specific fallback times
 
 ### Caching System

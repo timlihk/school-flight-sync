@@ -2,7 +2,7 @@
 
 ## Overview
 
-School Flight Sync follows a component-based architecture using React with TypeScript. Components are organized into logical categories with clear separation of concerns.
+UK Schedules follows a component-based architecture using React with TypeScript. Components are organized into logical categories with clear separation of concerns.
 
 ## Component Structure
 
@@ -48,9 +48,11 @@ The main component for displaying term information with expandable details.
 **Features**:
 - Collapsible card design
 - Status badges for flights and transport
-- Quick action buttons
+- Quick action buttons with FlightAware integration
+- Flight status refresh button (opens FlightAware)
 - Date range display
 - Academic year indicator
+- Automatic airline code conversion for FlightAware
 
 ### FlightDialog
 
@@ -73,6 +75,9 @@ Modal dialog for managing flight information.
 - Form validation with Zod
 - Date and time pickers
 - Confirmation code storage
+- Integration with flight lookup services
+- Manual correction system for flight data
+- 60-day cache for flight information
 
 ### TransportDialog
 

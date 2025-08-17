@@ -2,7 +2,7 @@
 
 ## Overview
 
-School Flight Sync uses Supabase as its backend, providing real-time database functionality with PostgreSQL. All API interactions are handled through the Supabase JavaScript client library.
+UK Schedules uses Supabase as its backend, providing real-time database functionality with PostgreSQL. All API interactions are handled through the Supabase JavaScript client library. Additionally, the application integrates with FlightAware for real-time flight status tracking.
 
 ## Authentication
 
@@ -201,17 +201,26 @@ The application provides custom React hooks for data management:
 
 ### useFlights()
 
-Manages flight data with real-time updates.
+Manages flight data with real-time updates and FlightAware integration.
 
 ```javascript
 const {
-  flights,        // Array of flight records
-  loading,        // Loading state
-  addFlight,      // Function to add a flight
-  editFlight,     // Function to edit a flight
-  removeFlight    // Function to remove a flight
+  flights,              // Array of flight records
+  loading,              // Loading state
+  addFlight,            // Function to add a flight
+  editFlight,           // Function to edit a flight
+  removeFlight,         // Function to remove a flight
+  updateFlightStatus,   // Function to open FlightAware for status
+  isUpdatingFlightStatus // Function to check if status is updating
 } = useFlights();
 ```
+
+#### FlightAware Integration
+
+The `updateFlightStatus` function automatically:
+- Converts IATA airline codes to ICAO format (e.g., CX→CPA, BA→BAW)
+- Opens FlightAware in a new tab with the converted flight number
+- Supports 20+ major airlines with automatic code conversion
 
 ### useTransport()
 
@@ -276,13 +285,60 @@ if (error) {
 }
 ```
 
+## External APIs
+
+### FlightAware Integration
+
+The application integrates with FlightAware for real-time flight status:
+
+#### Airline Code Conversion
+
+Automatic conversion from IATA to ICAO codes:
+
+| IATA | ICAO | Airline |
+|------|------|---------|  
+| CX | CPA | Cathay Pacific |
+| BA | BAW | British Airways |
+| AY | FIN | Finnair |
+| AA | AAL | American Airlines |
+| EK | UAE | Emirates |
+| QF | QFA | Qantas |
+| SQ | SIA | Singapore Airlines |
+| LH | DLH | Lufthansa |
+| AF | AFR | Air France |
+| KL | KLM | KLM |
+| UA | UAL | United Airlines |
+| DL | DAL | Delta Airlines |
+| VS | VIR | Virgin Atlantic |
+| JL | JAL | Japan Airlines |
+| NH | ANA | All Nippon Airways |
+| LX | SWR | Swiss |
+| QR | QTR | Qatar Airways |
+| EY | ETD | Etihad |
+| TG | THA | Thai Airways |
+| MH | MAS | Malaysia Airlines |
+
+### Flight Data Services
+
+The application uses multiple data sources with intelligent fallback:
+
+1. **Static Schedules** - Pre-configured for common routes (CX238, CX239, BA31, BA32)
+2. **Local Cache** - 60-day cache for flight lookups
+3. **FlightAware** - Real-time status via web redirect
+
 ## Environment Variables
 
-Required environment variables for Supabase connection:
+Required environment variables:
 
 ```env
+# Supabase Configuration
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
+
+# Optional API Keys (for enhanced functionality)
+VITE_AVIATIONSTACK_API_KEY=your_key_here      # 100 requests/month
+VITE_OPENSKY_CLIENT_ID=your_client_id         # For real-time tracking
+VITE_OPENSKY_CLIENT_SECRET=your_client_secret
 ```
 
 ## Security

@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2025-01-17
+
+### Added
+- **FlightAware Integration**: Direct link to FlightAware for real-time flight status tracking
+  - Automatic airline code conversion (IATA to ICAO format)
+  - Support for 20+ major airlines including CX→CPA, BA→BAW, AY→FIN
+  - One-click status refresh button on flight cards
+- **Enhanced Flight Data System**:
+  - Intelligent flight correction system for manual data updates
+  - 60-day caching system for API efficiency
+  - OpenSky Network integration with airport prioritization
+  - Static flight schedules for common routes (CX238, CX239, BA31, BA32)
+- **Improved Terminal Data**: Enhanced terminal capture from AviationStack API
+- **TypeScript Improvements**: Fixed all strict mode errors and improved type safety
+
+### Changed
+- **UI Rebranding**: Application renamed from "School Flight Sync" to "UK Schedules"
+- **Simplified Interface**: 
+  - Removed verbose descriptive text from header
+  - Removed "Family Account" label for cleaner design
+  - Minimalist approach to UI elements
+- **Flight Status System**: Replaced API-based status with FlightAware redirect
+- **API Architecture**: Implemented robust fallback system with multiple data sources
+
+### Fixed
+- **TypeScript Errors**: Resolved all critical TypeScript compilation errors
+- **API Rate Limiting**: Fixed OpenSky API rate limiting with intelligent prioritization
+- **Flight Corrections**: Fixed correction system for editing existing flights
+- **Transport Dialog**: Fixed loading errors and eliminated lazy loading issues
+- **Terminal Assignments**: Fixed Cathay Pacific terminal assignment at LHR to T3
+- **First-Click Issues**: Fixed flight status update issue on first click
+
+### Technical
+- **Code Quality**: Implemented proper error handling and type safety
+- **Performance**: Extended cache duration to 60 days for maximum efficiency
+- **API Integration**: Added comprehensive debugging for API calls
+- **Build System**: All TypeScript errors resolved for clean builds
+
 ### Security
 - 🚨 **CRITICAL**: Identified major security vulnerabilities requiring immediate attention
 - Added comprehensive security documentation (SECURITY.md)
@@ -17,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Complete overhaul of README.md with current project status and security notices
 - Added detailed security vulnerability documentation
 - Enhanced development guidelines and contribution requirements
+- Updated branding from "School Flight Sync" to "UK Schedules"
 
 ## [2.1.1] - 2025-01-14
 

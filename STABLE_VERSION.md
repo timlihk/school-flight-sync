@@ -1,7 +1,7 @@
-# School Flight Sync - Stable Version
+# UK Schedules - Stable Version
 
-**Version**: Commit `527ca60` - August 15, 2025  
-**Status**: ✅ **STABLE - DO NOT MODIFY**
+**Version**: Commit `45343b4` - August 17, 2025  
+**Status**: ✅ **STABLE - Production Ready**
 
 ## 🚀 Current Features (All Working)
 
@@ -17,16 +17,20 @@
 - Real-time database sync with Supabase
 
 ### ✅ **Flight Status**
-- One-click flight status check
-- Opens FlightAware in new tab for detailed tracking
+- One-click flight status check with FlightAware integration
+- Automatic airline code conversion (CX→CPA, BA→BAW, etc.)
+- Support for 20+ major airlines with ICAO code mapping
+- Opens FlightAware in new tab for real-time tracking
 - No API rate limiting issues
-- Works for all airlines and flight numbers
 
 ### ✅ **User Experience**
+- Minimalist design with "UK Schedules" branding
+- Clean interface without unnecessary text
 - Responsive design for all devices
 - Loading states and error handling
 - Intuitive flight card interface
 - Term-based organization of travel
+- School filtering dropdown
 
 ### ✅ **Deployment**
 - Deployed on Railway with auto-sync from GitHub
@@ -58,8 +62,13 @@
 
 ## ⚠️ **Important Notes**
 
-### **DO NOT MODIFY**
-This version is stable and working perfectly for the family's needs. Any changes risk breaking the deployment or functionality.
+### **Recent Improvements (v2.2.0)**
+- Enhanced FlightAware integration with airline code conversion
+- Simplified UI with "UK Schedules" branding
+- Removed unnecessary descriptive text for cleaner interface
+- Fixed all TypeScript compilation errors
+- Improved flight data caching (60-day cache)
+- Added support for 20+ major airlines
 
 ### **Environment Variables Required**
 ```
@@ -80,9 +89,9 @@ If any issues arise:
 1. Check Railway deployment logs
 2. Verify environment variables are set
 3. Confirm Supabase database is accessible
-4. For major issues, revert to this exact commit: `527ca60`
+4. For major issues, revert to this exact commit: `45343b4`
 
 ---
 
-**Last Updated**: August 15, 2025  
-**Commit**: `527ca60` - Replace API calls with FlightAware redirect for flight status
+**Last Updated**: August 17, 2025  
+**Commit**: `45343b4` - Improve FlightAware integration and simplify UI
