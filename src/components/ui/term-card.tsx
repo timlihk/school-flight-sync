@@ -19,6 +19,7 @@ interface TermCardProps {
   onAddTransport: (termId: string) => void;
   onViewTransport: (termId: string) => void;
   onSetNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
+  onClearNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
   notTravellingStatus?: NotTravellingStatus;
   className?: string;
   onCardClick?: (term: Term) => void;
@@ -37,6 +38,7 @@ const TermCard = memo(function TermCard({
   onAddTransport,
   onViewTransport,
   onSetNotTravelling,
+  onClearNotTravelling,
   notTravellingStatus,
   className,
   onCardClick,
@@ -349,9 +351,19 @@ const TermCard = memo(function TermCard({
             
             {/* Transport section */}
             {notTravellingStatus?.noTransport ? (
-              <Badge variant="secondary" className="text-xs">
-                Not travelling (transport)
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  Not travelling (transport)
+                </Badge>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onClearNotTravelling(term.id, 'transport')}
+                  className="text-xs h-6 px-2"
+                >
+                  Clear
+                </Button>
+              </div>
             ) : relevantTransport.length === 0 && (
               <div className="flex gap-2">
                 <Button 
@@ -628,10 +640,18 @@ const TermCard = memo(function TermCard({
                       </div>
                     ) : notTravellingStatus?.noTransport ? (
                       <div className="p-3 bg-muted/20 rounded-lg">
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-center justify-center gap-3">
                           <Badge variant="secondary" className="text-xs">
                             Not travelling
                           </Badge>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => onClearNotTravelling(term.id, 'transport')}
+                            className="text-xs h-7 px-3"
+                          >
+                            Clear Status
+                          </Button>
                         </div>
                       </div>
                      ) : (

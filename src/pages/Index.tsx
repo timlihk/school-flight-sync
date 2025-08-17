@@ -36,7 +36,7 @@ export default function Index() {
   const { logout } = useFamilyAuth();
   const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, updateNearFlightStatuses, applyFlightCorrection, isUpdatingFlightStatus } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
-  const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus } = useNotTravelling();
+  const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus } = useNotTravelling();
 
   // Memoize expensive term filtering and sorting operations
   const filteredTerms = useMemo(() => {
@@ -107,6 +107,10 @@ export default function Index() {
   const handleSetNotTravelling = useCallback((termId: string, type: 'flights' | 'transport') => {
     setNotTravellingStatus(termId, type);
   }, [setNotTravellingStatus]);
+
+  const handleClearNotTravelling = useCallback((termId: string, type: 'flights' | 'transport') => {
+    clearNotTravellingStatus(termId, type);
+  }, [clearNotTravellingStatus]);
 
   const handleAddTransport = useCallback((termId: string) => {
     const term = termLookup.get(termId);
@@ -298,6 +302,7 @@ export default function Index() {
                   onAddTransport={handleAddTransport}
                   onViewTransport={handleViewTransport}
                   onSetNotTravelling={handleSetNotTravelling}
+                  onClearNotTravelling={handleClearNotTravelling}
                   notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
                   className="h-full"
                   isExpanded={expandedCards.has(term.id)}
@@ -333,6 +338,7 @@ export default function Index() {
                   onAddTransport={handleAddTransport}
                   onViewTransport={handleViewTransport}
                   onSetNotTravelling={handleSetNotTravelling}
+                  onClearNotTravelling={handleClearNotTravelling}
                   notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
                   className="h-full"
                   isExpanded={expandedCards.has(term.id)}

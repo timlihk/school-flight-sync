@@ -46,10 +46,6 @@ export function useTransport() {
     staleTime: 3 * 60 * 1000, // 3 minutes
   });
 
-  // Debug logging for transport data
-  React.useEffect(() => {
-    console.log('Transport data loaded:', transport);
-  }, [transport]);
 
   React.useEffect(() => {
     if (error) {

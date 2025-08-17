@@ -141,12 +141,6 @@ export function transformForPrint(
     const termTransport = transport.filter(t => t.termId === term.id);
     const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
     
-    // Debug logging for Benenden Autumn term specifically
-    if (term.name === 'Autumn Term' && term.school === 'benenden') {
-      console.log(`🐛 DEBUG: ${term.name} (${term.school}) - ID: ${term.id}`);
-      console.log('🐛 Available transport termIds:', transport.map(t => t.termId));
-      console.log('🐛 Matched transport for this term:', termTransport);
-    }
     
     acc[term.school].push({
       term,

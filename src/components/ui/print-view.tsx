@@ -28,11 +28,6 @@ export function PrintView({ flights, transport, notTravelling, terms, printOptio
     let filteredTransport = transport;
     let filteredNotTravelling = notTravelling;
 
-    // Debug: Log raw transport data to see what we have
-    console.log('🐛 PrintView: All transport data:', transport.length, 'records');
-    transport.forEach(t => {
-      console.log(`🐛 Transport: ${t.driverName} for term ${t.termId}`);
-    });
 
     if (printOptions) {
       // Filter by year
