@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar, Clock, Plane, Plus, X, Edit2, Search, Loader2, Database } from "lucide-react";
+import { Calendar, Clock, Plane, Plus, X, Edit2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,8 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FlightDetails, Term } from "@/types/school";
-import { flightLookupService } from "@/services/flightLookupService";
-import { flightCorrectionService } from "@/services/flightCorrectionService";
 import { useToast } from "@/hooks/use-toast";
 
 interface FlightDialogProps {
@@ -30,7 +28,6 @@ interface FlightDialogProps {
   onAddFlight: (flight: Omit<FlightDetails, 'id'>) => void;
   onRemoveFlight: (flightId: string) => void;
   onEditFlight?: (flightId: string, flight: Omit<FlightDetails, 'id'>) => void;
-  onApplyCorrection?: (flightNumber: string, originalDate: string, correctedFlight: FlightDetails) => Promise<unknown>;
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -42,7 +39,6 @@ export function FlightDialog({
   onAddFlight, 
   onRemoveFlight, 
   onEditFlight,
-  onApplyCorrection,
   children,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange
@@ -51,10 +47,6 @@ export function FlightDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [isAddingFlight, setIsAddingFlight] = useState(false);
   const [editingFlight, setEditingFlight] = useState<FlightDetails | null>(null);
-  const [isLookingUp, setIsLookingUp] = useState(false);
-  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
-  const [isSavingCorrection, setIsSavingCorrection] = useState(false);
-  const [wasAutoFilled, setWasAutoFilled] = useState(false);
 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
@@ -100,19 +92,15 @@ export function FlightDialog({
   };
 
   const handleAddFlight = () => {
-    if (!newFlight.flightNumber || !newFlight.departureDate) {
+    if (!newFlight.flightNumber || !newFlight.departureDate || !newFlight.airline || 
+        !newFlight.departureAirport || !newFlight.arrivalAirport || 
+        !newFlight.departureTime || !newFlight.arrivalTime) {
       toast({
         title: "Missing Information",
-        description: "Please enter flight number and departure date.",
+        description: "Please fill in all required flight details.",
         variant: "destructive",
       });
       return;
-    }
-
-    // Auto-fill basic info if not already filled
-    if (!newFlight.airline) {
-      const airline = getAirlineFromCode(newFlight.flightNumber);
-      setNewFlight(prev => ({ ...prev, airline }));
     }
 
     const flightData = {
@@ -160,10 +148,6 @@ export function FlightDialog({
     });
     setIsAddingFlight(false);
     setEditingFlight(null);
-    setShowAdvancedForm(false);
-    setIsLookingUp(false);
-    setWasAutoFilled(false);
-    setIsSavingCorrection(false);
   };
 
   const handleEditFlight = (flight: FlightDetails) => {
@@ -182,7 +166,6 @@ export function FlightDialog({
       notes: flight.notes || ''
     });
     setIsAddingFlight(true);
-    setShowAdvancedForm(true); // Show advanced form when editing
   };
 
   const handleFlightNumberChange = (flightNumber: string) => {
@@ -194,163 +177,6 @@ export function FlightDialog({
     }));
   };
 
-  const handleSaveCorrection = async () => {
-    if (!newFlight.flightNumber || !newFlight.departureDate) {
-      toast({
-        title: "Missing Information",
-        description: "Flight number and departure date are required for saving corrections.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // For existing flights, first save the current edit
-    if (editingFlight && onEditFlight) {
-      const flightData = {
-        termId: term.id,
-        type: newFlight.type,
-        airline: newFlight.airline,
-        flightNumber: newFlight.flightNumber,
-        departure: {
-          airport: newFlight.departureAirport,
-          date: new Date(newFlight.departureDate),
-          time: newFlight.departureTime
-        },
-        arrival: {
-          airport: newFlight.arrivalAirport,
-          date: new Date(newFlight.arrivalDate),
-          time: newFlight.arrivalTime
-        },
-        confirmationCode: newFlight.confirmationCode,
-        notes: newFlight.notes
-      };
-      
-      // Save the edit first
-      onEditFlight(editingFlight.id, flightData);
-      
-      // Wait a moment for the edit to be processed
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-
-    setIsSavingCorrection(true);
-    try {
-      // Create corrected flight data
-      const correctedFlight: FlightDetails = {
-        id: editingFlight?.id || 'temp',
-        termId: term.id,
-        type: newFlight.type,
-        airline: newFlight.airline,
-        flightNumber: newFlight.flightNumber,
-        departure: {
-          airport: newFlight.departureAirport,
-          date: new Date(newFlight.departureDate),
-          time: newFlight.departureTime
-        },
-        arrival: {
-          airport: newFlight.arrivalAirport,
-          date: new Date(newFlight.arrivalDate),
-          time: newFlight.arrivalTime
-        },
-        confirmationCode: newFlight.confirmationCode,
-        notes: newFlight.notes
-      };
-
-      const stats = onApplyCorrection 
-        ? await onApplyCorrection(newFlight.flightNumber, newFlight.departureDate, correctedFlight)
-        : await flightCorrectionService.applyManualCorrection(
-            newFlight.flightNumber,
-            newFlight.departureDate,
-            correctedFlight
-          );
-
-      // Show success message with stats
-      const successMessages = [];
-      if (stats.cacheUpdated) successMessages.push('✅ Cache updated');
-      if (stats.databaseFlightsUpdated > 0) successMessages.push(`✅ ${stats.databaseFlightsUpdated} database flight(s) updated`);
-      if (stats.similarFlightsFound > 0) successMessages.push(`🔍 Found ${stats.similarFlightsFound} similar flight(s)`);
-
-      const actionDescription = editingFlight 
-        ? "Applied corrections to similar flights and updated cache"
-        : "Saved correction for future lookups";
-
-      toast({
-        title: editingFlight ? "Flight Updated & Corrections Applied" : "Flight Correction Saved",
-        description: stats.errors.length > 0 
-          ? `Partially successful. ${successMessages.join(', ')}. Errors: ${stats.errors.join(', ')}`
-          : `${successMessages.join(', ')}. ${actionDescription}.`,
-        variant: stats.errors.length > 0 ? "destructive" : "default",
-      });
-
-      // Mark as no longer auto-filled since correction is saved
-      setWasAutoFilled(false);
-
-    } catch (error) {
-      console.error('Correction save error:', error);
-      toast({
-        title: "Save Correction Failed",
-        description: "Unable to save correction. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSavingCorrection(false);
-    }
-  };
-
-  const handleAutoLookup = async () => {
-    if (!newFlight.flightNumber || !newFlight.departureDate) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter flight number and departure date first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLookingUp(true);
-    try {
-      // Add a small delay to ensure state updates are processed
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const result = await flightLookupService.lookupFlight(
-        newFlight.flightNumber,
-        newFlight.departureDate
-      );
-
-      if (result.success && result.data) {
-        setNewFlight(prev => ({
-          ...prev,
-          airline: result.data!.airline,
-          flightNumber: result.data!.flightNumber,
-          departureAirport: result.data!.departure.airport,
-          departureTime: result.data!.departure.time,
-          arrivalAirport: result.data!.arrival.airport,
-          arrivalDate: result.data!.arrival.date,
-          arrivalTime: result.data!.arrival.time,
-        }));
-        setWasAutoFilled(true);
-
-        toast({
-          title: "Flight Information Found",
-          description: `Auto-filled details for ${result.data.airline} ${result.data.flightNumber}`,
-        });
-      } else {
-        toast({
-          title: "Flight Not Found",
-          description: result.error || "Unable to find flight information. Please enter details manually.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Flight lookup error:', error);
-      toast({
-        title: "Lookup Failed",
-        description: "Unable to lookup flight information. Please enter details manually.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLookingUp(false);
-    }
-  };
 
   const dialogContent = (
     <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -442,7 +268,7 @@ export function FlightDialog({
               {editingFlight ? 'Edit Flight' : 'Add New Flight'}
             </h3>
             
-            {/* Simple Form - Flight Number and Date First */}
+            {/* Flight Form */}
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -464,6 +290,28 @@ export function FlightDialog({
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="flightNumber">Flight Number</Label>
+                  <Input
+                    id="flightNumber"
+                    value={newFlight.flightNumber}
+                    onChange={(e) => handleFlightNumberChange(e.target.value)}
+                    placeholder="e.g., BA123, CX251"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="airline">Airline</Label>
+                  <Input
+                    id="airline"
+                    value={newFlight.airline}
+                    onChange={(e) => setNewFlight(prev => ({ ...prev, airline: e.target.value }))}
+                    placeholder="e.g., British Airways"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="departureDate">Departure Date</Label>
                   <Input
                     id="departureDate"
@@ -474,127 +322,59 @@ export function FlightDialog({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="flightNumber">Flight Number</Label>
-                <div className="flex gap-2">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="departureAirport">Departure Airport</Label>
                   <Input
-                    id="flightNumber"
-                    value={newFlight.flightNumber}
-                    onChange={(e) => handleFlightNumberChange(e.target.value)}
-                    placeholder="e.g., BA123, CX251"
-                    className="flex-1"
+                    id="departureAirport"
+                    value={newFlight.departureAirport}
+                    onChange={(e) => setNewFlight(prev => ({ ...prev, departureAirport: e.target.value }))}
+                    placeholder="e.g., LHR T5"
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleAutoLookup}
-                    disabled={isLookingUp || !newFlight.flightNumber || !newFlight.departureDate}
-                    className="gap-2"
-                  >
-                    {isLookingUp ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                    {isLookingUp ? 'Looking up...' : 'Auto-fill'}
-                  </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Enter flight number and click "Auto-fill" to automatically populate flight details
-                </p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="departureTime">Departure Time</Label>
+                  <Input
+                    id="departureTime"
+                    type="time"
+                    value={newFlight.departureTime}
+                    onChange={(e) => setNewFlight(prev => ({ ...prev, departureTime: e.target.value }))}
+                  />
+                </div>
               </div>
 
-              {/* Auto-filled or manual fields */}
-              {(newFlight.airline || showAdvancedForm) && (
-                <div className="space-y-4 pt-4 border-t border-border">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-foreground">Flight Details</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowAdvancedForm(!showAdvancedForm)}
-                      className="text-xs"
-                    >
-                      {showAdvancedForm ? 'Hide Advanced' : 'Show Advanced'}
-                    </Button>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="airline">Airline</Label>
-                      <Input
-                        id="airline"
-                        value={newFlight.airline}
-                        onChange={(e) => setNewFlight(prev => ({ ...prev, airline: e.target.value }))}
-                        placeholder="e.g., British Airways"
-                        readOnly={!showAdvancedForm}
-                        className={!showAdvancedForm ? "bg-muted/50" : ""}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="departureAirport">Departure Airport</Label>
-                      <Input
-                        id="departureAirport"
-                        value={newFlight.departureAirport}
-                        onChange={(e) => setNewFlight(prev => ({ ...prev, departureAirport: e.target.value }))}
-                        placeholder="e.g., LHR T5"
-                        readOnly={!showAdvancedForm}
-                        className={!showAdvancedForm ? "bg-muted/50" : ""}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="arrivalAirport">Arrival Airport</Label>
-                      <Input
-                        id="arrivalAirport"
-                        value={newFlight.arrivalAirport}
-                        onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalAirport: e.target.value }))}
-                        placeholder="e.g., HKG T1"
-                        readOnly={!showAdvancedForm}
-                        className={!showAdvancedForm ? "bg-muted/50" : ""}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="arrivalDate">Arrival Date</Label>
-                      <Input
-                        id="arrivalDate"
-                        type="date"
-                        value={newFlight.arrivalDate}
-                        onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalDate: e.target.value }))}
-                        readOnly={!showAdvancedForm}
-                        className={!showAdvancedForm ? "bg-muted/50" : ""}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="departureTime">Departure Time</Label>
-                      <Input
-                        id="departureTime"
-                        type="time"
-                        value={newFlight.departureTime}
-                        onChange={(e) => setNewFlight(prev => ({ ...prev, departureTime: e.target.value }))}
-                        readOnly={!showAdvancedForm}
-                        className={!showAdvancedForm ? "bg-muted/50" : ""}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="arrivalTime">Arrival Time</Label>
-                      <Input
-                        id="arrivalTime"
-                        type="time"
-                        value={newFlight.arrivalTime}
-                        onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalTime: e.target.value }))}
-                        readOnly={!showAdvancedForm}
-                        className={!showAdvancedForm ? "bg-muted/50" : ""}
-                      />
-                    </div>
-                  </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="arrivalAirport">Arrival Airport</Label>
+                  <Input
+                    id="arrivalAirport"
+                    value={newFlight.arrivalAirport}
+                    onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalAirport: e.target.value }))}
+                    placeholder="e.g., HKG T1"
+                  />
                 </div>
-              )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="arrivalTime">Arrival Time</Label>
+                  <Input
+                    id="arrivalTime"
+                    type="time"
+                    value={newFlight.arrivalTime}
+                    onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalTime: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="arrivalDate">Arrival Date</Label>
+                <Input
+                  id="arrivalDate"
+                  type="date"
+                  value={newFlight.arrivalDate}
+                  onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalDate: e.target.value }))}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -622,22 +402,6 @@ export function FlightDialog({
               <Button onClick={handleAddFlight} variant="flight">
                 {editingFlight ? 'Update Flight' : 'Add Flight'}
               </Button>
-              {/* Save Correction Button - shown when editing flights with flight numbers */}
-              {(wasAutoFilled && showAdvancedForm || editingFlight) && newFlight.flightNumber && (
-                <Button 
-                  onClick={handleSaveCorrection}
-                  variant="outline"
-                  disabled={isSavingCorrection}
-                  className="gap-2"
-                >
-                  {isSavingCorrection ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Database className="h-4 w-4" />
-                  )}
-                  {isSavingCorrection ? 'Saving...' : editingFlight ? 'Save & Apply to Similar Flights' : 'Save Correction'}
-                </Button>
-              )}
               <Button 
                 variant="outline" 
                 onClick={resetForm}

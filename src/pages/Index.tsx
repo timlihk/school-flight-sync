@@ -16,7 +16,6 @@ import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
-import { flightLookupService } from "@/services/flightLookupService";
 import { Term, NotTravellingStatus } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -34,7 +33,7 @@ export default function Index() {
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
   
   const { logout } = useFamilyAuth();
-  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, updateNearFlightStatuses, applyFlightCorrection, isUpdatingFlightStatus } = useFlights();
+  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, updateNearFlightStatuses, isUpdatingFlightStatus } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus } = useNotTravelling();
 
@@ -167,7 +166,6 @@ export default function Index() {
 
   // Clean up expired cache on component mount
   React.useEffect(() => {
-    flightLookupService.clearExpiredCache();
   }, []);
 
 
@@ -369,7 +367,6 @@ export default function Index() {
                 onAddFlight={addFlight}
                 onEditFlight={editFlight}
                 onRemoveFlight={removeFlight}
-                onApplyCorrection={applyFlightCorrection}
                 open={showFlightDialog}
                 onOpenChange={setShowFlightDialog}
               />
