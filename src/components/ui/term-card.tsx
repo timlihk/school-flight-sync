@@ -275,6 +275,11 @@ const TermCard = memo(function TermCard({
                       )}
                     </div>
                   </div>
+                  {flight.notes && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      <span className="font-medium">Notes:</span> {flight.notes}
+                    </div>
+                  )}
                   {flight.status && (
                     <div className="text-xs text-muted-foreground mt-1">
                       {flight.status.gate && (
@@ -523,6 +528,11 @@ const TermCard = memo(function TermCard({
                                      <span className="font-medium">{flight.confirmationCode}</span>
                                    )}
                                  </div>
+                                 {flight.notes && (
+                                   <div className="text-xs text-muted-foreground mt-1">
+                                     <span className="font-medium">Notes:</span> {flight.notes}
+                                   </div>
+                                 )}
                                  {flight.status && (
                                    <div className="text-xs text-muted-foreground mt-1">
                                      {flight.status.gate && (
