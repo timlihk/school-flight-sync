@@ -63,16 +63,20 @@ export function useTransport() {
   // Add transport mutation with optimistic updates
   const addTransportMutation = useMutation({
     mutationFn: async (newTransport: Omit<TransportDetails, 'id'>): Promise<TransportDetails> => {
-      const dbTransport = {
+      const dbTransport: any = {
         term_id: newTransport.termId,
         type: newTransport.type,
-        direction: newTransport.direction,
         driver_name: newTransport.driverName,
         phone_number: newTransport.phoneNumber,
         license_number: newTransport.licenseNumber,
         pickup_time: newTransport.pickupTime,
         notes: newTransport.notes || null,
       };
+
+      // Only include direction if it's provided (to handle migration state)
+      if (newTransport.direction) {
+        dbTransport.direction = newTransport.direction;
+      }
 
       const { data, error } = await supabase
         .from('transport')
@@ -192,16 +196,20 @@ export function useTransport() {
       if (!currentTransport) throw new Error('Transport not found');
 
       const updatedTransport = { ...currentTransport, ...updates };
-      const dbTransport = {
+      const dbTransport: any = {
         term_id: updatedTransport.termId,
         type: updatedTransport.type,
-        direction: updatedTransport.direction,
         driver_name: updatedTransport.driverName,
         phone_number: updatedTransport.phoneNumber,
         license_number: updatedTransport.licenseNumber,
         pickup_time: updatedTransport.pickupTime,
         notes: updatedTransport.notes || null,
       };
+
+      // Only include direction if it's provided (to handle migration state)
+      if (updatedTransport.direction) {
+        dbTransport.direction = updatedTransport.direction;
+      }
 
       const { error } = await supabase
         .from('transport')
