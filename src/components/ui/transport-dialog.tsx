@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Car, Plus, Trash2, Edit, Phone, Clock, CreditCard, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Car, Plus, Trash2, Edit, Phone, Clock, CreditCard, User, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Term, TransportDetails } from "@/types/school";
+import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { Term, TransportDetails, ServiceProvider } from "@/types/school";
+import { useServiceProviders } from "@/hooks/use-service-providers";
 
 interface TransportDialogProps {
   term: Term;
@@ -33,6 +35,8 @@ export function TransportDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [isAddingTransport, setIsAddingTransport] = useState(false);
   const [editingTransport, setEditingTransport] = useState<TransportDetails | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const [showProviderSelection, setShowProviderSelection] = useState(true);
   const [newTransport, setNewTransport] = useState({
     type: 'school-coach' as 'school-coach' | 'taxi',
     driverName: '',
@@ -42,12 +46,60 @@ export function TransportDialog({
     notes: ''
   });
 
+  const { 
+    serviceProviders, 
+    getProvidersByType, 
+    addServiceProvider, 
+    isAddingProvider 
+  } = useServiceProviders();
+
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;
 
-  const handleAddTransport = () => {
+  // Auto-fill transport details when a provider is selected
+  const handleProviderSelect = (providerId: string, option: ComboboxOption) => {
+    const provider = option.data as ServiceProvider;
+    if (provider) {
+      setNewTransport({
+        ...newTransport,
+        type: provider.vehicleType,
+        driverName: provider.name,
+        phoneNumber: provider.phoneNumber,
+        licenseNumber: provider.licenseNumber || '',
+        notes: provider.notes || ''
+      });
+      setSelectedProvider(providerId);
+      setShowProviderSelection(false);
+    }
+  };
+
+  // Handle saving new provider when manually entered
+  const handleSaveAsNewProvider = async () => {
+    if (newTransport.driverName && newTransport.phoneNumber && newTransport.type) {
+      try {
+        const newProvider: Omit<ServiceProvider, 'id' | 'createdAt' | 'updatedAt'> = {
+          name: newTransport.driverName,
+          phoneNumber: newTransport.phoneNumber,
+          licenseNumber: newTransport.licenseNumber,
+          vehicleType: newTransport.type,
+          notes: newTransport.notes,
+          isActive: true,
+        };
+        await addServiceProvider(newProvider);
+      } catch (error) {
+        console.error('Error saving service provider:', error);
+      }
+    }
+  };
+
+  const handleAddTransport = async () => {
     if (!newTransport.type) {
       return;
+    }
+
+    // Save as new provider if this is a new provider and not editing
+    if (!editingTransport && !selectedProvider && newTransport.driverName && newTransport.phoneNumber) {
+      await handleSaveAsNewProvider();
     }
 
     if (editingTransport) {
@@ -74,6 +126,8 @@ export function TransportDialog({
       pickupTime: '',
       notes: ''
     });
+    setSelectedProvider('');
+    setShowProviderSelection(true);
     setIsAddingTransport(false);
     setEditingTransport(null);
   };
@@ -88,12 +142,31 @@ export function TransportDialog({
       notes: transportItem.notes || ''
     });
     setEditingTransport(transportItem);
+    setShowProviderSelection(false); // Skip provider selection when editing
     setIsAddingTransport(true);
   };
 
   const getTransportTypeDisplay = (type: string) => {
     return type === 'school-coach' ? 'School Coach' : 'Taxi';
   };
+
+  // Get provider options for the combobox
+  const getProviderOptions = (): ComboboxOption[] => {
+    const filteredProviders = getProvidersByType(newTransport.type);
+    return filteredProviders.map(provider => ({
+      value: provider.id,
+      label: `${provider.name} (${provider.phoneNumber})`,
+      data: provider
+    }));
+  };
+
+  // Reset provider selection when transport type changes
+  useEffect(() => {
+    if (selectedProvider && !editingTransport) {
+      setSelectedProvider('');
+      setShowProviderSelection(true);
+    }
+  }, [newTransport.type]);
 
   const dialogContent = (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -203,6 +276,58 @@ export function TransportDialog({
                 />
               </div>
             </div>
+
+            {/* Service Provider Selection */}
+            {showProviderSelection && !editingTransport && getProviderOptions().length > 0 && (
+              <div className="space-y-2 border-t pt-4">
+                <Label>Select Existing Service Provider</Label>
+                <Combobox
+                  options={getProviderOptions()}
+                  value={selectedProvider}
+                  onSelect={handleProviderSelect}
+                  placeholder="Search for a service provider..."
+                  searchPlaceholder="Search providers..."
+                  emptyMessage="No matching providers found."
+                  className="w-full"
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowProviderSelection(false)}
+                  >
+                    Enter new provider instead
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Manual Entry or New Provider Notice */}
+            {(!showProviderSelection || getProviderOptions().length === 0) && !editingTransport && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800">
+                    {getProviderOptions().length === 0 
+                      ? 'No existing providers found. Enter details below to add a new one.'
+                      : 'Adding new service provider'
+                    }
+                  </span>
+                </div>
+                {getProviderOptions().length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowProviderSelection(true)}
+                    className="mt-2 text-blue-600 hover:text-blue-800"
+                  >
+                    ← Back to provider selection
+                  </Button>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

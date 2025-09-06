@@ -84,6 +84,20 @@ export interface NotTravellingStatus {
   noTransport?: boolean;
 }
 
+export interface ServiceProvider {
+  id: string;
+  name: string;
+  phoneNumber: string;
+  licenseNumber?: string;
+  vehicleType: 'school-coach' | 'taxi';
+  email?: string;
+  notes?: string;
+  rating?: number; // 1-5 stars
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SchoolData {
   name: string;
   color: string;
