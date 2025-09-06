@@ -71,6 +71,7 @@ export interface TransportDetails {
   id: string;
   termId: string;
   type: 'school-coach' | 'taxi';
+  direction: 'outbound' | 'return';
   driverName: string;
   phoneNumber: string;
   licenseNumber: string;

@@ -16,7 +16,7 @@ interface TermCardProps {
   transport?: TransportDetails[];
   onAddFlight: (termId: string) => void;
   onViewFlights: (termId: string) => void;
-  onAddTransport: (termId: string) => void;
+  onAddTransport: (termId: string, direction?: 'outbound' | 'return') => void;
   onViewTransport: (termId: string) => void;
   onSetNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
   onClearNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
@@ -193,8 +193,8 @@ const TermCard = memo(function TermCard({
     });
     
     const relevantTransport = transport.filter(t => {
-      // For now, show all transport - could be filtered by type/date if needed
-      return true;
+      const isOutbound = t.direction === 'outbound';
+      return t.termId === term.id && (isStart ? isOutbound : !isOutbound);
     });
     
     // Debug log to see the transport data
@@ -375,7 +375,7 @@ const TermCard = memo(function TermCard({
                   variant="outline" 
                   size="sm" 
                   className="justify-start gap-2 flex-1"
-                  onClick={() => onAddTransport(term.id)}
+                  onClick={() => onAddTransport(term.id, isStart ? 'outbound' : 'return')}
                 >
                   <Car className="h-4 w-4" />
                   Add Transport

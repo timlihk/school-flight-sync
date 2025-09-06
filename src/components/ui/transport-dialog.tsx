@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Term, TransportDetails } from "@/types/school";
-import { cn } from "@/lib/utils";
 
 interface TransportDialogProps {
   term: Term;
@@ -19,6 +18,7 @@ interface TransportDialogProps {
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  selectedDirection?: 'outbound' | 'return';
 }
 
 export function TransportDialog({
@@ -29,13 +29,15 @@ export function TransportDialog({
   onEditTransport,
   children,
   open,
-  onOpenChange
+  onOpenChange,
+  selectedDirection
 }: TransportDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isAddingTransport, setIsAddingTransport] = useState(false);
   const [editingTransport, setEditingTransport] = useState<TransportDetails | null>(null);
   const [newTransport, setNewTransport] = useState({
     type: 'school-coach' as 'school-coach' | 'taxi',
+    direction: selectedDirection || 'outbound' as 'outbound' | 'return',
     driverName: '',
     phoneNumber: '',
     licenseNumber: '',
@@ -69,6 +71,7 @@ export function TransportDialog({
   const resetForm = () => {
     setNewTransport({
       type: 'school-coach',
+      direction: selectedDirection || 'outbound',
       driverName: '',
       phoneNumber: '',
       licenseNumber: '',
@@ -82,6 +85,7 @@ export function TransportDialog({
   const handleEditTransport = (transportItem: TransportDetails) => {
     setNewTransport({
       type: transportItem.type,
+      direction: transportItem.direction,
       driverName: transportItem.driverName,
       phoneNumber: transportItem.phoneNumber,
       licenseNumber: transportItem.licenseNumber,
@@ -193,6 +197,27 @@ export function TransportDialog({
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="transport-direction">Direction</Label>
+                <Select 
+                  value={newTransport.direction} 
+                  onValueChange={(value: 'outbound' | 'return') => 
+                    setNewTransport({ ...newTransport, direction: value })
+                  }
+                  disabled={!!selectedDirection}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="outbound">Travel from School</SelectItem>
+                    <SelectItem value="return">Return to School</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="pickup-time">Pickup Time</Label>
                 <Input
