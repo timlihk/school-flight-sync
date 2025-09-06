@@ -16,7 +16,7 @@ interface TermCardProps {
   transport?: TransportDetails[];
   onAddFlight: (termId: string) => void;
   onViewFlights: (termId: string) => void;
-  onAddTransport: (termId: string, direction?: 'outbound' | 'return') => void;
+  onAddTransport: (termId: string) => void;
   onViewTransport: (termId: string) => void;
   onSetNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
   onClearNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
@@ -192,9 +192,13 @@ const TermCard = memo(function TermCard({
       return f.termId === term.id && (isStart ? isOutbound : !isOutbound);
     });
     
-    const relevantTransport = transport.filter(t => {
-      const isOutbound = t.direction === 'outbound';
-      return t.termId === term.id && (isStart ? isOutbound : !isOutbound);
+    // Simple approach: split transport entries between the two cards
+    // Even-indexed entries go to the first card (outbound), odd-indexed entries go to the second card (return)
+    const termTransport = transport.filter(t => t.termId === term.id);
+    const relevantTransport = termTransport.filter((_, index) => {
+      const isFirstCard = isStart; // "Travel from School"
+      const isEvenIndex = index % 2 === 0;
+      return isFirstCard ? isEvenIndex : !isEvenIndex;
     });
     
     // Debug log to see the transport data
@@ -375,7 +379,7 @@ const TermCard = memo(function TermCard({
                   variant="outline" 
                   size="sm" 
                   className="justify-start gap-2 flex-1"
-                  onClick={() => onAddTransport(term.id, isStart ? 'outbound' : 'return')}
+                  onClick={() => onAddTransport(term.id)}
                 >
                   <Car className="h-4 w-4" />
                   Add Transport

@@ -22,7 +22,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
-  const [selectedDirection, setSelectedDirection] = useState<'outbound' | 'return' | undefined>(undefined);
   const [showFlightDialog, setShowFlightDialog] = useState(false);
   const [showTransportDialog, setShowTransportDialog] = useState(false);
   const [showTermDetailsDialog, setShowTermDetailsDialog] = useState(false);
@@ -112,11 +111,10 @@ export default function Index() {
     clearNotTravellingStatus(termId, type);
   }, [clearNotTravellingStatus]);
 
-  const handleAddTransport = useCallback((termId: string, direction?: 'outbound' | 'return') => {
+  const handleAddTransport = useCallback((termId: string) => {
     const term = termLookup.get(termId);
     if (term) {
       setSelectedTerm(term);
-      setSelectedDirection(direction);
       setShowTransportDialog(true);
       // Close popup if it's open
       if (showTermCardPopup) {
@@ -389,11 +387,7 @@ export default function Index() {
                 onEditTransport={editTransport}
                 onRemoveTransport={removeTransport}
                 open={showTransportDialog}
-                onOpenChange={(open) => {
-                  setShowTransportDialog(open);
-                  if (!open) setSelectedDirection(undefined);
-                }}
-                selectedDirection={selectedDirection}
+                onOpenChange={setShowTransportDialog}
               />
             </ErrorBoundary>
 

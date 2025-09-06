@@ -27,7 +27,6 @@ export function useTransport() {
       id: transport.id,
       termId: transport.term_id,
       type: transport.type as 'school-coach' | 'taxi',
-      direction: (transport.direction || 'outbound') as 'outbound' | 'return',
       driverName: transport.driver_name,
       phoneNumber: transport.phone_number,
       licenseNumber: transport.license_number,
@@ -63,7 +62,7 @@ export function useTransport() {
   // Add transport mutation with optimistic updates
   const addTransportMutation = useMutation({
     mutationFn: async (newTransport: Omit<TransportDetails, 'id'>): Promise<TransportDetails> => {
-      const dbTransport: any = {
+      const dbTransport = {
         term_id: newTransport.termId,
         type: newTransport.type,
         driver_name: newTransport.driverName,
@@ -72,11 +71,6 @@ export function useTransport() {
         pickup_time: newTransport.pickupTime,
         notes: newTransport.notes || null,
       };
-
-      // Only include direction if it's provided (to handle migration state)
-      if (newTransport.direction) {
-        dbTransport.direction = newTransport.direction;
-      }
 
       const { data, error } = await supabase
         .from('transport')
@@ -90,7 +84,6 @@ export function useTransport() {
         id: data.id,
         termId: data.term_id,
         type: data.type as 'school-coach' | 'taxi',
-        direction: data.direction as 'outbound' | 'return',
         driverName: data.driver_name,
         phoneNumber: data.phone_number,
         licenseNumber: data.license_number,
@@ -196,7 +189,7 @@ export function useTransport() {
       if (!currentTransport) throw new Error('Transport not found');
 
       const updatedTransport = { ...currentTransport, ...updates };
-      const dbTransport: any = {
+      const dbTransport = {
         term_id: updatedTransport.termId,
         type: updatedTransport.type,
         driver_name: updatedTransport.driverName,
@@ -205,11 +198,6 @@ export function useTransport() {
         pickup_time: updatedTransport.pickupTime,
         notes: updatedTransport.notes || null,
       };
-
-      // Only include direction if it's provided (to handle migration state)
-      if (updatedTransport.direction) {
-        dbTransport.direction = updatedTransport.direction;
-      }
 
       const { error } = await supabase
         .from('transport')
