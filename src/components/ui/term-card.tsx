@@ -311,17 +311,40 @@ const TermCard = memo(function TermCard({
               onClick={() => onViewTransport(term.id)}
             >
               {relevantTransport.map((transportItem) => (
-                <div key={transportItem.id} className="p-2 bg-muted/20 rounded-md">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-medium">{transportItem.driverName}</span>
-                    <span className="text-muted-foreground">{transportItem.pickupTime}</span>
+                <div key={transportItem.id} className="p-3 bg-muted/20 rounded-lg border border-muted/40">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">
+                        🚗
+                      </span>
+                      <span className="text-xs font-medium text-foreground">
+                        {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {transportItem.type === 'school-coach' ? 'School Coach' : 'Taxi'}
+                  
+                  <div className="grid grid-cols-2 gap-1 text-xs">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <User className="h-3 w-3" />
+                      <span className="truncate">{transportItem.driverName}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>{transportItem.pickupTime}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Phone className="h-3 w-3" />
+                      <span className="truncate">{transportItem.phoneNumber}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <CreditCard className="h-3 w-3" />
+                      <span className="truncate">{transportItem.licenseNumber}</span>
+                    </div>
                   </div>
+                  
                   {transportItem.notes && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Notes: {transportItem.notes}
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      <span className="font-medium">Notes:</span> {transportItem.notes}
                     </div>
                   )}
                 </div>
