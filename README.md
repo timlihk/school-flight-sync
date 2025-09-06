@@ -1,10 +1,10 @@
-# UK Schedules
+# School Flight Sync
 
 A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
 ## Overview
 
-UK Schedules is designed to help parents efficiently manage and track:
+School Flight Sync is designed to help parents efficiently manage and track:
 - School term dates for multiple UK boarding schools
 - Flight bookings for term start/end dates
 - Ground transportation arrangements
@@ -32,8 +32,10 @@ UK Schedules is designed to help parents efficiently manage and track:
 
 ### 🚗 Transport Coordination
 - **Ground Transportation**: Manage school coach and taxi arrangements
+- **Smart Card Separation**: Transport details are automatically separated between departure and return travel cards
 - **Driver Information**: Store driver names, phone numbers, and license details
 - **Pickup Times**: Track scheduled pickup times for each term
+- **Index-Based Filtering**: Even-indexed entries appear in "Travel from School", odd-indexed in "Return to School"
 
 ### 📋 Task Management
 - **To-Do List**: View all terms requiring flight or transport bookings
@@ -41,11 +43,12 @@ UK Schedules is designed to help parents efficiently manage and track:
 - **Smart Filtering**: Automatically filter out completed or marked terms
 
 ### 🎨 User Interface
-- **Minimalist Design**: Clean, simplified interface with "UK Schedules" branding
+- **Minimalist Design**: Clean, simplified interface with "School Flight Sync" branding
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Expandable Cards**: Quick expand/collapse all term cards
+- **Dual Travel Cards**: Separate cards for departure ("Travel from School") and return ("Return to School") journeys
 - **School Filtering**: Dropdown to view specific schools or both
-- **School Branding**: Color-coded interface for each school
+- **School Branding**: Color-coded interface for each school (Benenden purple, Wycombe blue)
 - **Clean Layout**: Side-by-side school comparison view
 
 ## Tech Stack
@@ -126,6 +129,9 @@ The application will be available at `http://localhost:5173`
 - `npm run build:dev` - Build for development environment
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
+- `npm run lint:fix` - Run ESLint with auto-fix
+- `npm run typecheck` - Run TypeScript type checking
+- `npm run check` - Run both typecheck and lint
 
 ## Database Schema
 
@@ -183,9 +189,13 @@ When auto-filled flight information is incorrect:
 4. The correction applies to all flights with the same flight number
 
 ### Managing Transport
-1. Click "Add Transport" on any term card
-2. Enter driver details and pickup times
-3. Choose between school coach or taxi options
+1. **For Two-Way Trips (Exeats, Half-Terms)**: Each term shows two travel cards
+   - "Travel from School" card: Add transport for departure journey
+   - "Return to School" card: Add transport for return journey
+2. **Adding Transport**: Click "Add Transport" on the specific travel card
+3. **Enter Details**: Driver name, phone number, license, pickup time
+4. **Transport Type**: Choose between school coach or taxi
+5. **Automatic Separation**: Transport entries are automatically kept separate between departure and return cards
 
 ### Marking "Not Travelling"
 For terms where travel arrangements aren't needed:
@@ -276,6 +286,33 @@ npm run build
 ## License
 
 This project is private and proprietary.
+
+## Recent Updates
+
+### v2.1.0 (September 2025)
+- ✨ **Transport Filtering**: Implemented smart transport separation between departure and return travel cards
+- 🔧 **UI Improvements**: Enhanced dual travel card layout for exeats and half-terms
+- 🚗 **Bug Fix**: Resolved transport duplication issue where same transport appeared in both cards
+- 📱 **Frontend-Only Solution**: No database changes required - uses index-based filtering
+
+### v2.0.0 (August 2025)
+- ✈️ **FlightAware Integration**: Direct flight status links with automatic airline code conversion
+- 📊 **Real-Time Status**: Click refresh to open FlightAware for any flight
+- 🔄 **Airline Conversion**: Support for 20+ major airlines (CX→CPA, BA→BAW, etc.)
+- 💾 **Smart Caching**: 60-day flight data caching for 98%+ API call reduction
+- 🎯 **Flight Corrections**: Save and apply corrections to improve future lookups
+
+## Troubleshooting
+
+### Common Issues
+
+**Transport not saving**: Ensure all required fields are filled (driver name, phone, license, pickup time)
+
+**Flight status not loading**: Check that your API keys are correctly set in the environment variables
+
+**Transport appearing in wrong card**: This is automatically handled - even-indexed entries go to departure, odd-indexed to return
+
+**Cache not working**: Check browser console for cache statistics on app startup
 
 ## Support
 

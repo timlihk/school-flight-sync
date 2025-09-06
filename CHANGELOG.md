@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2025-09-06
+
+### Added
+- **Smart Transport Card Separation**: Implemented index-based filtering to separate transport between departure and return travel cards
+- **Enhanced Travel Card UI**: Improved dual travel card layout for exeats and half-terms
+- **Frontend-Only Solution**: Transport filtering works without database schema changes
+
+### Fixed
+- **Transport Duplication Bug**: Resolved issue where transport details appeared in both "Travel from School" and "Return to School" cards
+- **Transport Saving Errors**: Fixed database errors when adding transport details
+- **UI Consistency**: Improved transport display consistency across travel cards
+
+### Changed
+- **Simplified Transport Management**: Removed complex database direction field approach in favor of frontend-only filtering
+- **Index-Based Organization**: Even-indexed transport entries appear in departure card, odd-indexed in return card
+- **Improved User Experience**: Clear separation between outbound and return transport arrangements
+
+### Technical
+- Reverted database migration approach to maintain backward compatibility
+- Simplified transport filtering logic using array index modulation
+- Enhanced error handling for transport operations
+- Improved TypeScript type safety for transport interfaces
+
 ## [2.2.0] - 2025-01-17
 
 ### Added
