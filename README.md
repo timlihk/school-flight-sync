@@ -33,6 +33,9 @@ School Flight Sync is designed to help parents efficiently manage and track:
 ### 🚗 Transport Coordination
 - **Ground Transportation**: Manage school coach and taxi arrangements
 - **Smart Card Separation**: Transport details are automatically separated between departure and return travel cards
+- **Service Provider Database**: Reusable provider database with auto-complete functionality
+- **Provider Management**: Store provider ratings (1-5 stars), contact details, and vehicle information
+- **Auto-Fill Forms**: Select existing providers to automatically populate transport forms
 - **Driver Information**: Store driver names, phone numbers, and license details
 - **Pickup Times**: Track scheduled pickup times for each term
 - **Index-Based Filtering**: Even-indexed entries appear in "Travel from School", odd-indexed in "Return to School"
@@ -162,6 +165,18 @@ The application will be available at `http://localhost:5173`
 - `pickup_time` (TEXT): Scheduled pickup time
 - `notes` (TEXT): Optional notes
 
+#### `service_providers`
+- `id` (UUID): Primary key
+- `name` (TEXT): Provider company name
+- `phone_number` (TEXT): Contact phone number
+- `license_number` (TEXT): Vehicle license (optional)
+- `vehicle_type` (TEXT): 'school-coach' or 'taxi'
+- `email` (TEXT): Contact email (optional)
+- `notes` (TEXT): Additional notes (optional)
+- `rating` (INTEGER): Provider rating 1-5 stars (optional)
+- `is_active` (BOOLEAN): Active status for soft delete
+- `created_at`, `updated_at` (TIMESTAMP): Audit fields
+
 #### `not_travelling`
 - `id` (UUID): Primary key
 - `term_id` (TEXT): Reference to term
@@ -193,9 +208,13 @@ When auto-filled flight information is incorrect:
    - "Travel from School" card: Add transport for departure journey
    - "Return to School" card: Add transport for return journey
 2. **Adding Transport**: Click "Add Transport" on the specific travel card
-3. **Enter Details**: Driver name, phone number, license, pickup time
-4. **Transport Type**: Choose between school coach or taxi
-5. **Automatic Separation**: Transport entries are automatically kept separate between departure and return cards
+3. **Service Provider Selection**: Use the auto-complete combobox to:
+   - Select existing service providers (automatically fills form)
+   - Filter providers by vehicle type (school-coach vs taxi)
+   - Create new providers when entering manual details
+4. **Enter Details**: Driver name, phone number, license, pickup time
+5. **Provider Ratings**: Rate providers 1-5 stars for future reference
+6. **Automatic Separation**: Transport entries are automatically kept separate between departure and return cards
 
 ### Marking "Not Travelling"
 For terms where travel arrangements aren't needed:
@@ -289,6 +308,13 @@ This project is private and proprietary.
 
 ## Recent Updates
 
+### v2.2.0 (September 2025)
+- ✨ **Service Provider Database**: Complete provider management system with auto-complete functionality
+- ⭐ **Provider Ratings**: 1-5 star rating system for transport providers
+- 🔗 **Auto-Fill Integration**: Selecting providers automatically populates transport forms
+- 📊 **Provider Analytics**: Track and manage preferred transport providers
+- 🗄️ **Soft Delete**: Provider data retention with active/inactive status
+
 ### v2.1.0 (September 2025)
 - ✨ **Transport Filtering**: Implemented smart transport separation between departure and return travel cards
 - 🔧 **UI Improvements**: Enhanced dual travel card layout for exeats and half-terms
@@ -307,6 +333,8 @@ This project is private and proprietary.
 ### Common Issues
 
 **Transport not saving**: Ensure all required fields are filled (driver name, phone, license, pickup time)
+
+**Service provider not appearing**: Check that the provider is marked as active and matches the correct vehicle type filter
 
 **Flight status not loading**: Check that your API keys are correctly set in the environment variables
 

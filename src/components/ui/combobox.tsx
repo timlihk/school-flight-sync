@@ -19,7 +19,7 @@ import {
 export interface ComboboxOption {
   value: string
   label: string
-  data?: any
+  data?: unknown
 }
 
 interface ComboboxProps {

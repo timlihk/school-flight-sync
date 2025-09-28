@@ -35,7 +35,7 @@ This is a React + TypeScript application for managing UK boarding school term da
 **Database Design:**
 - `flights` table with `type: 'outbound' | 'return'` for journey direction
 - `transport` table uses index-based filtering (even=outbound, odd=return) for journey separation
-- `service_providers` table for reusable transport provider auto-complete
+- `service_providers` table for reusable transport provider auto-complete with rating system (1-5 stars)
 - `not_travelling` table for marking when travel arrangements aren't needed
 
 ### Critical Implementation Details
@@ -56,6 +56,8 @@ const relevantTransport = termTransport.filter((_, index) => {
 - Combobox component filters providers by vehicle type (school-coach vs taxi)
 - Auto-fills transport forms when existing provider is selected
 - Automatically saves manually entered details as new service providers
+- Includes provider rating system (1-5 stars) and contact management
+- Supports soft-delete via `is_active` flag for data retention
 
 **Flight Data Integration:**
 - FlightAware integration with automatic airline code conversion (IATA to ICAO)
@@ -86,8 +88,14 @@ New migrations go in `supabase/migrations/` with timestamp format: `YYYYMMDD_HHM
 All tables follow the pattern:
 - UUID primary keys with `gen_random_uuid()`
 - `created_at` and `updated_at` timestamps
-- Row Level Security enabled with permissive policies
+- Row Level Security enabled with permissive policies (`USING (true)`)
 - Update triggers for `updated_at` columns
+
+Current database schema includes:
+- `flights` - Flight booking details with outbound/return types
+- `transport` - Ground transportation arrangements
+- `service_providers` - Reusable transport provider database (NEW)
+- `not_travelling` - Terms where travel isn't needed
 
 ### Testing and Quality Assurance
 
