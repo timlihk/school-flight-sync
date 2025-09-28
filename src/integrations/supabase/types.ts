@@ -68,6 +68,48 @@ export type Database = {
         }
         Relationships: []
       }
+      service_providers: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          license_number: string | null
+          name: string
+          notes: string | null
+          phone_number: string
+          rating: number | null
+          updated_at: string
+          vehicle_type: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          name: string
+          notes?: string | null
+          phone_number: string
+          rating?: number | null
+          updated_at?: string
+          vehicle_type: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          name?: string
+          notes?: string | null
+          phone_number?: string
+          rating?: number | null
+          updated_at?: string
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
       not_travelling: {
         Row: {
           created_at: string
