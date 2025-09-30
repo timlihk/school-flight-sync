@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#6B46C1" rx="64"/>
+
+  <!-- Plane icon -->
+  <g transform="translate(128, 180)">
+    <path d="M256 93.7l-48-48V32c0-8.8-7.2-16-16-16s-16 7.2-16 16v13.7L128 93.7V32c0-8.8-7.2-16-16-16s-16 7.2-16 16v61.7l-48 48C39.6 150.1 32 164.8 32 180.3V208c0 8.8 7.2 16 16 16h16L96 272v48c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16v-48l32-48h16c8.8 0 16-7.2 16-16v-27.7c0-15.5-7.6-30.2-16-38.6z"
+          fill="white"
+          transform="scale(0.8) translate(20, -20)"/>
+  </g>
+
+  <!-- School icon (book) -->
+  <g transform="translate(240, 280)">
+    <path d="M96 0C43 0 0 43 0 96v320c0 53 43 96 96 96h288c53 0 96-43 96-96V96c0-53-43-96-96-96H96zm0 64h288c17.7 0 32 14.3 32 32v320c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V96c0-17.7 14.3-32 32-32z"
+          fill="white"
+          transform="scale(0.35)"/>
+  </g>
+</svg>

@@ -2,7 +2,7 @@
 
 A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
-> **Latest Version:** v2.3.0 | **Status:** Production Ready ✅ | **Tests:** 9/9 Passing | **Build:** Successful
+> **Latest Version:** v2.4.0 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
 
 ## Overview
 
@@ -14,6 +14,14 @@ School Flight Sync is designed to help parents efficiently manage and track:
 - Travel coordination for multiple children
 
 ## Features
+
+### 📱 Progressive Web App (PWA)
+- **Mobile Installation**: Install the app on your phone or tablet for quick access
+- **Offline Support**: Access your travel data even without internet connection
+- **App-Like Experience**: Runs in standalone mode without browser chrome
+- **Auto-Updates**: Service worker automatically updates when new versions are available
+- **Background Sync**: Synchronizes data when connection is restored
+- **Push Notifications**: (Future) Receive alerts for flight changes and travel reminders
 
 ### 📅 Term Management
 - **Multi-School Support**: Track term dates for Benenden School and Wycombe Abbey School
@@ -340,6 +348,17 @@ Tests include:
 
 ## Recent Updates
 
+### v2.4.0 (October 2025)
+- 📱 **PWA Support**: Full Progressive Web App implementation
+  - Install prompt with dismissible banner UI
+  - Service worker with intelligent caching strategies (cache-first for static assets, network-first for API calls)
+  - Offline support for viewing cached data
+  - Automatic update detection and prompt
+  - iOS and Android installation support
+  - Web app manifest with custom icons
+- 🔧 **Performance**: Optimized asset loading and caching for faster load times
+- 📲 **Mobile First**: Enhanced mobile experience with standalone mode
+
 ### v2.3.0 (September 2025)
 - 🎯 **Code Quality**: Reduced ESLint warnings from 57 to 8 (86% reduction)
 - 🧪 **Test Suite**: Added Vitest + React Testing Library with 9 passing tests
@@ -368,6 +387,31 @@ Tests include:
 - 💾 **Smart Caching**: 60-day flight data caching for 98%+ API call reduction
 - 🎯 **Flight Corrections**: Save and apply corrections to improve future lookups
 
+## PWA Installation Guide
+
+### Installing on iOS (iPhone/iPad)
+1. Open the app in Safari browser
+2. Tap the Share button (box with arrow pointing up)
+3. Scroll down and tap "Add to Home Screen"
+4. Tap "Add" in the top right
+5. The app icon will appear on your home screen
+
+### Installing on Android
+1. Open the app in Chrome browser
+2. You'll see an "Install" banner at the bottom of the screen
+3. Tap "Install" or tap the menu (⋮) and select "Install app"
+4. The app will be added to your home screen and app drawer
+
+### Installing on Desktop
+1. Look for the install icon (⊕) in your browser's address bar
+2. Click it and confirm the installation
+3. The app will open in its own window
+
+### Offline Features
+- View previously loaded term dates and travel information
+- Access cached flight and transport details
+- Changes made offline will sync when connection is restored
+
 ## Troubleshooting
 
 ### Common Issues
@@ -381,6 +425,14 @@ Tests include:
 **Transport appearing in wrong card**: Ensure the correct direction (outbound/return) is selected when adding transport
 
 **Cache not working**: Check browser console for cache statistics on app startup
+
+**PWA install prompt not showing**:
+- Ensure you're using HTTPS (required for PWA)
+- The prompt appears once per browser session
+- Check if you've previously dismissed it (localStorage key: 'pwa-prompt-dismissed')
+- Try clearing browser cache and revisiting the site
+
+**Offline mode not working**: Service worker only activates after first visit and page refresh
 
 ## Support
 

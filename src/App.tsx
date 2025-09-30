@@ -7,6 +7,7 @@ import { Suspense, lazy } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { FamilyAuthProvider } from "@/contexts/FamilyAuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { InstallPrompt } from "@/components/ui/install-prompt";
 import NotFound from "./pages/NotFound";
 
 // Lazy load main pages for code splitting
@@ -50,6 +51,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <InstallPrompt />
           <BrowserRouter>
             <Suspense fallback={<PageLoader />}>
               <Routes>
