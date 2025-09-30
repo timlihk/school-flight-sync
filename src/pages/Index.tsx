@@ -1,5 +1,5 @@
-import React, { useState, Suspense, lazy, useMemo, useCallback } from "react";
-import { Calendar, Plane, Car, ChevronDown, ChevronUp, FileText, Download, LogOut, Home } from "lucide-react";
+import React, { useState, useMemo, useCallback } from "react";
+import { Calendar, Plane, ChevronDown, ChevronUp, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { TermCard } from "@/components/ui/term-card";
@@ -10,13 +10,12 @@ import FlightDialog from "@/components/ui/flight-dialog";
 import TransportDialog from "@/components/ui/transport-dialog";
 import ToDoDialog from "@/components/ui/todo-dialog";
 import ExportDialog from "@/components/ui/export-dialog";
-import { EventSections } from "@/components/ui/event-sections";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
-import { Term, NotTravellingStatus } from "@/types/school";
+import { Term } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -33,7 +32,7 @@ export default function Index() {
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
   
   const { logout } = useFamilyAuth();
-  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, updateNearFlightStatuses, isUpdatingFlightStatus } = useFlights();
+  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus } = useNotTravelling();
 

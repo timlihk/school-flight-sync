@@ -53,7 +53,7 @@ class AviationStackService {
         try {
           const errorData = await response.text();
           errorDetails += ` - ${errorData}`;
-        } catch (e) {
+        } catch {
           // Ignore errors reading response body
         }
         throw new Error(`AviationStack API request failed: ${errorDetails}`);

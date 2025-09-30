@@ -17,7 +17,7 @@ export function ApiStatusDebug() {
     try {
       const info = await hybridFlightService.getAuthenticationInfo();
       setAuthInfo(info);
-    } catch (error) {
+    } catch {
       setAuthInfo(null);
     } finally {
       setLoading(false);
@@ -35,7 +35,7 @@ export function ApiStatusDebug() {
     }
   }, [isOpen, authInfo]);
 
-  const getStatusBadge = (method: string, available: boolean, recommended?: boolean) => {
+  const getStatusBadge = (method: string, available: boolean) => {
     if (!available) {
       return <Badge variant="secondary" className="text-xs">Not Available</Badge>;
     }
@@ -86,7 +86,7 @@ export function ApiStatusDebug() {
                   <div className="flex items-center gap-2">
                     <Key className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium text-sm">OpenSky Network</span>
-                    {getStatusBadge(authInfo.opensky.method, authInfo.opensky.available, authInfo.opensky.recommended)}
+                    {getStatusBadge(authInfo.opensky.method, authInfo.opensky.available)}
                   </div>
                   
                   <div className="pl-6 space-y-1 text-xs text-muted-foreground">

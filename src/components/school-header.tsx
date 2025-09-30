@@ -1,20 +1,15 @@
-import { GraduationCap, Calendar } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Calendar } from "lucide-react";
 import benendenLogo from "/lovable-uploads/2862c869-2c37-4d6f-a4f9-6d8f96162fad.png";
 import wycommebLogo from "/lovable-uploads/ca153a00-902a-4a17-a0dc-2f475bb46d6e.png";
 
 interface SchoolHeaderProps {
   schoolName: string;
-  termCount: number;
   variant: 'benenden' | 'wycombe';
   academicYear?: string;
   onAcademicYearClick?: () => void;
 }
 
-export function SchoolHeader({ schoolName, termCount, variant, academicYear = "2025-2026", onAcademicYearClick }: SchoolHeaderProps) {
-  const getBadgeVariant = () => {
-    return variant === 'benenden' ? 'default' : 'secondary';
-  };
+export function SchoolHeader({ schoolName, variant, academicYear = "2025-2026", onAcademicYearClick }: SchoolHeaderProps) {
 
   return (
     <div className="text-center space-y-3 animate-fade-in">

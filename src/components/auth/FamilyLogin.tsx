@@ -52,7 +52,7 @@ export function FamilyLogin() {
         setError('Incorrect secret phrase. Please try again.');
         form.reset();
       }
-    } catch (error) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);

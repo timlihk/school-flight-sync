@@ -93,8 +93,6 @@ export function createCompleteBackup(
   notTravelling: NotTravellingStatus[],
   terms: Term[]
 ) {
-  const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm-ss');
-  
   return {
     exportInfo: {
       timestamp: new Date().toISOString(),

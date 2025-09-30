@@ -46,11 +46,9 @@ export function TransportDialog({
     notes: ''
   });
 
-  const { 
-    serviceProviders, 
-    getProvidersByType, 
-    addServiceProvider, 
-    isAddingProvider 
+  const {
+    getProvidersByType,
+    addServiceProvider
   } = useServiceProviders();
 
   const isOpen = open !== undefined ? open : internalOpen;
@@ -166,7 +164,7 @@ export function TransportDialog({
       setSelectedProvider('');
       setShowProviderSelection(true);
     }
-  }, [newTransport.type]);
+  }, [newTransport.type, editingTransport, selectedProvider]);
 
   const dialogContent = (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

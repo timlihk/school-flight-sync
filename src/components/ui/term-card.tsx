@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Calendar, Plane, Plus, Car, User, Phone, Clock, CreditCard, ChevronDown, ArrowRight, RefreshCw, AlertCircle } from "lucide-react";
+import { Calendar, Plane, Car, User, Phone, Clock, CreditCard, ChevronDown, ArrowRight, RefreshCw, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,6 @@ interface TermCardProps {
   onClearNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
   notTravellingStatus?: NotTravellingStatus;
   className?: string;
-  onCardClick?: (term: Term) => void;
   isExpanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
   onUpdateFlightStatus?: (flightId: string) => void;
@@ -41,7 +40,6 @@ const TermCard = memo(function TermCard({
   onClearNotTravelling,
   notTravellingStatus,
   className,
-  onCardClick,
   isExpanded,
   onExpandedChange,
   onUpdateFlightStatus,
@@ -105,7 +103,6 @@ const TermCard = memo(function TermCard({
   };
   const hasFlights = flights.length > 0;
   const hasTransport = transport.length > 0;
-  const isAutumnTermStart = term.type === 'term' && term.name.toLowerCase().includes('autumn');
 
   // Show flight options for holidays, half terms, exeats, leaves, and term starts
   const shouldShowFlights = isHoliday || isHalfTerm || isExeat || isShortLeave || isLongLeave || term.type === 'term';
@@ -200,11 +197,7 @@ const TermCard = memo(function TermCard({
       const isEvenIndex = index % 2 === 0;
       return isFirstCard ? isEvenIndex : !isEvenIndex;
     });
-    
-    // Debug log to see the transport data
-    console.log('Transport data for term:', term.name, transport);
-    console.log('Relevant transport:', relevantTransport);
-    
+
     return (
       <Card className="border border-border">
         <CardHeader className="pb-3">

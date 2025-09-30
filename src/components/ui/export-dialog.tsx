@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, FileText, Database, Printer, Calendar } from 'lucide-react';
+import { Download, FileText, Database, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -59,7 +59,7 @@ export function ExportDialog({ flights, transport, notTravelling, terms }: Expor
         title: "Export Successful",
         description: `Exported ${csvData.length} flights to ${filename}`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Export Failed",
         description: "Failed to export flight data. Please try again.",
@@ -91,7 +91,7 @@ export function ExportDialog({ flights, transport, notTravelling, terms }: Expor
         title: "Export Successful",
         description: `Exported ${csvData.length} transport arrangements to ${filename}`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Export Failed",
         description: "Failed to export transport data. Please try again.",
@@ -114,7 +114,7 @@ export function ExportDialog({ flights, transport, notTravelling, terms }: Expor
         title: "Backup Created",
         description: `Complete data backup saved as ${filename}`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Backup Failed",
         description: "Failed to create backup. Please try again.",

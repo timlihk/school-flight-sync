@@ -182,7 +182,7 @@ class OpenSkyService {
               // Failed to fetch arrivals - continue
             }
           }
-        } catch (error) {
+        } catch {
           continue;
         }
       }
@@ -277,9 +277,6 @@ class OpenSkyService {
       }
 
       
-      // Log first few callsigns for debugging
-      const sampleCallsigns = data.states.slice(0, 10).map((state: unknown[]) => (state[1] as string)?.trim()).filter(Boolean);
-
       // Find flight by callsign - with detailed logging
       const flightState = data.states.find((state: unknown[]) => {
         const stateCallsign = (state[1] as string)?.trim().toUpperCase();
@@ -288,12 +285,6 @@ class OpenSkyService {
       });
 
       if (!flightState) {
-        // Additional search patterns for debugging
-        const partialMatches = data.states.filter((state: unknown[]) => {
-          const stateCallsign = (state[1] as string)?.trim().toUpperCase();
-          return stateCallsign && (stateCallsign.includes('CPA') || stateCallsign.includes('239'));
-        });
-        
         return {
           success: false,
           error: `Flight not found. Searched for: ${callsign.toUpperCase()}. Found ${data.states.length} total flights.`
@@ -390,17 +381,10 @@ class OpenSkyService {
     try {
       // OpenSky flight data structure
       const {
-        callsign,
         estDepartureAirport,
         estArrivalAirport,
         firstSeen,
-        lastSeen,
-        estDepartureAirportHorizDistance,
-        estArrivalAirportHorizDistance,
-        estDepartureAirportVertDistance,
-        estArrivalAirportVertDistance,
-        departureAirportCandidatesCount,
-        arrivalAirportCandidatesCount
+        lastSeen
       } = flightData;
 
       // Convert Unix timestamps to readable times
@@ -463,9 +447,9 @@ class OpenSkyService {
     // [12] sensors, [13] geo_altitude, [14] squawk, [15] spi, [16] position_source
 
     const [
-      icao24, callsign, originCountry, timePosition, lastContact,
+      icao24, , , , lastContact,
       longitude, latitude, baroAltitude, onGround, velocity,
-      trueTrack, verticalRate
+      trueTrack
     ] = stateVector as [string, string, string, number, number, number, number, number, boolean, number, number, number];
 
     // Determine flight status based on available data

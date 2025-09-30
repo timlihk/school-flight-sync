@@ -1,4 +1,4 @@
-import { FlightStatus, FlightStatusResponse } from '@/types/flightStatus';
+import { FlightStatusResponse } from '@/types/flightStatus';
 import { aviationStackService } from './aviationStackService';
 import { openSkyService } from './openSkyService';
 
@@ -153,7 +153,7 @@ class HybridFlightService {
       ]);
 
       try {
-        const openSkyResult = await openSkyPromise;
+        await openSkyPromise;
         results.opensky = true;
       } catch (error) {
         console.log('OpenSky service not available:', error);

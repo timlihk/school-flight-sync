@@ -4,7 +4,7 @@ import { CheckSquare, Plane, Car, Calendar, AlertCircle, Filter } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Term, FlightDetails, TransportDetails, NotTravellingStatus } from "@/types/school";
@@ -264,8 +264,8 @@ export function ToDoDialog({
             </Card>
           ) : (
             <div className="space-y-3">
-              {toDoItems.map((item, index) => (
-                <Card 
+              {toDoItems.map((item) => (
+                <Card
                   key={item.id}
                   className={cn(
                     "cursor-pointer transition-all duration-200 hover:shadow-md",
