@@ -53,9 +53,10 @@ export function useServiceProviders() {
   React.useEffect(() => {
     if (error) {
       console.error('Error loading service providers:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       toast({
         title: "Error Loading Service Providers",
-        description: "Failed to load service provider data from database.",
+        description: `Failed to load service provider data: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
