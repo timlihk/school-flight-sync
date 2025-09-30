@@ -190,9 +190,9 @@ const TermCard = memo(function TermCard({
     });
 
     // Filter transport by direction field
-    const direction = isStart ? 'outbound' : 'return';
+    const transportDirection = isStart ? 'outbound' : 'return';
     const relevantTransport = transport.filter(t =>
-      t.termId === term.id && t.direction === direction
+      t.termId === term.id && t.direction === transportDirection
     );
 
     return (
