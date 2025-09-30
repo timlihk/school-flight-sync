@@ -189,11 +189,18 @@ const TermCard = memo(function TermCard({
       return f.termId === term.id && (isStart ? isOutbound : !isOutbound);
     });
 
-    // Filter transport by direction field
+    // Filter transport by direction field (fallback to index-based for backwards compatibility)
     const transportDirection = isStart ? 'outbound' : 'return';
-    const relevantTransport = transport.filter(t =>
-      t.termId === term.id && t.direction === transportDirection
-    );
+    const termTransport = transport.filter(t => t.termId === term.id);
+    const relevantTransport = termTransport.filter((t, index) => {
+      // If direction field exists, use it; otherwise fall back to index-based
+      if (t.direction) {
+        return t.direction === transportDirection;
+      }
+      // Fallback: index-based filtering for old data
+      const isEvenIndex = index % 2 === 0;
+      return isStart ? isEvenIndex : !isEvenIndex;
+    });
 
     return (
       <Card className="border border-border">
