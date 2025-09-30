@@ -32,13 +32,13 @@ School Flight Sync is designed to help parents efficiently manage and track:
 
 ### 🚗 Transport Coordination
 - **Ground Transportation**: Manage school coach and taxi arrangements
-- **Smart Card Separation**: Transport details are automatically separated between departure and return travel cards
+- **Direction-Based Filtering**: Explicit outbound/return direction field for clear transport organization
 - **Service Provider Database**: Reusable provider database with auto-complete functionality
 - **Provider Management**: Store provider ratings (1-5 stars), contact details, and vehicle information
 - **Auto-Fill Forms**: Select existing providers to automatically populate transport forms
 - **Driver Information**: Store driver names, phone numbers, and license details
 - **Pickup Times**: Track scheduled pickup times for each term
-- **Index-Based Filtering**: Even-indexed entries appear in "Travel from School", odd-indexed in "Return to School"
+- **Visual Indicators**: ✈️ From School and 🏠 To School labels for easy identification
 
 ### 📋 Task Management
 - **To-Do List**: View all terms requiring flight or transport bookings
@@ -58,6 +58,7 @@ School Flight Sync is designed to help parents efficiently manage and track:
 
 - **Frontend Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
+- **Testing**: Vitest + React Testing Library
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **Database**: Supabase (PostgreSQL)
 - **State Management**: React Query (TanStack Query)
@@ -73,12 +74,15 @@ school-flight-sync/
 │   ├── components/       # React components
 │   │   ├── ui/          # Reusable UI components
 │   │   └── school-header.tsx
+│   ├── config/          # Configuration files
+│   │   └── airlineCodes.ts  # IATA to ICAO airline code mappings
 │   ├── data/            # Mock data and constants
 │   ├── hooks/           # Custom React hooks
 │   ├── integrations/    # External service integrations
 │   │   └── supabase/    # Supabase client and types
 │   ├── lib/             # Utility functions
 │   ├── pages/           # Page components
+│   ├── test/            # Test setup and utilities
 │   └── types/           # TypeScript type definitions
 ├── supabase/
 │   └── migrations/      # Database migrations
@@ -134,6 +138,9 @@ The application will be available at `http://localhost:5173`
 - `npm run lint` - Run ESLint
 - `npm run lint:fix` - Run ESLint with auto-fix
 - `npm run typecheck` - Run TypeScript type checking
+- `npm test` - Run tests in watch mode
+- `npm run test:run` - Run tests once
+- `npm run test:ui` - Run tests with UI
 - `npm run check` - Run both typecheck and lint
 
 ## Database Schema
@@ -159,6 +166,7 @@ The application will be available at `http://localhost:5173`
 - `id` (UUID): Primary key
 - `term_id` (TEXT): Reference to term
 - `type` (TEXT): 'school-coach' or 'taxi'
+- `direction` (TEXT): 'outbound' or 'return' (from school vs to school)
 - `driver_name` (TEXT): Driver's name
 - `phone_number` (TEXT): Contact number
 - `license_number` (TEXT): Vehicle license
@@ -308,6 +316,14 @@ This project is private and proprietary.
 
 ## Recent Updates
 
+### v2.3.0 (September 2025)
+- 🎯 **Code Quality**: Reduced ESLint warnings from 57 to 8 (86% reduction)
+- 🧪 **Test Suite**: Added Vitest + React Testing Library with 9 passing tests
+- ✈️ **Airline Config**: Extracted airline code mappings to reusable config file
+- 🚗 **Transport Direction**: Added explicit direction field (outbound/return) replacing index-based filtering
+- 🔧 **Better Architecture**: Clearer code organization and improved maintainability
+- 📝 **Type Safety**: Enhanced TypeScript definitions across the codebase
+
 ### v2.2.0 (September 2025)
 - ✨ **Service Provider Database**: Complete provider management system with auto-complete functionality
 - ⭐ **Provider Ratings**: 1-5 star rating system for transport providers
@@ -319,7 +335,6 @@ This project is private and proprietary.
 - ✨ **Transport Filtering**: Implemented smart transport separation between departure and return travel cards
 - 🔧 **UI Improvements**: Enhanced dual travel card layout for exeats and half-terms
 - 🚗 **Bug Fix**: Resolved transport duplication issue where same transport appeared in both cards
-- 📱 **Frontend-Only Solution**: No database changes required - uses index-based filtering
 
 ### v2.0.0 (August 2025)
 - ✈️ **FlightAware Integration**: Direct flight status links with automatic airline code conversion
@@ -338,7 +353,7 @@ This project is private and proprietary.
 
 **Flight status not loading**: Check that your API keys are correctly set in the environment variables
 
-**Transport appearing in wrong card**: This is automatically handled - even-indexed entries go to departure, odd-indexed to return
+**Transport appearing in wrong card**: Ensure the correct direction (outbound/return) is selected when adding transport
 
 **Cache not working**: Check browser console for cache statistics on app startup
 
