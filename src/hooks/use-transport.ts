@@ -27,6 +27,7 @@ export function useTransport() {
       id: transport.id,
       termId: transport.term_id,
       type: transport.type as 'school-coach' | 'taxi',
+      direction: transport.direction as 'outbound' | 'return',
       driverName: transport.driver_name,
       phoneNumber: transport.phone_number,
       licenseNumber: transport.license_number,
@@ -65,6 +66,7 @@ export function useTransport() {
       const dbTransport = {
         term_id: newTransport.termId,
         type: newTransport.type,
+        direction: newTransport.direction,
         driver_name: newTransport.driverName,
         phone_number: newTransport.phoneNumber,
         license_number: newTransport.licenseNumber,
@@ -84,6 +86,7 @@ export function useTransport() {
         id: data.id,
         termId: data.term_id,
         type: data.type as 'school-coach' | 'taxi',
+        direction: data.direction as 'outbound' | 'return',
         driverName: data.driver_name,
         phoneNumber: data.phone_number,
         licenseNumber: data.license_number,
@@ -192,6 +195,7 @@ export function useTransport() {
       const dbTransport = {
         term_id: updatedTransport.termId,
         type: updatedTransport.type,
+        direction: updatedTransport.direction,
         driver_name: updatedTransport.driverName,
         phone_number: updatedTransport.phoneNumber,
         license_number: updatedTransport.licenseNumber,

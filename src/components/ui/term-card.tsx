@@ -188,15 +188,12 @@ const TermCard = memo(function TermCard({
       const isOutbound = f.type === 'outbound';
       return f.termId === term.id && (isStart ? isOutbound : !isOutbound);
     });
-    
-    // Simple approach: split transport entries between the two cards
-    // Even-indexed entries go to the first card (outbound), odd-indexed entries go to the second card (return)
-    const termTransport = transport.filter(t => t.termId === term.id);
-    const relevantTransport = termTransport.filter((_, index) => {
-      const isFirstCard = isStart; // "Travel from School"
-      const isEvenIndex = index % 2 === 0;
-      return isFirstCard ? isEvenIndex : !isEvenIndex;
-    });
+
+    // Filter transport by direction field
+    const direction = isStart ? 'outbound' : 'return';
+    const relevantTransport = transport.filter(t =>
+      t.termId === term.id && t.direction === direction
+    );
 
     return (
       <Card className="border border-border">

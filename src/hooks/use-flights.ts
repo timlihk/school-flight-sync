@@ -5,6 +5,7 @@ import { FlightDetails } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
 import { transformFlightToDb, transformDbToFlight, transformDbFlightsArray } from '@/utils/flightTransforms';
 import { hybridFlightService } from '@/services/hybridFlightService';
+import { convertFlightNumber } from '@/config/airlineCodes';
 
 // Query keys for React Query
 const QUERY_KEYS = {
@@ -259,42 +260,12 @@ export function useFlights() {
 
     try {
       console.log(`🌐 Opening FlightAware for ${flight.flightNumber}`);
-      
-      // Convert airline codes to FlightAware format
-      const airlineCodeMap: Record<string, string> = {
-        'CX': 'CPA',    // Cathay Pacific
-        'BA': 'BAW',    // British Airways
-        'AY': 'FIN',    // Finnair
-        'AA': 'AAL',    // American Airlines
-        'EK': 'UAE',    // Emirates
-        'QF': 'QFA',    // Qantas
-        'SQ': 'SIA',    // Singapore Airlines
-        'LH': 'DLH',    // Lufthansa
-        'AF': 'AFR',    // Air France
-        'KL': 'KLM',    // KLM
-        'UA': 'UAL',    // United Airlines
-        'DL': 'DAL',    // Delta Airlines
-        'VS': 'VIR',    // Virgin Atlantic
-        'JL': 'JAL',    // Japan Airlines
-        'NH': 'ANA',    // All Nippon Airways
-        'LX': 'SWR',    // Swiss
-        'QR': 'QTR',    // Qatar Airways
-        'EY': 'ETD',    // Etihad
-        'TG': 'THA',    // Thai Airways
-        'MH': 'MAS',    // Malaysia Airlines
-      };
-      
-      // Extract airline code and flight number
-      const flightNumberMatch = flight.flightNumber.match(/^([A-Z]{2})(\d+)$/);
-      let flightAwareFlightNumber = flight.flightNumber;
-      
-      if (flightNumberMatch) {
-        const [, airlineCode, flightNum] = flightNumberMatch;
-        const flightAwareCode = airlineCodeMap[airlineCode];
-        if (flightAwareCode) {
-          flightAwareFlightNumber = `${flightAwareCode}${flightNum}`;
-          console.log(`Converted ${flight.flightNumber} to ${flightAwareFlightNumber} for FlightAware`);
-        }
+
+      // Convert airline codes to FlightAware ICAO format
+      const flightAwareFlightNumber = convertFlightNumber(flight.flightNumber);
+
+      if (flightAwareFlightNumber !== flight.flightNumber) {
+        console.log(`Converted ${flight.flightNumber} to ${flightAwareFlightNumber} for FlightAware`);
       }
       
       // Format date for FlightAware URL (YYYY-MM-DD)

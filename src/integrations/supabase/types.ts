@@ -140,6 +140,7 @@ export type Database = {
       transport: {
         Row: {
           created_at: string
+          direction: string
           driver_name: string
           id: string
           license_number: string
@@ -152,6 +153,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          direction: string
           driver_name: string
           id?: string
           license_number: string
@@ -164,6 +166,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          direction?: string
           driver_name?: string
           id?: string
           license_number?: string

@@ -39,6 +39,7 @@ export function TransportDialog({
   const [showProviderSelection, setShowProviderSelection] = useState(true);
   const [newTransport, setNewTransport] = useState({
     type: 'school-coach' as 'school-coach' | 'taxi',
+    direction: 'outbound' as 'outbound' | 'return',
     driverName: '',
     phoneNumber: '',
     licenseNumber: '',
@@ -118,6 +119,7 @@ export function TransportDialog({
   const resetForm = () => {
     setNewTransport({
       type: 'school-coach',
+      direction: 'outbound',
       driverName: '',
       phoneNumber: '',
       licenseNumber: '',
@@ -186,7 +188,7 @@ export function TransportDialog({
                     <div className="space-y-2 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">
-                          {getTransportTypeDisplay(transportItem.type)}
+                          {transportItem.direction === 'outbound' ? '✈️ From School' : '🏠 To School'} - {getTransportTypeDisplay(transportItem.type)}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
@@ -246,10 +248,28 @@ export function TransportDialog({
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label htmlFor="direction">Direction</Label>
+                <Select
+                  value={newTransport.direction}
+                  onValueChange={(value: 'outbound' | 'return') =>
+                    setNewTransport({ ...newTransport, direction: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="outbound">From School (Outbound)</SelectItem>
+                    <SelectItem value="return">To School (Return)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="transport-type">Type</Label>
-                <Select 
-                  value={newTransport.type} 
-                  onValueChange={(value: 'school-coach' | 'taxi') => 
+                <Select
+                  value={newTransport.type}
+                  onValueChange={(value: 'school-coach' | 'taxi') =>
                     setNewTransport({ ...newTransport, type: value })
                   }
                 >
