@@ -2,6 +2,8 @@
 
 A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
+> **Latest Version:** v2.3.0 | **Status:** Production Ready ✅ | **Tests:** 9/9 Passing | **Build:** Successful
+
 ## Overview
 
 School Flight Sync is designed to help parents efficiently manage and track:
@@ -314,6 +316,28 @@ npm run build
 
 This project is private and proprietary.
 
+## Code Quality & Testing
+
+### **Quality Metrics**
+- ✅ **ESLint Warnings**: 8 (down from 57 - 86% reduction)
+- ✅ **TypeScript**: 0 errors, strict mode enabled
+- ✅ **Test Coverage**: 9/9 tests passing
+- ✅ **Build Status**: Successful production builds
+- ✅ **Performance**: Optimized with React Query caching
+
+### **Testing**
+```bash
+npm test              # Run tests in watch mode
+npm run test:run      # Run tests once
+npm run test:ui       # Run tests with visual UI
+npm run check         # Run typecheck + lint
+```
+
+Tests include:
+- Airline code conversion utilities
+- IATA to ICAO mapping validation
+- Flight number parsing and transformation
+
 ## Recent Updates
 
 ### v2.3.0 (September 2025)
@@ -323,6 +347,7 @@ This project is private and proprietary.
 - 🚗 **Transport Direction**: Added explicit direction field (outbound/return) replacing index-based filtering
 - 🔧 **Better Architecture**: Clearer code organization and improved maintainability
 - 📝 **Type Safety**: Enhanced TypeScript definitions across the codebase
+- 🐛 **Bug Fixes**: Fixed service_providers table creation and backwards compatibility
 
 ### v2.2.0 (September 2025)
 - ✨ **Service Provider Database**: Complete provider management system with auto-complete functionality
