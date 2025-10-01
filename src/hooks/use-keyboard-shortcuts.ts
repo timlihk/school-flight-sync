@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface KeyboardShortcut {
   key: string;
@@ -10,9 +10,16 @@ interface KeyboardShortcut {
 }
 
 export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
+  const shortcutsRef = useRef(shortcuts);
+
+  // Update ref when shortcuts change
+  useEffect(() => {
+    shortcutsRef.current = shortcuts;
+  }, [shortcuts]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      for (const shortcut of shortcuts) {
+      for (const shortcut of shortcutsRef.current) {
         const ctrlMatch = shortcut.ctrl === undefined || shortcut.ctrl === (event.ctrlKey || event.metaKey);
         const shiftMatch = shortcut.shift === undefined || shortcut.shift === event.shiftKey;
         const altMatch = shortcut.alt === undefined || shortcut.alt === event.altKey;
@@ -28,7 +35,7 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [shortcuts]);
+  }, []); // Empty dependency array - only set up listener once
 }
 
 // Hook to show keyboard shortcuts help
