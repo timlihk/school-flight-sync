@@ -3,12 +3,58 @@
 This document outlines planned improvements and future development priorities for School Flight Sync.
 
 **Last Updated:** October 1, 2025
-**Current Version:** v2.4.0
+**Current Version:** v2.5.0
 **Status:** Production Ready ✅ | PWA Enabled 📱
 
 ---
 
 ## ✅ Recently Completed
+
+### Quick Wins: 5 UX Features ✓
+**Completed:** October 1, 2025
+**Time Spent:** 30 minutes
+**Impact:** High - Major UX improvements
+
+#### What Was Implemented
+1. **Dark Mode** ✅
+   - Light, dark, and system theme options
+   - ThemeProvider context with localStorage persistence
+   - Theme toggle dropdown in header
+   - Keyboard shortcut: Ctrl+T
+
+2. **Confirmation Dialogs** ✅
+   - Delete confirmation for flights and transport
+   - Reusable ConfirmDialog component
+   - Prevents accidental data loss
+
+3. **Keyboard Shortcuts** ✅
+   - Ctrl+K: Focus search
+   - Ctrl+T: Toggle theme
+   - Ctrl+E: Export data
+   - Ctrl+/: Expand/collapse all
+   - ?: Show keyboard shortcuts help
+   - useKeyboardShortcuts custom hook
+
+4. **Calendar Export** ✅
+   - Export flights to .ics files
+   - Export transport to calendar
+   - Export term dates
+   - Compatible with Google/Apple Calendar, Outlook
+   - Proper event formatting with details
+
+5. **Search & Filter** ✅
+   - Real-time search by term name, school, type
+   - Search box with Ctrl+K shortcut
+   - Memoized for performance
+   - Integrates with existing filters
+
+**Files Created:**
+- `/src/contexts/ThemeContext.tsx` - Theme management
+- `/src/components/ui/theme-toggle.tsx` - Theme dropdown
+- `/src/components/ui/confirm-dialog.tsx` - Reusable confirmation
+- `/src/hooks/use-keyboard-shortcuts.ts` - Keyboard shortcuts hook
+- `/src/components/ui/keyboard-shortcuts-dialog.tsx` - Help dialog
+- `/src/utils/calendarExport.ts` - Calendar export utilities
 
 ### PWA (Progressive Web App) Setup ✓
 **Completed:** October 1, 2025
@@ -312,20 +358,26 @@ When adding new features:
 ## 🎯 Current Sprint Goals
 
 ### Sprint 1 (October 2025) - COMPLETED ✓
-**Theme:** Mobile Experience
+**Theme:** Mobile Experience & UX Quick Wins
 
 - ✅ PWA Setup (2.5 hours)
-- [ ] Loading States (2 hours)
-- [ ] Empty States (1 hour)
-- **Total:** ~5.5 hours (2.5/5.5 complete)
+- ✅ Dark Mode (15 minutes)
+- ✅ Confirmation Dialogs (10 minutes)
+- ✅ Keyboard Shortcuts (5 minutes)
+- ✅ Calendar Export (5 minutes)
+- ✅ Search & Filter (5 minutes)
+- **Total:** ~3 hours (100% complete) 🎉
 
 **Success Metrics:**
 - ✅ App installable on mobile
-- ⏳ Loading feedback on all actions (pending)
-- ⏳ Clear guidance for new users (pending)
+- ✅ Theme switching with persistence
+- ✅ Delete confirmations prevent data loss
+- ✅ Power user keyboard shortcuts
+- ✅ Calendar integration (.ics export)
+- ✅ Real-time search functionality
 
 ### Sprint 2 (October 2025)
-**Theme:** Polish & UX Improvements
+**Theme:** Polish & Visual Improvements
 
 - [ ] Generate proper PWA icons (0.5 hours)
 - [ ] Loading states and skeletons (2 hours)

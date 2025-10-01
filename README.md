@@ -2,7 +2,7 @@
 
 A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
-> **Latest Version:** v2.4.0 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
+> **Latest Version:** v2.5.0 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
 
 ## Overview
 
@@ -23,6 +23,26 @@ School Flight Sync is designed to help parents efficiently manage and track:
 - **Background Sync**: Synchronizes data when connection is restored
 - **Push Notifications**: (Future) Receive alerts for flight changes and travel reminders
 
+### 🌓 Dark Mode
+- **Theme Options**: Light, dark, or system preference
+- **Persistent**: Saves your theme choice
+- **Smooth Transitions**: Seamless theme switching
+- **Keyboard Shortcut**: `Ctrl+T` to toggle theme
+
+### ⌨️ Keyboard Shortcuts
+- **Ctrl+K**: Focus search box
+- **Ctrl+T**: Toggle dark/light theme
+- **Ctrl+E**: Open export dialog
+- **Ctrl+/**: Expand/collapse all cards
+- **?**: Show keyboard shortcuts help
+- **Power User Features**: Navigate quickly without touching the mouse
+
+### 🔍 Search & Filter
+- **Real-Time Search**: Instant filtering as you type
+- **Search Terms**: Find by term name, school, or type
+- **Quick Access**: Press `Ctrl+K` to focus search
+- **Smart Filtering**: Combines with other filters (academic year, school)
+
 ### 📅 Term Management
 - **Multi-School Support**: Track term dates for Benenden School and Wycombe Abbey School
 - **Academic Year Filtering**: View terms by academic year (2025-2026, 2026-2027)
@@ -39,6 +59,8 @@ School Flight Sync is designed to help parents efficiently manage and track:
 - **Outbound & Return**: Separate tracking for outbound and return flights
 - **Flight Details**: Store airline, flight numbers, airports, times, and confirmation codes
 - **Quick Status Check**: Refresh button opens FlightAware with converted airline codes
+- **Calendar Export**: Export flights to .ics files for Google/Apple Calendar
+- **Delete Confirmation**: Prevents accidental flight deletion
 
 ### 🚗 Transport Coordination
 - **Ground Transportation**: Manage school coach and taxi arrangements
@@ -49,6 +71,8 @@ School Flight Sync is designed to help parents efficiently manage and track:
 - **Driver Information**: Store driver names, phone numbers, and license details
 - **Pickup Times**: Track scheduled pickup times for each term
 - **Visual Indicators**: ✈️ From School and 🏠 To School labels for easy identification
+- **Calendar Export**: Export transport schedules to calendar apps
+- **Delete Confirmation**: Prevents accidental transport deletion
 
 ### 📋 Task Management
 - **To-Do List**: View all terms requiring flight or transport bookings
@@ -347,6 +371,18 @@ Tests include:
 - Flight number parsing and transformation
 
 ## Recent Updates
+
+### v2.5.0 (October 2025)
+- 🌓 **Dark Mode**: Full theme support (light/dark/system) with persistence
+- ⌨️ **Keyboard Shortcuts**: Power user features for quick navigation
+  - Ctrl+K: Focus search, Ctrl+T: Toggle theme, Ctrl+E: Export
+  - Ctrl+/: Expand/collapse all, ?: Show shortcuts
+- 🔍 **Search & Filter**: Real-time search for terms by name, school, or type
+- 📅 **Calendar Export**: Export flights and transport to .ics files
+  - Compatible with Google Calendar, Apple Calendar, Outlook
+  - Individual event export with full details
+- 🛡️ **Delete Confirmations**: Prevent accidental deletions with confirmation dialogs
+- 🎨 **UX Improvements**: 5 quick-win features for better user experience
 
 ### v2.4.0 (October 2025)
 - 📱 **PWA Support**: Full Progressive Web App implementation
