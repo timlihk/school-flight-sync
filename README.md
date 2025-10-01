@@ -27,21 +27,7 @@ School Flight Sync is designed to help parents efficiently manage and track:
 - **Theme Options**: Light, dark, or system preference
 - **Persistent**: Saves your theme choice
 - **Smooth Transitions**: Seamless theme switching
-- **Keyboard Shortcut**: `Ctrl+T` to toggle theme
-
-### ⌨️ Keyboard Shortcuts
-- **Ctrl+K**: Focus search box
-- **Ctrl+T**: Toggle dark/light theme
-- **Ctrl+E**: Open export dialog
-- **Ctrl+/**: Expand/collapse all cards
-- **?**: Show keyboard shortcuts help
-- **Power User Features**: Navigate quickly without touching the mouse
-
-### 🔍 Search & Filter
-- **Real-Time Search**: Instant filtering as you type
-- **Search Terms**: Find by term name, school, or type
-- **Quick Access**: Press `Ctrl+K` to focus search
-- **Smart Filtering**: Combines with other filters (academic year, school)
+- **Easy Access**: Theme toggle dropdown in header
 
 ### 📅 Term Management
 - **Multi-School Support**: Track term dates for Benenden School and Wycombe Abbey School
@@ -374,15 +360,12 @@ Tests include:
 
 ### v2.5.0 (October 2025)
 - 🌓 **Dark Mode**: Full theme support (light/dark/system) with persistence
-- ⌨️ **Keyboard Shortcuts**: Power user features for quick navigation
-  - Ctrl+K: Focus search, Ctrl+T: Toggle theme, Ctrl+E: Export
-  - Ctrl+/: Expand/collapse all, ?: Show shortcuts
-- 🔍 **Search & Filter**: Real-time search for terms by name, school, or type
-- 📅 **Calendar Export**: Export flights and transport to .ics files
+- 🛡️ **Delete Confirmations**: Prevent accidental deletions with confirmation dialogs
+- 📅 **Calendar Export**: Export utility functions created (available for future integration)
   - Compatible with Google Calendar, Apple Calendar, Outlook
   - Individual event export with full details
-- 🛡️ **Delete Confirmations**: Prevent accidental deletions with confirmation dialogs
-- 🎨 **UX Improvements**: 5 quick-win features for better user experience
+- 🎨 **UX Improvements**: Enhanced user experience with dark mode and better confirmations
+- ⚠️ **Note**: Search and keyboard shortcuts features were attempted but removed due to stability issues
 
 ### v2.4.0 (October 2025)
 - 📱 **PWA Support**: Full Progressive Web App implementation

@@ -10,51 +10,48 @@ This document outlines planned improvements and future development priorities fo
 
 ## ✅ Recently Completed
 
-### Quick Wins: 5 UX Features ✓
-**Completed:** October 1, 2025
-**Time Spent:** 30 minutes
-**Impact:** High - Major UX improvements
+### Quick Wins: UX Features (Partially Implemented) ⚠️
+**Started:** October 1, 2025
+**Status:** Dark Mode & Confirmations Active | Search & Shortcuts Removed
 
-#### What Was Implemented
-1. **Dark Mode** ✅
+#### What Was Implemented ✅
+1. **Dark Mode** ✅ (Active)
    - Light, dark, and system theme options
    - ThemeProvider context with localStorage persistence
    - Theme toggle dropdown in header
-   - Keyboard shortcut: Ctrl+T
+   - Working in production
 
-2. **Confirmation Dialogs** ✅
+2. **Confirmation Dialogs** ✅ (Active)
    - Delete confirmation for flights and transport
    - Reusable ConfirmDialog component
    - Prevents accidental data loss
+   - Working in production
 
-3. **Keyboard Shortcuts** ✅
-   - Ctrl+K: Focus search
-   - Ctrl+T: Toggle theme
-   - Ctrl+E: Export data
-   - Ctrl+/: Expand/collapse all
-   - ?: Show keyboard shortcuts help
-   - useKeyboardShortcuts custom hook
+#### What Was Removed ❌
+3. **Keyboard Shortcuts** ❌ (Removed - caused crashes)
+   - Code preserved in git history for future re-implementation
+   - Files remain: `/src/hooks/use-keyboard-shortcuts.ts`, `/src/components/ui/keyboard-shortcuts-dialog.tsx`
 
-4. **Calendar Export** ✅
-   - Export flights to .ics files
-   - Export transport to calendar
-   - Export term dates
+4. **Search & Filter** ❌ (Removed - caused crashes)
+   - Removed from UI due to infinite render loop issues
+   - Can be re-implemented with different approach
+
+#### What Was Created (Available but Not Used) 📦
+5. **Calendar Export** 📦 (Code available)
+   - Export utilities created in `/src/utils/calendarExport.ts`
+   - Functions exist for .ics export
    - Compatible with Google/Apple Calendar, Outlook
-   - Proper event formatting with details
+   - Not integrated into UI yet
 
-5. **Search & Filter** ✅
-   - Real-time search by term name, school, type
-   - Search box with Ctrl+K shortcut
-   - Memoized for performance
-   - Integrates with existing filters
+**Files Currently Active:**
+- `/src/contexts/ThemeContext.tsx` - Theme management ✅
+- `/src/components/ui/theme-toggle.tsx` - Theme dropdown ✅
+- `/src/components/ui/confirm-dialog.tsx` - Reusable confirmation ✅
 
-**Files Created:**
-- `/src/contexts/ThemeContext.tsx` - Theme management
-- `/src/components/ui/theme-toggle.tsx` - Theme dropdown
-- `/src/components/ui/confirm-dialog.tsx` - Reusable confirmation
-- `/src/hooks/use-keyboard-shortcuts.ts` - Keyboard shortcuts hook
-- `/src/components/ui/keyboard-shortcuts-dialog.tsx` - Help dialog
-- `/src/utils/calendarExport.ts` - Calendar export utilities
+**Files Preserved (Not in Use):**
+- `/src/hooks/use-keyboard-shortcuts.ts` - For future use
+- `/src/components/ui/keyboard-shortcuts-dialog.tsx` - For future use
+- `/src/utils/calendarExport.ts` - For future use
 
 ### PWA (Progressive Web App) Setup ✓
 **Completed:** October 1, 2025
@@ -144,10 +141,18 @@ No flights yet?
 
 ## 🔄 Medium Priority (Future Sprints)
 
-### 4. Search & Filter Enhancements
+### 4. Search & Filter Implementation
 **Estimated Time:** 3-4 hours
 **Impact:** Medium
+**Note:** Previous implementation removed due to infinite render loop issues
 
+#### Re-implementation Strategy
+- [ ] Re-implement basic search for terms (different approach)
+- [ ] Use debouncing to prevent render loops
+- [ ] Simpler state management pattern
+- [ ] Thorough testing before deployment
+
+#### Future Enhancements
 - [ ] Search flights by airport code
 - [ ] Filter by airline
 - [ ] Search service providers by name
@@ -260,10 +265,12 @@ No flights yet?
 ## 📊 Technical Debt
 
 ### Items to Address
-1. ⚠️ **Remaining ESLint Warnings**: 8 warnings in shadcn/ui files (acceptable)
+1. ⚠️ **Remaining ESLint Warnings**: 9 warnings in shadcn/ui files (acceptable)
 2. 🔄 **Lazy Loading**: Import statements present but not used
 3. 🔒 **RLS Policies**: Currently using `USING (true)` - consider stricter policies if app scope expands
 4. 📝 **Type Definitions**: Some `any` types in legacy code could be stricter
+5. 🔍 **Search Feature**: Needs re-implementation with better architecture (removed due to crashes)
+6. ⌨️ **Keyboard Shortcuts**: Needs re-implementation with proper debugging (removed due to crashes)
 
 ---
 
@@ -275,8 +282,8 @@ These can be done quickly for immediate impact:
 2. **Add Meta Tags** - Better SEO and social sharing
 3. **Add Loading Bar** - nprogress or similar
 4. **Add Toast Styling** - More polished notifications
-5. **Add Keyboard Shortcuts** - Power user features
-6. **Add Dark Mode** - User preference support
+5. ~~**Add Keyboard Shortcuts**~~ - ❌ Attempted, removed due to crashes
+6. ~~**Add Dark Mode**~~ - ✅ Already implemented and working
 
 ---
 
@@ -357,24 +364,30 @@ When adding new features:
 
 ## 🎯 Current Sprint Goals
 
-### Sprint 1 (October 2025) - COMPLETED ✓
+### Sprint 1 (October 2025) - PARTIALLY COMPLETED ⚠️
 **Theme:** Mobile Experience & UX Quick Wins
 
-- ✅ PWA Setup (2.5 hours)
-- ✅ Dark Mode (15 minutes)
-- ✅ Confirmation Dialogs (10 minutes)
-- ✅ Keyboard Shortcuts (5 minutes)
-- ✅ Calendar Export (5 minutes)
-- ✅ Search & Filter (5 minutes)
-- **Total:** ~3 hours (100% complete) 🎉
+- ✅ PWA Setup (2.5 hours) - Working
+- ✅ Dark Mode (15 minutes) - Working
+- ✅ Confirmation Dialogs (10 minutes) - Working
+- ❌ Keyboard Shortcuts (attempted, removed due to crashes)
+- 📦 Calendar Export (code created but not integrated)
+- ❌ Search & Filter (attempted, removed due to crashes)
+- **Total:** ~3 hours | **Status:** 50% complete (3/6 features active)
 
 **Success Metrics:**
 - ✅ App installable on mobile
 - ✅ Theme switching with persistence
 - ✅ Delete confirmations prevent data loss
-- ✅ Power user keyboard shortcuts
-- ✅ Calendar integration (.ics export)
-- ✅ Real-time search functionality
+- ❌ Power user keyboard shortcuts (removed)
+- 📦 Calendar integration code available (not integrated)
+- ❌ Real-time search functionality (removed)
+
+**Lessons Learned:**
+- Search and keyboard shortcuts caused infinite render loops
+- Multiple debugging attempts failed to identify root cause
+- Features removed to maintain app stability
+- Code preserved in git history for future re-implementation with different approach
 
 ### Sprint 2 (October 2025)
 **Theme:** Polish & Visual Improvements
