@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FlightDetails, Term } from "@/types/school";
 import { useToast } from "@/hooks/use-toast";
 
@@ -47,6 +48,10 @@ export function FlightDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [isAddingFlight, setIsAddingFlight] = useState(false);
   const [editingFlight, setEditingFlight] = useState<FlightDetails | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; flightId: string | null }>({
+    open: false,
+    flightId: null,
+  });
 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
@@ -221,7 +226,7 @@ export function FlightDialog({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onRemoveFlight(flight.id)}
+                        onClick={() => setConfirmDelete({ open: true, flightId: flight.id })}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
                         <X className="h-4 w-4" />
@@ -435,10 +440,28 @@ export function FlightDialog({
     );
   }
 
+  const handleConfirmDelete = () => {
+    if (confirmDelete.flightId) {
+      onRemoveFlight(confirmDelete.flightId);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {dialogContent}
-    </Dialog>
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        {dialogContent}
+      </Dialog>
+
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onOpenChange={(open) => setConfirmDelete({ open, flightId: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Flight"
+        description="Are you sure you want to delete this flight? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+      />
+    </>
   );
 }
 

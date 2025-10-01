@@ -1,6 +1,11 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { Calendar, Plane, ChevronDown, ChevronUp, LogOut } from "lucide-react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
+import { Calendar, Plane, ChevronDown, ChevronUp, LogOut, Search, Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { KeyboardShortcutsDialog } from "@/components/ui/keyboard-shortcuts-dialog";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { TermCard } from "@/components/ui/term-card";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
@@ -30,18 +35,34 @@ export default function Index() {
   const [allExpanded, setAllExpanded] = useState(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('all');
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
-  
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const { logout } = useFamilyAuth();
+  const { theme, setTheme } = useTheme();
   const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus } = useNotTravelling();
 
   // Memoize expensive term filtering and sorting operations
   const filteredTerms = useMemo(() => {
-    return selectedAcademicYear === 'all' 
-      ? mockTerms 
+    let terms = selectedAcademicYear === 'all'
+      ? mockTerms
       : mockTerms.filter(term => term.academicYear === selectedAcademicYear);
-  }, [selectedAcademicYear]);
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      terms = terms.filter(term =>
+        term.termName.toLowerCase().includes(query) ||
+        term.school.toLowerCase().includes(query) ||
+        term.type.toLowerCase().includes(query)
+      );
+    }
+
+    return terms;
+  }, [selectedAcademicYear, searchQuery]);
     
   const { benendenTerms, wycombeTerms } = useMemo(() => {
     const benenden = filteredTerms
@@ -167,6 +188,42 @@ export default function Index() {
   React.useEffect(() => {
   }, []);
 
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'k',
+      ctrl: true,
+      callback: () => searchInputRef.current?.focus(),
+      description: 'Focus search',
+    },
+    {
+      key: 'e',
+      ctrl: true,
+      callback: () => {
+        // Trigger export dialog  - find and click export button
+        const exportBtn = document.querySelector('[data-export-button]') as HTMLElement;
+        if (exportBtn) exportBtn.click();
+      },
+      description: 'Export data',
+    },
+    {
+      key: 't',
+      ctrl: true,
+      callback: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
+      description: 'Toggle theme',
+    },
+    {
+      key: '/',
+      ctrl: true,
+      callback: handleToggleExpandAll,
+      description: 'Expand/collapse all',
+    },
+    {
+      key: '?',
+      callback: () => setShowKeyboardShortcuts(true),
+      description: 'Show keyboard shortcuts',
+    },
+  ]);
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
@@ -200,6 +257,16 @@ export default function Index() {
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
+                  size="icon"
+                  onClick={() => setShowKeyboardShortcuts(true)}
+                  className="h-9 w-9"
+                  title="Keyboard shortcuts"
+                >
+                  <Keyboard className="h-4 w-4" />
+                </Button>
+                <ThemeToggle />
+                <Button
+                  variant="ghost"
                   size="sm"
                   onClick={() => logout()}
                   className="gap-2"
@@ -217,6 +284,17 @@ export default function Index() {
       {/* Filter Controls */}
       <div className="container mx-auto px-6 py-4">
         <div className="flex flex-wrap justify-center gap-3">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search terms (Ctrl+K)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
           <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
             <SelectTrigger className="w-48 h-9">
               <SelectValue placeholder="Academic Year" />
@@ -429,6 +507,12 @@ export default function Index() {
             </DialogContent>
           </Dialog>
         )}
+
+      {/* Keyboard Shortcuts Dialog */}
+      <KeyboardShortcutsDialog
+        open={showKeyboardShortcuts}
+        onOpenChange={setShowKeyboardShortcuts}
+      />
       </main>
     </div>
   );

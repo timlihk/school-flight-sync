@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Term, TransportDetails, ServiceProvider } from "@/types/school";
 import { useServiceProviders } from "@/hooks/use-service-providers";
 
@@ -37,6 +38,10 @@ export function TransportDialog({
   const [editingTransport, setEditingTransport] = useState<TransportDetails | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [showProviderSelection, setShowProviderSelection] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; transportId: string | null }>({
+    open: false,
+    transportId: null,
+  });
   const [newTransport, setNewTransport] = useState({
     type: 'school-coach' as 'school-coach' | 'taxi',
     direction: 'outbound' as 'outbound' | 'return',
@@ -227,7 +232,7 @@ export function TransportDialog({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onRemoveTransport(transportItem.id)}
+                        onClick={() => setConfirmDelete({ open: true, transportId: transportItem.id })}
                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -427,10 +432,28 @@ export function TransportDialog({
     );
   }
 
+  const handleConfirmDelete = () => {
+    if (confirmDelete.transportId) {
+      onRemoveTransport(confirmDelete.transportId);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {dialogContent}
-    </Dialog>
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        {dialogContent}
+      </Dialog>
+
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onOpenChange={(open) => setConfirmDelete({ open, transportId: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Transport"
+        description="Are you sure you want to delete this transport arrangement? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+      />
+    </>
   );
 }
 
