@@ -188,8 +188,8 @@ export default function Index() {
   React.useEffect(() => {
   }, []);
 
-  // Keyboard shortcuts
-  useKeyboardShortcuts([
+  // Keyboard shortcuts - memoized to prevent infinite loops
+  const shortcuts = useMemo(() => [
     {
       key: 'k',
       ctrl: true,
@@ -223,7 +223,9 @@ export default function Index() {
       callback: () => setShowKeyboardShortcuts(true),
       description: 'Show keyboard shortcuts',
     },
-  ]);
+  ], [handleToggleExpandAll, theme, setTheme]);
+
+  useKeyboardShortcuts(shortcuts);
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
