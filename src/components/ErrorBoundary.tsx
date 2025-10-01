@@ -95,10 +95,10 @@ export class ErrorBoundary extends Component<Props, State> {
                 <p className="text-sm text-muted-foreground mb-2">
                   We're sorry, but an unexpected error has occurred. The error has been logged and we'll look into it.
                 </p>
-                {process.env.NODE_ENV === 'development' && this.state.error && (
+                {this.state.error && (
                   <details className="mt-4">
                     <summary className="cursor-pointer text-xs font-medium text-destructive hover:underline">
-                      Error details (Development only)
+                      Error details
                     </summary>
                     <div className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
                       <p className="font-medium mb-1">{this.state.error.toString()}</p>
