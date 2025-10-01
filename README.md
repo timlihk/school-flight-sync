@@ -390,11 +390,20 @@ Tests include:
 ## PWA Installation Guide
 
 ### Installing on iOS (iPhone/iPad)
-1. Open the app in Safari browser
-2. Tap the Share button (box with arrow pointing up)
-3. Scroll down and tap "Add to Home Screen"
-4. Tap "Add" in the top right
-5. The app icon will appear on your home screen
+1. **Open Safari browser** (⚠️ Must use Safari, not Chrome or other browsers)
+2. Navigate to your app URL
+3. **Tap the Share button** at the bottom (square icon with arrow pointing up ⬆️)
+4. **Scroll down** and tap "Add to Home Screen"
+5. **Customize** the app name if desired (shows "Flight Sync")
+6. **Tap "Add"** in the top right corner
+7. The app icon will appear on your home screen
+8. **Launch** by tapping the icon - it opens in standalone mode without Safari UI
+
+**Important:**
+- ✅ Must use Safari browser (iOS requirement)
+- ✅ Requires HTTPS (secure connection)
+- ✅ Works offline after first visit
+- ✅ Updates automatically when new versions are deployed
 
 ### Installing on Android
 1. Open the app in Chrome browser
@@ -427,12 +436,23 @@ Tests include:
 **Cache not working**: Check browser console for cache statistics on app startup
 
 **PWA install prompt not showing**:
+- On iOS: Must use Safari browser (not Chrome/Firefox)
 - Ensure you're using HTTPS (required for PWA)
-- The prompt appears once per browser session
+- The in-app install banner appears once per browser session
+- On iOS, use the Safari Share button method (no in-app banner)
 - Check if you've previously dismissed it (localStorage key: 'pwa-prompt-dismissed')
 - Try clearing browser cache and revisiting the site
 
-**Offline mode not working**: Service worker only activates after first visit and page refresh
+**Offline mode not working**:
+- Service worker only activates after first visit and page refresh
+- Visit a few pages while online to cache data
+- Check browser console for service worker registration logs
+
+**"Add to Home Screen" not appearing on iOS**:
+- Confirm you're using Safari (required for iOS PWA installation)
+- Make sure the website URL starts with HTTPS
+- Try refreshing the page first
+- Check that you haven't already installed it
 
 ## Support
 
