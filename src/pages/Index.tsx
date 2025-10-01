@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { KeyboardShortcutsDialog } from "@/components/ui/keyboard-shortcuts-dialog";
-import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
-import { useTheme } from "@/contexts/ThemeContext";
+// import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+// import { useTheme } from "@/contexts/ThemeContext";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { TermCard } from "@/components/ui/term-card";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
@@ -40,7 +40,7 @@ export default function Index() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const { logout } = useFamilyAuth();
-  const { theme, setTheme } = useTheme();
+  // const { theme, setTheme } = useTheme();
   const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus } = useNotTravelling();
@@ -188,44 +188,44 @@ export default function Index() {
   React.useEffect(() => {
   }, []);
 
-  // Keyboard shortcuts - memoized to prevent infinite loops
-  const shortcuts = useMemo(() => [
-    {
-      key: 'k',
-      ctrl: true,
-      callback: () => searchInputRef.current?.focus(),
-      description: 'Focus search',
-    },
-    {
-      key: 'e',
-      ctrl: true,
-      callback: () => {
-        // Trigger export dialog  - find and click export button
-        const exportBtn = document.querySelector('[data-export-button]') as HTMLElement;
-        if (exportBtn) exportBtn.click();
-      },
-      description: 'Export data',
-    },
-    {
-      key: 't',
-      ctrl: true,
-      callback: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
-      description: 'Toggle theme',
-    },
-    {
-      key: '/',
-      ctrl: true,
-      callback: handleToggleExpandAll,
-      description: 'Expand/collapse all',
-    },
-    {
-      key: '?',
-      callback: () => setShowKeyboardShortcuts(true),
-      description: 'Show keyboard shortcuts',
-    },
-  ], [handleToggleExpandAll, theme, setTheme]);
+  // Keyboard shortcuts - temporarily disabled for debugging
+  // const shortcuts = useMemo(() => [
+  //   {
+  //     key: 'k',
+  //     ctrl: true,
+  //     callback: () => searchInputRef.current?.focus(),
+  //     description: 'Focus search',
+  //   },
+  //   {
+  //     key: 'e',
+  //     ctrl: true,
+  //     callback: () => {
+  //       // Trigger export dialog  - find and click export button
+  //       const exportBtn = document.querySelector('[data-export-button]') as HTMLElement;
+  //       if (exportBtn) exportBtn.click();
+  //     },
+  //     description: 'Export data',
+  //   },
+  //   {
+  //     key: 't',
+  //     ctrl: true,
+  //     callback: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
+  //     description: 'Toggle theme',
+  //   },
+  //   {
+  //     key: '/',
+  //     ctrl: true,
+  //     callback: handleToggleExpandAll,
+  //     description: 'Expand/collapse all',
+  //   },
+  //   {
+  //     key: '?',
+  //     callback: () => setShowKeyboardShortcuts(true),
+  //     description: 'Show keyboard shortcuts',
+  //   },
+  // ], [handleToggleExpandAll, theme, setTheme]);
 
-  useKeyboardShortcuts(shortcuts);
+  // useKeyboardShortcuts(shortcuts);
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
