@@ -25,7 +25,7 @@ pool.on('error', (err) => {
 });
 
 // Helper function to query the database
-export async function query<T = any>(text: string, params?: any[]): Promise<pg.QueryResult<T>> {
+export async function query<T extends pg.QueryResultRow = any>(text: string, params?: any[]): Promise<pg.QueryResult<T>> {
   const start = Date.now();
   try {
     const res = await pool.query<T>(text, params);
