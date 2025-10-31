@@ -36,10 +36,12 @@ jobs:
           echo "Creating backup: ${BACKUP_FILE}"
 
           # Use PostgreSQL 17 Docker image to run pg_dump
+          # Mount current directory and output directly to file
           docker run --rm \
-            -e PGPASSWORD="${DATABASE_URL#*:*:}" \
+            -v "$(pwd)/backups:/backups" \
+            -e DATABASE_URL="$DATABASE_URL" \
             postgres:17-alpine \
-            pg_dump "$DATABASE_URL" > "$BACKUP_FILE"
+            sh -c "pg_dump \$DATABASE_URL -f /backups/railway_backup_${TIMESTAMP}.sql"
 
           # Create a "latest" copy
           cp "$BACKUP_FILE" "backups/railway_backup_latest.sql"
@@ -52,16 +54,19 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           echo "Record counts:"
-          docker run --rm postgres:17-alpine psql "$DATABASE_URL" -c "
-            SELECT 'flights' as table_name, COUNT(*) as count FROM flights
-            UNION ALL
-            SELECT 'transport', COUNT(*) FROM transport
-            UNION ALL
-            SELECT 'not_travelling', COUNT(*) FROM not_travelling
-            UNION ALL
-            SELECT 'service_providers', COUNT(*) FROM service_providers
-            ORDER BY table_name;
-          " || echo "Could not retrieve record counts"
+          docker run --rm \
+            -e DATABASE_URL="$DATABASE_URL" \
+            postgres:17-alpine \
+            sh -c 'psql "$DATABASE_URL" -c "
+              SELECT '\''flights'\'' as table_name, COUNT(*) as count FROM flights
+              UNION ALL
+              SELECT '\''transport'\'', COUNT(*) FROM transport
+              UNION ALL
+              SELECT '\''not_travelling'\'', COUNT(*) FROM not_travelling
+              UNION ALL
+              SELECT '\''service_providers'\'', COUNT(*) FROM service_providers
+              ORDER BY table_name;
+            "' || echo "Could not retrieve record counts"
 
       - name: Commit and push backup
         run: |
