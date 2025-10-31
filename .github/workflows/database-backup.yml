@@ -18,20 +18,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up PostgreSQL 17 client
-        run: |
-          # Add PostgreSQL APT repository for version 17
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client-17
-
       - name: Create backup directory
         run: |
           mkdir -p backups
           echo "Backup directory created"
 
-      - name: Export database to SQL
+      - name: Export database to SQL using Docker (PostgreSQL 17)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
@@ -40,23 +32,24 @@ jobs:
 
           echo "Creating backup: ${BACKUP_FILE}"
 
-          # Export database using pg_dump
-          pg_dump "$DATABASE_URL" > "$BACKUP_FILE"
+          # Use PostgreSQL 17 Docker image to run pg_dump
+          docker run --rm \
+            -e PGPASSWORD="${DATABASE_URL#*:*:}" \
+            postgres:17-alpine \
+            pg_dump "$DATABASE_URL" > "$BACKUP_FILE"
 
-          # Create a "latest" symlink
+          # Create a "latest" copy
           cp "$BACKUP_FILE" "backups/railway_backup_latest.sql"
 
           echo "Backup created successfully"
-
-          # Show backup stats
           echo "Backup size: $(du -h "$BACKUP_FILE" | cut -f1)"
-          echo "Record counts:"
 
-      - name: Get record counts
+      - name: Get record counts using Docker
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          psql "$DATABASE_URL" -c "
+          echo "Record counts:"
+          docker run --rm postgres:17-alpine psql "$DATABASE_URL" -c "
             SELECT 'flights' as table_name, COUNT(*) as count FROM flights
             UNION ALL
             SELECT 'transport', COUNT(*) FROM transport
