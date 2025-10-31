@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api-client';
 import { TransportDetails } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,10 +15,7 @@ export function useTransport() {
 
   // Fetch transport with React Query
   const fetchTransport = async (): Promise<TransportDetails[]> => {
-    const { data, error } = await supabase
-      .from('transport')
-      .select('*')
-      .order('created_at', { ascending: true });
+    const { data, error } = await apiClient.transport.getAll();
 
     if (error) throw error;
 
@@ -74,11 +71,7 @@ export function useTransport() {
         notes: newTransport.notes || null,
       };
 
-      const { data, error } = await supabase
-        .from('transport')
-        .insert([dbTransport])
-        .select()
-        .single();
+      const { data, error } = await apiClient.transport.create(dbTransport);
 
       if (error) throw error;
 
@@ -141,10 +134,7 @@ export function useTransport() {
   // Remove transport mutation with optimistic updates
   const removeTransportMutation = useMutation({
     mutationFn: async (transportId: string): Promise<void> => {
-      const { error } = await supabase
-        .from('transport')
-        .delete()
-        .eq('id', transportId);
+      const { error } = await apiClient.transport.delete(transportId);
 
       if (error) throw error;
     },
@@ -203,10 +193,7 @@ export function useTransport() {
         notes: updatedTransport.notes || null,
       };
 
-      const { error } = await supabase
-        .from('transport')
-        .update(dbTransport)
-        .eq('id', transportId);
+      const { error } = await apiClient.transport.update(transportId, dbTransport);
 
       if (error) throw error;
       

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api-client';
 import { ServiceProvider } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,11 +15,7 @@ export function useServiceProviders() {
 
   // Fetch service providers with React Query
   const fetchServiceProviders = async (): Promise<ServiceProvider[]> => {
-    const { data, error } = await supabase
-      .from('service_providers')
-      .select('*')
-      .eq('is_active', true)
-      .order('name', { ascending: true });
+    const { data, error } = await apiClient.serviceProviders.getAll();
 
     if (error) throw error;
 
@@ -76,11 +72,7 @@ export function useServiceProviders() {
         is_active: newProvider.isActive,
       };
 
-      const { data, error } = await supabase
-        .from('service_providers')
-        .insert([dbProvider])
-        .select()
-        .single();
+      const { data, error } = await apiClient.serviceProviders.create(dbProvider);
 
       if (error) throw error;
 
@@ -162,10 +154,7 @@ export function useServiceProviders() {
         is_active: updatedProvider.isActive,
       };
 
-      const { error } = await supabase
-        .from('service_providers')
-        .update(dbProvider)
-        .eq('id', providerId);
+      const { error } = await apiClient.serviceProviders.update(providerId, dbProvider);
 
       if (error) throw error;
       

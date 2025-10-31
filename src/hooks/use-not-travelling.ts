@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api-client';
 import { NotTravellingStatus } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,9 +15,7 @@ export function useNotTravelling() {
 
   // Fetch not travelling status with React Query
   const fetchNotTravelling = async (): Promise<NotTravellingStatus[]> => {
-    const { data, error } = await supabase
-      .from('not_travelling')
-      .select('*');
+    const { data, error } = await apiClient.notTravelling.getAll();
 
     if (error) throw error;
 
@@ -54,14 +52,10 @@ export function useNotTravelling() {
   // Simplified not travelling status update with invalidation
   const setNotTravellingStatus = async (termId: string, type: 'flights' | 'transport') => {
     try {
-      const { error } = await supabase
-        .from('not_travelling')
-        .upsert({
-          term_id: termId,
-          ...(type === 'flights' ? { no_flights: true } : { no_transport: true })
-        }, {
-          onConflict: 'term_id'
-        });
+      const { error } = await apiClient.notTravelling.upsert({
+        term_id: termId,
+        ...(type === 'flights' ? { no_flights: true } : { no_transport: true })
+      });
 
       if (error) throw error;
 
@@ -84,39 +78,12 @@ export function useNotTravelling() {
 
   const clearNotTravellingStatus = async (termId: string, type: 'flights' | 'transport') => {
     try {
-      // Get current record
-      const { data: current, error: fetchError } = await supabase
-        .from('not_travelling')
-        .select('*')
-        .eq('term_id', termId)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
-
-      if (!current) return; // No record to update
-
-      const updates = {
-        ...(type === 'flights' ? { no_flights: false } : { no_transport: false })
-      };
-
-      const { error } = await supabase
-        .from('not_travelling')
-        .update(updates)
-        .eq('term_id', termId);
+      const { error } = await apiClient.notTravelling.clear(termId);
 
       if (error) throw error;
 
-      // Update local state
-      setNotTravelling(prev => 
-        prev.map(nt => 
-          nt.termId === termId 
-            ? { 
-                ...nt, 
-                ...(type === 'flights' ? { noFlights: undefined } : { noTransport: undefined })
-              }
-            : nt
-        )
-      );
+      // Invalidate and refetch to get fresh data
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notTravelling });
 
       toast({
         title: "Status Cleared",

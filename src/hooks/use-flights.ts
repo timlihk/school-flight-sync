@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api-client';
 import { FlightDetails } from '@/types/school';
 import { useToast } from '@/hooks/use-toast';
 import { transformFlightToDb, transformDbToFlight, transformDbFlightsArray } from '@/utils/flightTransforms';
@@ -19,10 +19,7 @@ export function useFlights() {
 
   // Fetch flights with React Query
   const fetchFlights = async (): Promise<FlightDetails[]> => {
-    const { data, error } = await supabase
-      .from('flights')
-      .select('*')
-      .order('departure_date', { ascending: true });
+    const { data, error } = await apiClient.flights.getAll();
 
     if (error) throw error;
     return data ? transformDbFlightsArray(data) : [];
@@ -56,11 +53,7 @@ export function useFlights() {
   const addFlightMutation = useMutation({
     mutationFn: async (newFlight: Omit<FlightDetails, 'id'>): Promise<FlightDetails> => {
       const dbFlight = transformFlightToDb(newFlight);
-      const { data, error } = await supabase
-        .from('flights')
-        .insert([dbFlight])
-        .select()
-        .single();
+      const { data, error } = await apiClient.flights.create(dbFlight);
 
       if (error) throw error;
       return transformDbToFlight(data);
@@ -115,12 +108,7 @@ export function useFlights() {
   const editFlightMutation = useMutation({
     mutationFn: async ({ flightId, updatedFlight }: { flightId: string; updatedFlight: Omit<FlightDetails, 'id'> }): Promise<FlightDetails> => {
       const dbFlight = transformFlightToDb(updatedFlight);
-      const { data, error } = await supabase
-        .from('flights')
-        .update(dbFlight)
-        .eq('id', flightId)
-        .select()
-        .single();
+      const { data, error } = await apiClient.flights.update(flightId, dbFlight);
 
       if (error) throw error;
       return transformDbToFlight(data);
@@ -166,10 +154,7 @@ export function useFlights() {
   // Remove flight mutation with optimistic updates
   const removeFlightMutation = useMutation({
     mutationFn: async (flightId: string): Promise<void> => {
-      const { error } = await supabase
-        .from('flights')
-        .delete()
-        .eq('id', flightId);
+      const { error } = await apiClient.flights.delete(flightId);
 
       if (error) throw error;
     },
