@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Calendar, Plane, ChevronDown, ChevronUp, LogOut } from "lucide-react";
+import { Plane, ChevronDown, ChevronUp, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
+import { useNavigate } from "react-router-dom";
 import { TermCard } from "@/components/ui/term-card";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { SchoolHeader } from "@/components/school-header";
+import { CompactCalendar } from "@/components/CompactCalendar";
 
 import FlightDialog from "@/components/ui/flight-dialog";
 import TransportDialog from "@/components/ui/transport-dialog";
@@ -33,6 +35,7 @@ export default function Index() {
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
 
   const { logout } = useFamilyAuth();
+  const navigate = useNavigate();
   const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus } = useNotTravelling();
@@ -272,6 +275,11 @@ export default function Index() {
             terms={mockTerms}
           />
         </div>
+      </div>
+
+      {/* Calendar View */}
+      <div className="container mx-auto px-6 py-4">
+        <CompactCalendar selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'} />
       </div>
 
       {/* Main Content */}
