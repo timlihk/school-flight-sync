@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { query } from '../db/pool.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { validateBody, validateParams } from '../middleware/validation.js';
+import { upsertNotTravellingSchema, clearNotTravellingSchema } from '../schemas/validation.js';
 import type { NotTravelling, UpsertNotTravellingDTO } from '../types/index.js';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -29,7 +32,7 @@ router.get('/term/:termId', asyncHandler(async (req, res) => {
 }));
 
 // POST /api/not-travelling - Upsert not travelling status
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', validateBody(upsertNotTravellingSchema), asyncHandler(async (req, res) => {
   const data: UpsertNotTravellingDTO = req.body;
 
   const result = await query<NotTravelling>(
@@ -52,12 +55,40 @@ router.post('/', asyncHandler(async (req, res) => {
 }));
 
 // PUT /api/not-travelling/term/:termId/clear - Clear not travelling status for a term
-router.put('/term/:termId/clear', asyncHandler(async (req, res) => {
+router.put('/term/:termId/clear', validateBody(clearNotTravellingSchema), asyncHandler(async (req, res) => {
   const { termId } = req.params;
+  const { type } = req.body as { type?: 'flights' | 'transport' | 'both' } ?? {};
+
+  let clearFlights = true;
+  let clearTransport = true;
+
+  if (type === 'flights') {
+    clearTransport = false;
+  } else if (type === 'transport') {
+    clearFlights = false;
+  } else if (type && type !== 'both') {
+    return res.status(400).json({ error: 'Invalid type provided' });
+  }
+
+  const updates: string[] = [];
+  if (clearFlights) {
+    updates.push('no_flights = false');
+  }
+  if (clearTransport) {
+    updates.push('no_transport = false');
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'Nothing to clear' });
+  }
+
+  updates.push('updated_at = now()');
+
+  const setClause = updates.join(', ');
 
   const result = await query<NotTravelling>(
     `UPDATE public.not_travelling
-     SET no_flights = false, no_transport = false
+     SET ${setClause}
      WHERE term_id = $1
      RETURNING *`,
     [termId]

@@ -20,6 +20,7 @@ export function useNotTravelling() {
     if (error) throw error;
 
     return data?.map((item) => ({
+      id: item.id ? String(item.id) : undefined,
       termId: item.term_id,
       noFlights: item.no_flights || undefined,
       noTransport: item.no_transport || undefined,
@@ -78,7 +79,7 @@ export function useNotTravelling() {
 
   const clearNotTravellingStatus = async (termId: string, type: 'flights' | 'transport') => {
     try {
-      const { error } = await apiClient.notTravelling.clear(termId);
+      const { error } = await apiClient.notTravelling.clear(termId, { type });
 
       if (error) throw error;
 

@@ -117,7 +117,8 @@ class ApiClient {
     getAll: () => this.get<any[]>('/api/not-travelling'),
     getByTerm: (termId: string) => this.get<any>(`/api/not-travelling/term/${termId}`),
     upsert: (data: any) => this.post<any>('/api/not-travelling', data),
-    clear: (termId: string) => this.put<any>(`/api/not-travelling/term/${termId}/clear`, {}),
+    clear: (termId: string, data?: { type?: 'flights' | 'transport' | 'both' }) =>
+      this.put<any>(`/api/not-travelling/term/${termId}/clear`, data ?? {}),
     delete: (termId: string) => this.delete<void>(`/api/not-travelling/term/${termId}`),
   };
 }

@@ -80,6 +80,7 @@ export interface TransportDetails {
 }
 
 export interface NotTravellingStatus {
+  id?: string;
   termId: string;
   noFlights?: boolean;
   noTransport?: boolean;

@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { query } from '../db/pool.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { validateBody, validateParams } from '../middleware/validation.js';
+import { createTransportSchema, updateTransportSchema, uuidSchema } from '../schemas/validation.js';
 import type { Transport, CreateTransportDTO, UpdateTransportDTO } from '../types/index.js';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -14,7 +17,7 @@ router.get('/', asyncHandler(async (req, res) => {
 }));
 
 // GET /api/transport/:id - Get single transport record
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', validateParams(z.object({ id: uuidSchema })), asyncHandler(async (req, res) => {
   const { id } = req.params;
   const result = await query<Transport>(
     'SELECT * FROM public.transport WHERE id = $1',
@@ -39,7 +42,7 @@ router.get('/term/:termId', asyncHandler(async (req, res) => {
 }));
 
 // POST /api/transport - Create new transport record
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', validateBody(createTransportSchema), asyncHandler(async (req, res) => {
   const transport: CreateTransportDTO = req.body;
 
   const result = await query<Transport>(
@@ -64,13 +67,31 @@ router.post('/', asyncHandler(async (req, res) => {
 }));
 
 // PUT /api/transport/:id - Update transport record
-router.put('/:id', asyncHandler(async (req, res) => {
+router.put('/:id', validateParams(z.object({ id: uuidSchema })), validateBody(updateTransportSchema), asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updates: UpdateTransportDTO = req.body;
 
-  const fields = Object.keys(updates);
-  const setClause = fields.map((field, idx) => `${field} = $${idx + 2}`).join(', ');
-  const values = [id, ...fields.map(field => updates[field as keyof UpdateTransportDTO])];
+  const allowedFields = new Set<keyof UpdateTransportDTO>([
+    'term_id',
+    'type',
+    'direction',
+    'driver_name',
+    'phone_number',
+    'license_number',
+    'pickup_time',
+    'notes'
+  ]);
+
+  const entries = Object.entries(updates).filter(([field, value]) =>
+    allowedFields.has(field as keyof UpdateTransportDTO) && value !== undefined
+  );
+
+  if (entries.length === 0) {
+    return res.status(400).json({ error: 'No valid fields provided for update' });
+  }
+
+  const setClause = entries.map(([field], idx) => `${field} = $${idx + 2}`).join(', ');
+  const values = [id, ...entries.map(([, value]) => value)];
 
   const result = await query<Transport>(
     `UPDATE public.transport SET ${setClause} WHERE id = $1 RETURNING *`,
@@ -85,7 +106,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
 }));
 
 // DELETE /api/transport/:id - Delete transport record
-router.delete('/:id', asyncHandler(async (req, res) => {
+router.delete('/:id', validateParams(z.object({ id: uuidSchema })), asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const result = await query(
