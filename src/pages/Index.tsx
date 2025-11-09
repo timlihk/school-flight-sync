@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Plane, ChevronDown, ChevronUp, LogOut } from "lucide-react";
+import { Plane, ChevronDown, ChevronUp, LogOut, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
