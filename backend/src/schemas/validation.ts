@@ -29,11 +29,23 @@ export const createTransportSchema = z.object({
   direction: z.enum(['outbound', 'return'], {
     message: 'Direction must be either "outbound" or "return"'
   }),
-  driver_name: z.string().min(1, 'Driver name is required'),
-  phone_number: z.string().min(1, 'Phone number is required'),
-  license_number: z.string().min(1, 'License number is required'),
+  driver_name: z.string().optional(),
+  phone_number: z.string().optional(),
+  license_number: z.string().optional(),
   pickup_time: z.string().min(1, 'Pickup time is required'),
   notes: z.string().nullable().optional(),
+}).refine((data) => {
+  // For school-coach, only pickup_time is required
+  // For taxi, all fields are required
+  if (data.type === 'taxi') {
+    return data.driver_name && data.driver_name.length > 0 &&
+           data.phone_number && data.phone_number.length > 0 &&
+           data.license_number && data.license_number.length > 0;
+  }
+  return true;
+}, {
+  message: 'For taxi transport, driver name, phone number, and license number are required',
+  path: ['driver_name']
 });
 
 export const updateTransportSchema = createTransportSchema.partial();

@@ -140,6 +140,7 @@ export function TransportDialog({
   const handleEditTransport = (transportItem: TransportDetails) => {
     setNewTransport({
       type: transportItem.type,
+      direction: transportItem.direction, // Add direction field
       driverName: transportItem.driverName,
       phoneNumber: transportItem.phoneNumber,
       licenseNumber: transportItem.licenseNumber,
@@ -352,37 +353,42 @@ export function TransportDialog({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="driver-name">Driver Name</Label>
-                <Input
-                  id="driver-name"
-                  value={newTransport.driverName}
-                  onChange={(e) => setNewTransport({ ...newTransport, driverName: e.target.value })}
-                  placeholder="e.g., John Smith"
-                />
-              </div>
+            {/* Driver details - only show for taxi transport */}
+            {newTransport.type === 'taxi' && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="driver-name">Driver Name</Label>
+                    <Input
+                      id="driver-name"
+                      value={newTransport.driverName}
+                      onChange={(e) => setNewTransport({ ...newTransport, driverName: e.target.value })}
+                      placeholder="e.g., John Smith"
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone-number">Phone Number</Label>
-                <Input
-                  id="phone-number"
-                  value={newTransport.phoneNumber}
-                  onChange={(e) => setNewTransport({ ...newTransport, phoneNumber: e.target.value })}
-                  placeholder="e.g., +44 7123 456789"
-                />
-              </div>
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone-number">Phone Number</Label>
+                    <Input
+                      id="phone-number"
+                      value={newTransport.phoneNumber}
+                      onChange={(e) => setNewTransport({ ...newTransport, phoneNumber: e.target.value })}
+                      placeholder="e.g., +44 7123 456789"
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="license-number">License Number</Label>
-              <Input
-                id="license-number"
-                value={newTransport.licenseNumber}
-                onChange={(e) => setNewTransport({ ...newTransport, licenseNumber: e.target.value })}
-                placeholder="e.g., ABC123 or License #12345"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="license-number">License Number</Label>
+                  <Input
+                    id="license-number"
+                    value={newTransport.licenseNumber}
+                    onChange={(e) => setNewTransport({ ...newTransport, licenseNumber: e.target.value })}
+                    placeholder="e.g., ABC123 or License #12345"
+                  />
+                </div>
+              </>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="transport-notes">Notes (optional)</Label>
