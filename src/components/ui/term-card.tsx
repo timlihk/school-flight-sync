@@ -26,13 +26,14 @@ interface TermCardProps {
   onExpandedChange?: (expanded: boolean) => void;
   onUpdateFlightStatus?: (flightId: string) => void;
   isUpdatingFlightStatus?: (flightId: string) => boolean;
+  highlighted?: boolean;
 }
 
-const TermCard = memo(function TermCard({ 
-  term, 
-  flights = [], 
+const TermCard = memo(function TermCard({
+  term,
+  flights = [],
   transport = [],
-  onAddFlight, 
+  onAddFlight,
   onViewFlights,
   onAddTransport,
   onViewTransport,
@@ -43,7 +44,8 @@ const TermCard = memo(function TermCard({
   isExpanded,
   onExpandedChange,
   onUpdateFlightStatus,
-  isUpdatingFlightStatus
+  isUpdatingFlightStatus,
+  highlighted = false
 }: TermCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [isOpen, setIsOpen] = useState(isExpanded || false);
@@ -436,10 +438,11 @@ const TermCard = memo(function TermCard({
 
   return (
     <>
-      <Card 
+      <Card
         id={`term-card-${term.id}`}
         className={cn(
           "transition-all duration-300 hover:shadow-elegant group animate-fade-in overflow-hidden",
+          highlighted && "ring-2 ring-primary ring-offset-2 animate-pulse",
           className
         )}
       >

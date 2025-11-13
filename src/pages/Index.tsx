@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Plane, ChevronDown, ChevronUp, LogOut, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { TermCard } from "@/components/ui/term-card";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { SchoolHeader } from "@/components/school-header";
@@ -33,9 +33,11 @@ export default function Index() {
   const [allExpanded, setAllExpanded] = useState(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('all');
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
+  const [highlightedTerms, setHighlightedTerms] = useState<Set<string>>(new Set());
 
   const { logout } = useFamilyAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus } = useNotTravelling();
@@ -166,6 +168,25 @@ export default function Index() {
       return newSet;
     });
   }, []);
+
+  // Handle URL parameters for highlighted terms from calendar
+  useEffect(() => {
+    const highlightParam = searchParams.get('highlight');
+    if (highlightParam) {
+      const termIds = highlightParam.split(',');
+      setHighlightedTerms(new Set(termIds));
+
+      // Expand the highlighted term cards
+      setExpandedCards(prev => {
+        const newSet = new Set(prev);
+        termIds.forEach(id => newSet.add(id));
+        return newSet;
+      });
+
+      // Clear the URL parameter after processing
+      navigate('/', { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   // Clean up expired cache on component mount
   React.useEffect(() => {
@@ -315,6 +336,7 @@ export default function Index() {
                   onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
                   onUpdateFlightStatus={updateFlightStatus}
                   isUpdatingFlightStatus={isUpdatingFlightStatus}
+                  highlighted={highlightedTerms.has(term.id)}
                 />
                 ))}
               </div>
@@ -351,6 +373,7 @@ export default function Index() {
                   onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
                   onUpdateFlightStatus={updateFlightStatus}
                   isUpdatingFlightStatus={isUpdatingFlightStatus}
+                  highlighted={highlightedTerms.has(term.id)}
                 />
                 ))}
               </div>
@@ -433,6 +456,7 @@ export default function Index() {
                   className="border-0 shadow-none bg-transparent"
                   onUpdateFlightStatus={updateFlightStatus}
                   isUpdatingFlightStatus={isUpdatingFlightStatus}
+                  highlighted={highlightedTerms.has(popupTerm.id)}
                 />
               </div>
             </DialogContent>

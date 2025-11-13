@@ -23,6 +23,7 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
+import { mockTerms } from '@/data/mock-terms';
 import { cn } from '@/lib/utils';
 
 export function Calendar() {
@@ -31,6 +32,25 @@ export function Calendar() {
   const [selectedSchool, setSelectedSchool] = useState<School>('both');
 
   const { getEventsForDate, hasEventsOnDate } = useCalendarEvents(selectedSchool);
+
+  // Function to find terms for a given date
+  const findTermsForDate = (date: Date) => {
+    return mockTerms.filter(term => {
+      const startDate = new Date(term.startDate);
+      const endDate = new Date(term.endDate);
+      return date >= startDate && date <= endDate;
+    });
+  };
+
+  // Function to handle date click
+  const handleDateClick = (date: Date) => {
+    const termsForDate = findTermsForDate(date);
+    if (termsForDate.length > 0) {
+      // Navigate back to main page and pass the term IDs as URL parameters
+      const termIds = termsForDate.map(term => term.id).join(',');
+      navigate(`/?highlight=${termIds}`);
+    }
+  };
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -247,8 +267,10 @@ export function Calendar() {
                       className={cn(
                         'bg-background p-2 min-h-[80px] relative cursor-pointer hover:bg-accent transition-colors',
                         !isCurrentMonth && 'opacity-40',
-                        isCurrentDay && 'ring-2 ring-primary ring-inset'
+                        isCurrentDay && 'ring-2 ring-primary ring-inset',
+                        hasEvents && 'cursor-pointer hover:ring-2 hover:ring-primary/50'
                       )}
+                      onClick={() => handleDateClick(day)}
                     >
                       <div className={cn(
                         'text-sm font-medium',
