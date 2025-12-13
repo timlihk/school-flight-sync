@@ -3,7 +3,7 @@ import { useFlights } from './use-flights';
 import { useTransport } from './use-transport';
 import { useNotTravelling } from './use-not-travelling';
 import { mockTerms } from '@/data/mock-terms';
-import { format } from 'date-fns';
+import { format, isAfter, isToday } from 'date-fns';
 import type { Term, TransportDetails } from '@/types/school';
 
 const resolveTransportDate = (item: TransportDetails, term?: Term): Date | null => {
@@ -188,7 +188,13 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       });
     });
 
-    return allEvents;
+    // Filter to only show future events (including today)
+    const now = new Date();
+    const filteredEvents = allEvents.filter(event =>
+      isAfter(event.date, now) || isToday(event.date)
+    );
+
+    return filteredEvents;
   }, [flights, transport, notTravelling, selectedSchool, termLookup]);
 
   // Group events by date
