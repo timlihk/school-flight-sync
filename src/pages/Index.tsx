@@ -21,6 +21,7 @@ import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { isAfter, isToday } from "date-fns";
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -44,9 +45,35 @@ export default function Index() {
 
   // Memoize expensive term filtering and sorting operations
   const filteredTerms = useMemo(() => {
-    return selectedAcademicYear === 'all'
+    const now = new Date();
+    const yearFiltered = selectedAcademicYear === 'all'
       ? mockTerms
       : mockTerms.filter(term => term.academicYear === selectedAcademicYear);
+
+    // Filter out terms that have already ended (end date is before today)
+    const dateFiltered = yearFiltered.filter(term =>
+      isAfter(term.endDate, now) || isToday(term.endDate)
+    );
+
+    // Debug logging
+    console.log('Term filtering:', {
+      now: now.toISOString(),
+      totalTerms: mockTerms.length,
+      yearFiltered: yearFiltered.length,
+      dateFiltered: dateFiltered.length,
+      filteredOut: yearFiltered.length - dateFiltered.length,
+      sampleFilteredOut: yearFiltered
+        .filter(term => !isAfter(term.endDate, now) && !isToday(term.endDate))
+        .slice(0, 3)
+        .map(term => ({
+          id: term.id,
+          name: term.name,
+          startDate: term.startDate.toISOString(),
+          endDate: term.endDate.toISOString()
+        }))
+    });
+
+    return dateFiltered;
   }, [selectedAcademicYear]);
     
   const { benendenTerms, wycombeTerms } = useMemo(() => {
@@ -67,9 +94,9 @@ export default function Index() {
   }), [selectedSchool]);
 
   // Memoize all term IDs for expand/collapse functionality
-  const allTermIds = useMemo(() => 
-    new Set(mockTerms.map(term => term.id)), 
-    []
+  const allTermIds = useMemo(() =>
+    new Set(filteredTerms.map(term => term.id)),
+    [filteredTerms]
   );
 
   const handleToggleExpandAll = useCallback(() => {
