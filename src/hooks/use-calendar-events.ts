@@ -188,11 +188,45 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       });
     });
 
+    // Log all events before filtering
+    console.log(`All events before filtering: count=${allEvents.length}`);
+    allEvents.slice(0, 10).forEach((event, i) => {
+      console.log(`  [${i}] ${event.date.toISOString()} - ${event.title} (${event.type})`);
+    });
+
     // Filter to only show future events (including today)
     const now = new Date();
     const filteredEvents = allEvents.filter(event =>
       isAfter(event.date, now) || isToday(event.date)
     );
+
+    // Debug logging
+    console.log(`Calendar events filtering:`, {
+      now: now.toISOString(),
+      totalEvents: allEvents.length,
+      filteredEvents: filteredEvents.length,
+      samplePastEvents: allEvents
+        .filter(event => !isAfter(event.date, now) && !isToday(event.date))
+        .slice(0, 3)
+        .map(e => ({ date: e.date.toISOString(), title: e.title })),
+      sampleFutureEvents: filteredEvents.slice(0, 3).map(e => ({ date: e.date.toISOString(), title: e.title }))
+    });
+
+    // Check for specific September 2025 events that should be filtered out
+    filteredEvents.forEach(event => {
+      const eventYear = event.date.getFullYear();
+      const eventMonth = event.date.getMonth(); // 0-indexed
+      const eventDate = event.date.getDate();
+      if (eventYear === 2025 && eventMonth === 8 && eventDate === 2) {
+        console.warn('Unexpected September 2 2025 event in filtered results:', {
+          title: event.title,
+          date: event.date.toISOString(),
+          isAfter: isAfter(event.date, now),
+          isToday: isToday(event.date),
+          now: now.toISOString()
+        });
+      }
+    });
 
     return filteredEvents;
   }, [flights, transport, notTravelling, selectedSchool, termLookup]);

@@ -2,6 +2,7 @@
 nixPkgs = ["nodejs_20"]
 # Explicitly exclude bun to prevent automatic detection
 excludePkgs = ["bun"]
+env = ["NODE_VERSION=20", "NIXPACKS_NODE_VERSION=20"]
 
 [phases.install]
 cmds = ["npm ci"]
