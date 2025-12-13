@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `isAfter` and `isToday` imports from `date-fns`
 - Maintained backward compatibility with existing calendar components
 - TypeScript compilation passes cleanly after dependency updates
+- Updated Node.js requirement to v20 for Railway build compatibility
 
 ## [2.3.0] - 2025-09-06
 
