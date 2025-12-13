@@ -1,6 +1,11 @@
 [build]
   builder = "NIXPACKS"
 
+[build.config]
+  # Force Node.js 20 for Nixpacks
+  NODE_VERSION = "20"
+  NIXPACKS_NODE_VERSION = "20"
+
 [deploy]
   startCommand = "npm run preview"
   restartPolicyType = "ON_FAILURE"

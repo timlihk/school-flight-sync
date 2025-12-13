@@ -1,5 +1,7 @@
 [phases.setup]
 nixPkgs = ["nodejs_20"]
+# Explicitly exclude bun to prevent automatic detection
+excludePkgs = ["bun"]
 
 [phases.install]
 cmds = ["npm ci"]
