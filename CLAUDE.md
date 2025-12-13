@@ -81,6 +81,37 @@ All dialogs use local state for forms with reset functions and optimistic update
 **Modal Management:**
 Centralized modal state in Index.tsx with popup term cards for todo item interactions.
 
+### Calendar Events System
+
+**Event Aggregation:**
+- `use-calendar-events.ts` hook aggregates all events (terms, flights, transport, not-travelling) into a unified calendar view
+- Events are grouped by date using `date-fns` format function
+- Calendar components (`Calendar.tsx`, `CompactCalendar.tsx`) display events via hover cards
+
+**Date Filtering Logic:**
+Calendar events automatically filter to only show future events (including today):
+```typescript
+// Filter to only show future events (including today)
+const now = new Date();
+const filteredEvents = allEvents.filter(event =>
+  isAfter(event.date, now) || isToday(event.date)
+);
+```
+- Historical events (yesterday and earlier) are hidden from calendar displays
+- Uses `date-fns` `isAfter` and `isToday` functions for accurate date comparison
+- Filtering happens at the aggregation level, ensuring consistency across all calendar views
+
+**Event Types:**
+- `term`: Term start/end dates and schedule details
+- `flight`: Flight departure events with airline and route details
+- `transport`: Ground transport pickup events with driver information
+- `not-travelling`: Terms marked as not requiring travel arrangements
+
+**Component Integration:**
+- `Calendar.tsx`: Full-featured calendar view with month navigation
+- `CompactCalendar.tsx`: Responsive compact calendar for dashboard display
+- Both components use `getEventsForDate()` from the hook for consistent event retrieval
+
 ### Database Migration Workflow
 
 New migrations go in `supabase/migrations/` with timestamp format: `YYYYMMDD_HHMMSS_description.sql`

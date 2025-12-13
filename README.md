@@ -2,7 +2,7 @@
 
 A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
-> **Latest Version:** v2.5.0 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
+> **Latest Version:** v2.6.0 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
 
 ## Overview
 
@@ -357,6 +357,13 @@ Tests include:
 - Flight number parsing and transformation
 
 ## Recent Updates
+
+### v2.6.0 (December 2025)
+- 📅 **Calendar Event Filtering**: Calendar now only shows future events (including today)
+  - Historical events (yesterday and earlier) are automatically hidden
+  - Uses `date-fns` `isAfter` and `isToday` functions for accurate date filtering
+  - Consistent across both full calendar and compact calendar views
+- 🔧 **Code Quality**: TypeScript compilation passes cleanly after dependency updates
 
 ### v2.5.0 (October 2025)
 - 🌓 **Dark Mode**: Full theme support (light/dark/system) with persistence

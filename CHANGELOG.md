@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2025-12-14
+
+### Added
+- **Calendar Event Filtering**: Calendar events now only show future events (including today)
+  - Historical events (yesterday and earlier) are automatically hidden
+  - Uses `date-fns` `isAfter` and `isToday` functions for accurate date comparison
+  - Consistent filtering across both full calendar and compact calendar views
+
+### Technical
+- Updated `use-calendar-events.ts` hook with date filtering logic
+- Added `isAfter` and `isToday` imports from `date-fns`
+- Maintained backward compatibility with existing calendar components
+- TypeScript compilation passes cleanly after dependency updates
+
 ## [2.3.0] - 2025-09-06
 
 ### Added
@@ -238,6 +252,6 @@ Before contributing to this project:
 
 ---
 
-**Last Updated**: 2025-01-14  
-**Security Status**: ⛔ UNSAFE FOR PRODUCTION  
+**Last Updated**: 2025-12-14
+**Security Status**: ⛔ UNSAFE FOR PRODUCTION
 **Next Security Review**: After critical vulnerabilities are addressed
