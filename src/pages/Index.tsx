@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Plane, ChevronDown, ChevronUp, LogOut, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -35,6 +35,7 @@ export default function Index() {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('all');
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
   const [highlightedTerms, setHighlightedTerms] = useState<Set<string>>(new Set());
+  const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const { logout } = useFamilyAuth();
   const navigate = useNavigate();
@@ -181,6 +182,28 @@ export default function Index() {
     }
   }, [termLookup]);
 
+  const scrollToTerm = useCallback((termId: string) => {
+    const node = termRefs.current[termId];
+    if (node) {
+      node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
+
+  const handleHighlightTerms = useCallback((termIds: string[]) => {
+    if (!termIds.length) return;
+
+    setHighlightedTerms(new Set(termIds));
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      termIds.forEach(id => next.add(id));
+      return next;
+    });
+
+    // Scroll after DOM updates
+    const [firstTerm] = termIds;
+    setTimeout(() => scrollToTerm(firstTerm), 75);
+  }, [scrollToTerm]);
+
 
 
   // Optimize expanded card change handler with useCallback
@@ -201,19 +224,10 @@ export default function Index() {
     const highlightParam = searchParams.get('highlight');
     if (highlightParam) {
       const termIds = highlightParam.split(',');
-      setHighlightedTerms(new Set(termIds));
-
-      // Expand the highlighted term cards
-      setExpandedCards(prev => {
-        const newSet = new Set(prev);
-        termIds.forEach(id => newSet.add(id));
-        return newSet;
-      });
-
-      // Clear the URL parameter after processing
+      handleHighlightTerms(termIds);
       navigate('/', { replace: true });
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, handleHighlightTerms]);
 
   // Clean up expired cache on component mount
   React.useEffect(() => {
@@ -229,6 +243,11 @@ export default function Index() {
       </div>
     );
   }
+
+  const earliestTerm = useMemo(() => {
+    const terms = selectedSchool === 'both' ? mockTerms : mockTerms.filter(t => t.school === selectedSchool);
+    return terms.slice().sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0] || null;
+  }, [selectedSchool]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -267,8 +286,8 @@ export default function Index() {
 
 
       {/* Filter Controls */}
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex flex-wrap justify-center gap-3">
+      <div className="sticky top-[64px] md:top-[72px] z-30 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/40">
+        <div className="container mx-auto px-6 py-4 flex flex-wrap justify-center gap-3">
           <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
             <SelectTrigger className="w-48 h-9">
               <SelectValue placeholder="Academic Year" />
@@ -327,11 +346,30 @@ export default function Index() {
 
       {/* Calendar View */}
       <div className="container mx-auto px-6 py-4">
-        <CompactCalendar selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'} />
+        <CompactCalendar
+          selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'}
+          onSelectTermIds={handleHighlightTerms}
+        />
       </div>
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
+        {flights.length === 0 && transport.length === 0 && notTravelling.length === 0 && earliestTerm && (
+          <div className="mb-6 rounded-xl border border-dashed border-muted-foreground/30 bg-card/60 p-4 md:p-6 flex flex-col gap-3 md:items-center md:text-center">
+            <div className="text-sm md:text-base text-muted-foreground">
+              No travel plans yet. Add your first flight or transport for {earliestTerm.name}.
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => handleAddFlight(earliestTerm.id)} size="sm">
+                Add flight
+              </Button>
+              <Button variant="outline" onClick={() => handleAddTransport(earliestTerm.id)} size="sm">
+                Add transport
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className={`grid ${selectedSchool === 'both' ? 'lg:grid-cols-2' : 'lg:grid-cols-1 max-w-3xl mx-auto'} gap-8`}>
           {/* Benenden School */}
           {shouldShowBenenden && (
@@ -346,25 +384,26 @@ export default function Index() {
               
               <div className="space-y-4">
                 {benendenTerms.map((term) => (
-                <TermCard
-                  key={term.id}
-                  term={term}
-                  flights={flights.filter(f => f.termId === term.id)}
-                  transport={getTransportForTerm(term.id)}
-                  onAddFlight={handleAddFlight}
-                  onViewFlights={handleViewFlights}
-                  onAddTransport={handleAddTransport}
-                  onViewTransport={handleViewTransport}
-                  onSetNotTravelling={handleSetNotTravelling}
-                  onClearNotTravelling={handleClearNotTravelling}
-                  notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
-                  className="h-full"
-                  isExpanded={expandedCards.has(term.id)}
-                  onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
-                  onUpdateFlightStatus={updateFlightStatus}
-                  isUpdatingFlightStatus={isUpdatingFlightStatus}
-                  highlighted={highlightedTerms.has(term.id)}
-                />
+                  <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
+                    <TermCard
+                      term={term}
+                      flights={flights.filter(f => f.termId === term.id)}
+                      transport={getTransportForTerm(term.id)}
+                      onAddFlight={handleAddFlight}
+                      onViewFlights={handleViewFlights}
+                      onAddTransport={handleAddTransport}
+                      onViewTransport={handleViewTransport}
+                      onSetNotTravelling={handleSetNotTravelling}
+                      onClearNotTravelling={handleClearNotTravelling}
+                      notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
+                      className="h-full"
+                      isExpanded={expandedCards.has(term.id)}
+                      onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
+                      onUpdateFlightStatus={updateFlightStatus}
+                      isUpdatingFlightStatus={isUpdatingFlightStatus}
+                      highlighted={highlightedTerms.has(term.id)}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
@@ -383,25 +422,26 @@ export default function Index() {
               
               <div className="space-y-4">
                 {wycombeTerms.map((term) => (
-                <TermCard
-                  key={term.id}
-                  term={term}
-                  flights={flights.filter(f => f.termId === term.id)}
-                  transport={getTransportForTerm(term.id)}
-                  onAddFlight={handleAddFlight}
-                  onViewFlights={handleViewFlights}
-                  onAddTransport={handleAddTransport}
-                  onViewTransport={handleViewTransport}
-                  onSetNotTravelling={handleSetNotTravelling}
-                  onClearNotTravelling={handleClearNotTravelling}
-                  notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
-                  className="h-full"
-                  isExpanded={expandedCards.has(term.id)}
-                  onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
-                  onUpdateFlightStatus={updateFlightStatus}
-                  isUpdatingFlightStatus={isUpdatingFlightStatus}
-                  highlighted={highlightedTerms.has(term.id)}
-                />
+                  <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
+                    <TermCard
+                      term={term}
+                      flights={flights.filter(f => f.termId === term.id)}
+                      transport={getTransportForTerm(term.id)}
+                      onAddFlight={handleAddFlight}
+                      onViewFlights={handleViewFlights}
+                      onAddTransport={handleAddTransport}
+                      onViewTransport={handleViewTransport}
+                      onSetNotTravelling={handleSetNotTravelling}
+                      onClearNotTravelling={handleClearNotTravelling}
+                      notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
+                      className="h-full"
+                      isExpanded={expandedCards.has(term.id)}
+                      onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
+                      onUpdateFlightStatus={updateFlightStatus}
+                      isUpdatingFlightStatus={isUpdatingFlightStatus}
+                      highlighted={highlightedTerms.has(term.id)}
+                    />
+                  </div>
                 ))}
               </div>
             </div>

@@ -25,9 +25,10 @@ import { cn } from '@/lib/utils';
 
 interface CompactCalendarProps {
   selectedSchool: School;
+  onSelectTermIds?: (termIds: string[]) => void;
 }
 
-export function CompactCalendar({ selectedSchool }: CompactCalendarProps) {
+export function CompactCalendar({ selectedSchool, onSelectTermIds }: CompactCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const { getEventsForDate } = useCalendarEvents(selectedSchool);
 
@@ -152,6 +153,27 @@ export function CompactCalendar({ selectedSchool }: CompactCalendarProps) {
             const isCurrentMonth = isSameMonth(day, monthDate);
             const isCurrentDay = isToday(day);
 
+            const handleDayClick = () => {
+              if (!onSelectTermIds || !hasEvents) return;
+
+              const termIds = Array.from(
+                new Set(
+                  events
+                    .map(event => {
+                      if (event.type === 'term') {
+                        return (event.details as any)?.id;
+                      }
+                      return (event.details as any)?.termId || (event.details as any)?.term?.id;
+                    })
+                    .filter(Boolean) as string[]
+                )
+              );
+
+              if (termIds.length) {
+                onSelectTermIds(termIds);
+              }
+            };
+
             return (
               <HoverCard key={day.toString()} openDelay={200}>
                 <HoverCardTrigger asChild>
@@ -161,6 +183,7 @@ export function CompactCalendar({ selectedSchool }: CompactCalendarProps) {
                       !isCurrentMonth && 'opacity-30',
                       isCurrentDay && 'ring-1 ring-primary ring-inset'
                     )}
+                    onClick={handleDayClick}
                   >
                     <div className={cn(
                       'text-xs text-center',
