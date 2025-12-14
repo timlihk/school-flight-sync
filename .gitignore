@@ -28,4 +28,9 @@ dist-ssr
 .env.local
 
 # Vite temporary files
+# Backup files
+backups/*.sql
+backups/*.sql.gz
+
+# Vite cache files
 vite.config.ts.timestamp-*.mjs
