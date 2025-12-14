@@ -31,15 +31,25 @@ interface CompactCalendarProps {
 
 export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick }: CompactCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [monthsToShow, setMonthsToShow] = useState(1);
   const { getEventsForDate } = useCalendarEvents(selectedSchool);
 
-  // Calculate how many months to show based on screen width
-  const monthsToShow = useMemo(() => {
-    if (typeof window === 'undefined') return 1;
-    const width = window.innerWidth;
-    if (width >= 1536) return 3; // 2xl
-    if (width >= 1024) return 2; // lg
-    return 1;
+  // Calculate how many months to show based on screen width; update on resize
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const calculateMonths = () => {
+      const width = window.innerWidth;
+      if (width >= 1536) return 3; // 2xl
+      if (width >= 1024) return 2; // lg
+      return 1;
+    };
+
+    const update = () => setMonthsToShow(calculateMonths());
+    update();
+
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, []);
 
   const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];

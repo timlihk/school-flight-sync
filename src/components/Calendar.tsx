@@ -34,22 +34,31 @@ export function Calendar() {
   const { getEventsForDate, hasEventsOnDate } = useCalendarEvents(selectedSchool);
 
   // Function to find terms for a given date
-  const findTermsForDate = (date: Date) => {
-    return mockTerms.filter(term => {
-      const startDate = new Date(term.startDate);
-      const endDate = new Date(term.endDate);
-      return date >= startDate && date <= endDate;
-    });
-  };
-
-  // Function to handle date click
+  // Navigate using events present on the clicked day to ensure all visible items are actionable
   const handleDateClick = (date: Date) => {
-    const termsForDate = findTermsForDate(date);
-    if (termsForDate.length > 0) {
-      // Navigate back to main page and pass the term IDs as URL parameters
-      const termIds = termsForDate.map(term => term.id).join(',');
-      navigate(`/?highlight=${termIds}`);
-    }
+    const events = getEventsForDate(date);
+    if (!events.length) return;
+
+    // Prefer the first event for dialog opening; send all termIds for highlighting
+    const firstEvent = events[0];
+    const termIds = Array.from(
+      new Set(
+        events
+          .map(event => {
+            if (event.type === 'term') return (event.details as any)?.id;
+            if (event.type === 'not-travelling') {
+              return (event.details?.term as any)?.id ?? event.details?.termId;
+            }
+            return event.details?.termId ?? event.details?.term?.id;
+          })
+          .filter(Boolean) as string[]
+      )
+    );
+
+    const firstTermId = termIds[0];
+    if (!firstTermId) return;
+
+    navigate(`/?highlight=${termIds.join(',')}&open=${firstEvent.type}&termId=${firstTermId}`);
   };
 
   const monthStart = startOfMonth(currentDate);

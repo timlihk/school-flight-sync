@@ -57,24 +57,6 @@ export default function Index() {
       isAfter(term.endDate, now) || isToday(term.endDate)
     );
 
-    // Debug logging
-    console.log('Term filtering:', {
-      now: now.toISOString(),
-      totalTerms: mockTerms.length,
-      yearFiltered: yearFiltered.length,
-      dateFiltered: dateFiltered.length,
-      filteredOut: yearFiltered.length - dateFiltered.length,
-      sampleFilteredOut: yearFiltered
-        .filter(term => !isAfter(term.endDate, now) && !isToday(term.endDate))
-        .slice(0, 3)
-        .map(term => ({
-          id: term.id,
-          name: term.name,
-          startDate: term.startDate.toISOString(),
-          endDate: term.endDate.toISOString()
-        }))
-    });
-
     return dateFiltered;
   }, [selectedAcademicYear]);
     
