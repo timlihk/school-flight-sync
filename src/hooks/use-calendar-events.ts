@@ -3,7 +3,7 @@ import { useFlights } from './use-flights';
 import { useTransport } from './use-transport';
 import { useNotTravelling } from './use-not-travelling';
 import { mockTerms } from '@/data/mock-terms';
-import { format, isAfter, isToday } from 'date-fns';
+import { format } from 'date-fns';
 import type { Term, TransportDetails } from '@/types/school';
 
 const resolveTransportDate = (item: TransportDetails, term?: Term): Date | null => {

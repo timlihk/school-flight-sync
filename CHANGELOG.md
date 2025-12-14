@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Calendar views now show past events again (reverting the future-only filter for better history visibility)
+
 ## [2.6.0] - 2025-12-14
 
 ### Added
