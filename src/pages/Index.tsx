@@ -22,6 +22,7 @@ import { Term } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isAfter, isToday } from "date-fns";
+import { CalendarEvent } from "@/hooks/use-calendar-events";
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -182,6 +183,44 @@ export default function Index() {
     }
   }, [termLookup]);
 
+  const extractTermIdFromEvent = useCallback((event: CalendarEvent) => {
+    if (event.type === 'term') {
+      return (event.details as Term)?.id;
+    }
+    if (event.type === 'not-travelling') {
+      return (event.details?.term as Term)?.id ?? event.details?.termId;
+    }
+
+    return event.details?.termId ?? event.details?.term?.id;
+  }, []);
+
+  const handleCalendarEventClick = useCallback((event: CalendarEvent) => {
+    const termId = extractTermIdFromEvent(event);
+    if (!termId) return;
+
+    const term = termLookup.get(termId);
+    if (!term) return;
+
+    setSelectedTerm(term);
+    handleHighlightTerms([termId]);
+
+    if (showTermCardPopup) {
+      setShowTermCardPopup(false);
+    }
+
+    switch (event.type) {
+      case 'flight':
+        setShowFlightDialog(true);
+        break;
+      case 'transport':
+        setShowTransportDialog(true);
+        break;
+      default:
+        setShowTermDetailsDialog(true);
+        break;
+    }
+  }, [extractTermIdFromEvent, termLookup, handleHighlightTerms, showTermCardPopup]);
+
   const scrollToTerm = useCallback((termId: string) => {
     const node = termRefs.current[termId];
     if (node) {
@@ -222,12 +261,38 @@ export default function Index() {
   // Handle URL parameters for highlighted terms from calendar
   useEffect(() => {
     const highlightParam = searchParams.get('highlight');
+    const openParam = searchParams.get('open');
+    const termIdParam = searchParams.get('termId');
+
     if (highlightParam) {
       const termIds = highlightParam.split(',');
       handleHighlightTerms(termIds);
+    }
+
+    if (openParam && termIdParam) {
+      const term = termLookup.get(termIdParam);
+      if (term) {
+        setSelectedTerm(term);
+        handleHighlightTerms([termIdParam]);
+
+        switch (openParam) {
+          case 'flight':
+            setShowFlightDialog(true);
+            break;
+          case 'transport':
+            setShowTransportDialog(true);
+            break;
+          default:
+            setShowTermDetailsDialog(true);
+            break;
+        }
+      }
+    }
+
+    if (highlightParam || (openParam && termIdParam)) {
       navigate('/', { replace: true });
     }
-  }, [searchParams, navigate, handleHighlightTerms]);
+  }, [searchParams, navigate, termLookup, handleHighlightTerms]);
 
   // Clean up expired cache on component mount
   React.useEffect(() => {
@@ -348,6 +413,7 @@ export default function Index() {
       <div className="container mx-auto px-6 py-4">
         <CompactCalendar
           selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'}
+          onEventClick={handleCalendarEventClick}
           onSelectTermIds={handleHighlightTerms}
         />
       </div>

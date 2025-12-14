@@ -67,6 +67,17 @@ export function Calendar() {
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  const getTermIdFromEvent = (event: CalendarEvent) => {
+    if (event.type === 'term') {
+      return (event.details as any)?.id;
+    }
+    if (event.type === 'not-travelling') {
+      return (event.details?.term as any)?.id ?? event.details?.termId;
+    }
+
+    return event.details?.termId ?? event.details?.term?.id;
+  };
+
   const getEventTypeColor = (type: CalendarEvent['type']) => {
     switch (type) {
       case 'term':
@@ -110,7 +121,20 @@ export function Calendar() {
           {format(events[0].date, 'MMMM d, yyyy')}
         </div>
         {events.map((event, index) => (
-          <div key={event.id} className={cn('pb-2', index !== events.length - 1 && 'border-b')}>
+          <div
+            key={event.id}
+            className={cn(
+              'pb-2',
+              index !== events.length - 1 && 'border-b',
+              'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
+            )}
+            onClick={() => {
+              const termId = getTermIdFromEvent(event);
+              if (!termId) return;
+
+              navigate(`/?highlight=${termId}&open=${event.type}&termId=${termId}`);
+            }}
+          >
             <div className="flex items-start gap-2">
               <div className={cn('w-2 h-2 rounded-full mt-1.5 flex-shrink-0', getEventTypeColor(event.type))} />
               <div className="flex-1 min-w-0">

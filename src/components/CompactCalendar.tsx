@@ -26,9 +26,10 @@ import { cn } from '@/lib/utils';
 interface CompactCalendarProps {
   selectedSchool: School;
   onSelectTermIds?: (termIds: string[]) => void;
+  onEventClick?: (event: CalendarEvent) => void;
 }
 
-export function CompactCalendar({ selectedSchool, onSelectTermIds }: CompactCalendarProps) {
+export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick }: CompactCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const { getEventsForDate } = useCalendarEvents(selectedSchool);
 
@@ -83,7 +84,15 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds }: CompactCale
           {format(events[0].date, 'MMMM d, yyyy')}
         </div>
         {events.map((event, index) => (
-          <div key={event.id} className={cn('pb-1.5', index !== events.length - 1 && 'border-b')}>
+          <div
+            key={event.id}
+            className={cn(
+              'pb-1.5',
+              index !== events.length - 1 && 'border-b',
+              onEventClick && 'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
+            )}
+            onClick={() => onEventClick?.(event)}
+          >
             <div className="flex items-start gap-1.5">
               <div className={cn('w-1.5 h-1.5 rounded-full mt-1 flex-shrink-0', getEventTypeColor(event.type))} />
               <div className="flex-1 min-w-0">
