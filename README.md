@@ -2,7 +2,7 @@
 
 A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
-> **Latest Version:** v2.6.1 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
+> **Latest Version:** v2.6.2 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
 
 ## Overview
 

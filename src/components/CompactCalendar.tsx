@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/hover-card';
 import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface CompactCalendarProps {
   selectedSchool: School;
@@ -30,6 +31,7 @@ interface CompactCalendarProps {
 }
 
 export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick }: CompactCalendarProps) {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthsToShow, setMonthsToShow] = useState(1);
   const { getEventsForDate } = useCalendarEvents(selectedSchool);
@@ -99,9 +101,16 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
             className={cn(
               'pb-1.5',
               index !== events.length - 1 && 'border-b',
-              onEventClick && 'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
+              'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
             )}
-            onClick={() => onEventClick?.(event)}
+            onClick={() => {
+              if (onEventClick) {
+                onEventClick(event);
+              } else {
+                const termIds = getTermIdsFromEvents([event]);
+                openTermViaUrl(termIds, event);
+              }
+            }}
           >
             <div className="flex items-start gap-1.5">
               <div className={cn('w-1.5 h-1.5 rounded-full mt-1 flex-shrink-0', getEventTypeColor(event.type))} />
@@ -145,6 +154,20 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
           .filter(Boolean) as string[]
       )
     );
+
+  const openTermViaUrl = (termIds: string[], event?: CalendarEvent) => {
+    if (!termIds.length) return;
+
+    const firstTermId = termIds[0];
+    const params = new URLSearchParams();
+    params.set('highlight', termIds.join(','));
+    params.set('termId', firstTermId);
+    if (event?.type) {
+      params.set('open', event.type);
+    }
+
+    navigate(`/?${params.toString()}`);
+  };
 
   const renderMonth = (monthOffset: number) => {
     const monthDate = addMonths(currentDate, monthOffset);
@@ -198,6 +221,8 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
 
               if (onEventClick) {
                 onEventClick(events[0]);
+              } else {
+                openTermViaUrl(termIds, events[0]);
               }
             };
 
