@@ -2,7 +2,7 @@
 
 A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
-> **Latest Version:** v2.6.0 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
+> **Latest Version:** v2.6.1 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
 
 ## Overview
 
@@ -34,6 +34,7 @@ School Flight Sync is designed to help parents efficiently manage and track:
 - **Academic Year Filtering**: View terms by academic year (2025-2026, 2026-2027)
 - **Term Types**: Differentiate between regular terms, half-terms, exeats, and holidays
 - **Detailed Schedules**: View specific arrival/departure times and important dates
+- **Clickable Calendars**: Tap any event on the calendar to jump straight to the term and open the relevant dialog
 
 ### ✈️ Flight Tracking
 - **Flight Management**: Add, edit, and remove flight details for each term

@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Calendar views now show past events again (reverting the future-only filter for better history visibility)
-- Calendar hover cards now let you click an event to jump to its term and open the relevant dialog for editing
+- No unreleased changes.
+
+## [2.6.1] - 2025-12-17
+
+### Fixed
+- Calendar views once again show past events for historical context
+- Calendar day and hover interactions now open the relevant term and dialog so events are fully clickable
 
 ## [2.6.0] - 2025-12-14
 
