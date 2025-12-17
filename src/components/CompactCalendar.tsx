@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import {
   format,
   startOfMonth,
@@ -131,6 +131,21 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
     );
   };
 
+  const getTermIdsFromEvents = (events: CalendarEvent[]) =>
+    Array.from(
+      new Set(
+        events
+          .map(event => {
+            if (event.type === 'term') return (event.details as any)?.id;
+            if (event.type === 'not-travelling') {
+              return (event.details?.term as any)?.id ?? event.details?.termId;
+            }
+            return (event.details as any)?.termId || (event.details as any)?.term?.id;
+          })
+          .filter(Boolean) as string[]
+      )
+    );
+
   const renderMonth = (monthOffset: number) => {
     const monthDate = addMonths(currentDate, monthOffset);
     const monthStart = startOfMonth(monthDate);
@@ -173,23 +188,16 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
             const isCurrentDay = isToday(day);
 
             const handleDayClick = () => {
-              if (!onSelectTermIds || !hasEvents) return;
+              if (!hasEvents) return;
 
-              const termIds = Array.from(
-                new Set(
-                  events
-                    .map(event => {
-                      if (event.type === 'term') {
-                        return (event.details as any)?.id;
-                      }
-                      return (event.details as any)?.termId || (event.details as any)?.term?.id;
-                    })
-                    .filter(Boolean) as string[]
-                )
-              );
+              const termIds = getTermIdsFromEvents(events);
 
-              if (termIds.length) {
+              if (termIds.length && onSelectTermIds) {
                 onSelectTermIds(termIds);
+              }
+
+              if (onEventClick) {
+                onEventClick(events[0]);
               }
             };
 
