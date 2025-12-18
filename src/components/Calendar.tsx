@@ -130,14 +130,15 @@ export function Calendar() {
           {format(events[0].date, 'MMMM d, yyyy')}
         </div>
         {events.map((event, index) => (
-          <div
+          <button
             key={event.id}
+            type="button"
             className={cn(
               'pb-2',
               index !== events.length - 1 && 'border-b',
               'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
             )}
-            onClick={() => {
+            onPointerDown={() => {
               const termId = getTermIdFromEvent(event);
               if (!termId) return;
 
@@ -170,7 +171,7 @@ export function Calendar() {
                 {event.school === 'benenden' ? 'Ben' : 'WA'}
               </Badge>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     );

@@ -104,7 +104,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
               index !== events.length - 1 && 'border-b',
               'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
             )}
-            onClick={() => {
+            onPointerDown={() => {
               if (onEventClick) {
                 onEventClick(event);
               } else {
