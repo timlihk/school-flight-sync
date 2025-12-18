@@ -96,8 +96,9 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
           {format(events[0].date, 'MMMM d, yyyy')}
         </div>
         {events.map((event, index) => (
-          <div
+          <button
             key={event.id}
+            type="button"
             className={cn(
               'pb-1.5',
               index !== events.length - 1 && 'border-b',
@@ -134,7 +135,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
                 {event.school === 'benenden' ? 'Ben' : 'WA'}
               </Badge>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     );
@@ -227,7 +228,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
             };
 
             return (
-              <HoverCard key={day.toString()} openDelay={200}>
+              <HoverCard key={day.toString()} openDelay={200} closeDelay={200}>
                 <HoverCardTrigger asChild>
                   <div
                     className={cn(

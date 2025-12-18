@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- No unreleased changes.
+- Hover card popovers now stay open long enough to click events in the calendar
+- Calendar event items use buttons for more reliable click handling
 
 ## [2.6.2] - 2025-12-17
 

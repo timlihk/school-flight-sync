@@ -294,7 +294,7 @@ export function Calendar() {
               const isCurrentDay = isToday(day);
 
               return (
-                <HoverCard key={day.toString()} openDelay={200}>
+                <HoverCard key={day.toString()} openDelay={200} closeDelay={200}>
                   <HoverCardTrigger asChild>
                     <div
                       className={cn(
