@@ -138,11 +138,16 @@ export function Calendar() {
               index !== events.length - 1 && 'border-b',
               'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
             )}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('[Calendar] Event clicked:', event.title, event.type);
               const termId = getTermIdFromEvent(event);
+              console.log('[Calendar] termId:', termId);
               if (!termId) return;
 
-              navigate(`/?highlight=${termId}&open=${event.type}&termId=${termId}`);
+              const url = `/?highlight=${termId}&open=${event.type}&termId=${termId}`;
+              console.log('[Calendar] Navigating to:', url);
+              navigate(url);
             }}
           >
             <div className="flex items-start gap-2">

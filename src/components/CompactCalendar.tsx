@@ -104,11 +104,15 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
               index !== events.length - 1 && 'border-b',
               'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
             )}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('[CompactCalendar] Event clicked:', event.title, event.type);
               if (onEventClick) {
+                console.log('[CompactCalendar] Using onEventClick callback');
                 onEventClick(event);
               } else {
                 const termIds = getTermIdsFromEvents([event]);
+                console.log('[CompactCalendar] termIds:', termIds);
                 openTermViaUrl(termIds, event);
               }
             }}
