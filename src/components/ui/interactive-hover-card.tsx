@@ -21,17 +21,25 @@ export function InteractiveHoverCard({ children, open, onOpenChange }: Interacti
   const controlled = open !== undefined;
   const actualOpen = controlled ? open : isOpen;
 
+  const doClose = React.useCallback(() => {
+    if (controlled && onOpenChange) {
+      onOpenChange(false);
+    } else {
+      setIsOpen(false);
+    }
+  }, [controlled, onOpenChange]);
+
   const scheduleClose = React.useCallback(() => {
+    // Cancel any existing timeout before scheduling a new one
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
     closeTimeoutRef.current = setTimeout(() => {
       if (!isOverContent && !isOverTrigger) {
-        if (controlled && onOpenChange) {
-          onOpenChange(false);
-        } else {
-          setIsOpen(false);
-        }
+        doClose();
       }
     }, 100);
-  }, [isOverContent, isOverTrigger, controlled, onOpenChange]);
+  }, [isOverContent, isOverTrigger, doClose]);
 
   const cancelClose = React.useCallback(() => {
     if (closeTimeoutRef.current) {
@@ -76,8 +84,11 @@ export function InteractiveHoverCard({ children, open, onOpenChange }: Interacti
             } else {
               setIsOpen(true);
             }
+          } else {
+            // ESC, click-outside, focus loss, or hover-leave
+            // Schedule close with short delay - if mouse reaches content, it'll cancel
+            scheduleClose();
           }
-          // Don't close immediately - let the hover state handlers manage it
         }}
         openDelay={200}
         closeDelay={300}
