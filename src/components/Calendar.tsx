@@ -18,10 +18,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
+  InteractiveHoverCard,
+  InteractiveHoverCardContent,
+  InteractiveHoverCardTrigger,
+} from '@/components/ui/interactive-hover-card';
 import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
 import { mockTerms } from '@/data/mock-terms';
 import { cn } from '@/lib/utils';
@@ -134,11 +134,11 @@ export function Calendar() {
             key={event.id}
             type="button"
             className={cn(
-              'pb-2',
+              'w-full text-left pb-2',
               index !== events.length - 1 && 'border-b',
               'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
             )}
-            onPointerDown={() => {
+            onClick={() => {
               const termId = getTermIdFromEvent(event);
               if (!termId) return;
 
@@ -295,8 +295,8 @@ export function Calendar() {
               const isCurrentDay = isToday(day);
 
               return (
-                <HoverCard key={day.toString()} openDelay={200} closeDelay={200}>
-                  <HoverCardTrigger asChild>
+                <InteractiveHoverCard key={day.toString()}>
+                  <InteractiveHoverCardTrigger asChild>
                     <div
                       className={cn(
                         'bg-background p-2 min-h-[80px] relative cursor-pointer hover:bg-accent transition-colors',
@@ -314,13 +314,13 @@ export function Calendar() {
                       </div>
                       {hasEvents && renderEventDots(events)}
                     </div>
-                  </HoverCardTrigger>
+                  </InteractiveHoverCardTrigger>
                   {hasEvents && (
-                    <HoverCardContent className="w-auto" side="top">
+                    <InteractiveHoverCardContent className="w-auto" side="top">
                       {renderEventDetails(events)}
-                    </HoverCardContent>
+                    </InteractiveHoverCardContent>
                   )}
-                </HoverCard>
+                </InteractiveHoverCard>
               );
             })}
           </div>

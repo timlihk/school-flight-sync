@@ -16,10 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
+  InteractiveHoverCard,
+  InteractiveHoverCardContent,
+  InteractiveHoverCardTrigger,
+} from '@/components/ui/interactive-hover-card';
 import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -100,11 +100,11 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
             key={event.id}
             type="button"
             className={cn(
-              'pb-1.5',
+              'w-full text-left pb-1.5',
               index !== events.length - 1 && 'border-b',
               'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
             )}
-            onPointerDown={() => {
+            onClick={() => {
               if (onEventClick) {
                 onEventClick(event);
               } else {
@@ -228,8 +228,8 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
             };
 
             return (
-              <HoverCard key={day.toString()} openDelay={200} closeDelay={200}>
-                <HoverCardTrigger asChild>
+              <InteractiveHoverCard key={day.toString()}>
+                <InteractiveHoverCardTrigger asChild>
                   <div
                     className={cn(
                       'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative cursor-pointer hover:bg-accent transition-colors',
@@ -246,13 +246,13 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
                     </div>
                     {hasEvents && renderEventDots(events)}
                   </div>
-                </HoverCardTrigger>
+                </InteractiveHoverCardTrigger>
                 {hasEvents && (
-                  <HoverCardContent className="w-auto" side="top">
+                  <InteractiveHoverCardContent className="w-auto" side="top">
                     {renderEventDetails(events)}
-                  </HoverCardContent>
+                  </InteractiveHoverCardContent>
                 )}
-              </HoverCard>
+              </InteractiveHoverCard>
             );
           })}
         </div>
