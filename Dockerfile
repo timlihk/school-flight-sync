@@ -7,6 +7,7 @@ FROM deps AS build
 WORKDIR /app
 COPY . .
 # Build args for Vite - these are used at build time only
+ARG VITE_API_URL
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY
 ARG VITE_AVIATION_API_KEY
