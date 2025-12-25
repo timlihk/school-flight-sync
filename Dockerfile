@@ -20,6 +20,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/vite.config.ts ./
 COPY package*.json ./
 EXPOSE 4173
 CMD ["npm", "run", "preview"]

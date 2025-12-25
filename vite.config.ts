@@ -3,7 +3,12 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-const allowedHosts = ["localhost", "127.0.0.1", "uk-school.up.railway.app"];
+const allowedHosts = [
+  "localhost",
+  "127.0.0.1",
+  ".up.railway.app",
+  "uk-school.up.railway.app",
+];
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
