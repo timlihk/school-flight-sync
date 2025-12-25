@@ -176,6 +176,28 @@ export default function Index() {
     return event.details?.termId ?? event.details?.term?.id;
   }, []);
 
+  const scrollToTerm = useCallback((termId: string) => {
+    const node = termRefs.current[termId];
+    if (node) {
+      node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
+
+  const handleHighlightTerms = useCallback((termIds: string[]) => {
+    if (!termIds.length) return;
+
+    setHighlightedTerms(new Set(termIds));
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      termIds.forEach(id => next.add(id));
+      return next;
+    });
+
+    // Scroll after DOM updates
+    const [firstTerm] = termIds;
+    setTimeout(() => scrollToTerm(firstTerm), 75);
+  }, [scrollToTerm]);
+
   const handleCalendarEventClick = useCallback((event: CalendarEvent) => {
     const termId = extractTermIdFromEvent(event);
     if (!termId) return;
@@ -202,28 +224,6 @@ export default function Index() {
         break;
     }
   }, [extractTermIdFromEvent, termLookup, handleHighlightTerms, showTermCardPopup]);
-
-  const scrollToTerm = useCallback((termId: string) => {
-    const node = termRefs.current[termId];
-    if (node) {
-      node.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, []);
-
-  const handleHighlightTerms = useCallback((termIds: string[]) => {
-    if (!termIds.length) return;
-
-    setHighlightedTerms(new Set(termIds));
-    setExpandedCards(prev => {
-      const next = new Set(prev);
-      termIds.forEach(id => next.add(id));
-      return next;
-    });
-
-    // Scroll after DOM updates
-    const [firstTerm] = termIds;
-    setTimeout(() => scrollToTerm(firstTerm), 75);
-  }, [scrollToTerm]);
 
 
 
@@ -276,9 +276,11 @@ export default function Index() {
     }
   }, [searchParams, navigate, termLookup, handleHighlightTerms]);
 
-  // Clean up expired cache on component mount
-  React.useEffect(() => {
-  }, []);
+  // Memoize earliest term for empty state message
+  const earliestTerm = useMemo(() => {
+    const terms = selectedSchool === 'both' ? mockTerms : mockTerms.filter(t => t.school === selectedSchool);
+    return terms.slice().sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0] || null;
+  }, [selectedSchool]);
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
@@ -290,11 +292,6 @@ export default function Index() {
       </div>
     );
   }
-
-  const earliestTerm = useMemo(() => {
-    const terms = selectedSchool === 'both' ? mockTerms : mockTerms.filter(t => t.school === selectedSchool);
-    return terms.slice().sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0] || null;
-  }, [selectedSchool]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
