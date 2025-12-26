@@ -38,6 +38,8 @@ export default function Index() {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('all');
   const [selectedSchool, setSelectedSchool] = useState<string>('both');
   const [highlightedTerms, setHighlightedTerms] = useState<Set<string>>(new Set());
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareScope, setShareScope] = useState<'both' | 'benenden' | 'wycombe'>('both');
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const { logout } = useFamilyAuth();
@@ -113,12 +115,6 @@ export default function Index() {
     const base = new Date(item.direction === 'return' ? term.endDate : term.startDate);
     return Number.isNaN(base.getTime()) ? null : base;
   }, []);
-
-  const matchesSelectedSchool = useCallback(
-    (school: 'benenden' | 'wycombe') =>
-      selectedSchool === 'both' || selectedSchool === school,
-    [selectedSchool]
-  );
 
   const handleAddFlight = useCallback((termId: string) => {
     const term = termLookup.get(termId);
@@ -249,32 +245,35 @@ export default function Index() {
     }
   }, [extractTermIdFromEvent, termLookup, handleHighlightTerms, showTermCardPopup]);
 
-  const nextTravel = useMemo(() => {
+  const computeNextTravel = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
     const now = new Date();
+    const matches = (school: 'benenden' | 'wycombe') => scope === 'both' || scope === school;
     const entries: {
       date: Date;
       title: string;
       detail: string;
       status: 'booked' | 'unplanned' | 'staying';
       termId?: string;
+      school?: 'benenden' | 'wycombe';
     }[] = [];
 
     flights.forEach(flight => {
       if (!isAfter(flight.departure.date, now)) return;
       const term = termLookup.get(flight.termId);
-      if (term && !matchesSelectedSchool(term.school)) return;
+      if (term && !matches(term.school)) return;
       entries.push({
         date: flight.departure.date,
         title: `${flight.airline} ${flight.flightNumber}`,
         detail: `${flight.departure.airport} → ${flight.arrival.airport}`,
         status: 'booked',
-        termId: term?.id
+        termId: term?.id,
+        school: term?.school
       });
     });
 
     transport.forEach(item => {
       const term = termLookup.get(item.termId);
-      if (term && !matchesSelectedSchool(term.school)) return;
+      if (term && !matches(term.school)) return;
       const eventDate = resolveTransportDate(item, term);
       if (!eventDate || !isAfter(eventDate, now)) return;
       entries.push({
@@ -282,110 +281,102 @@ export default function Index() {
         title: `${item.type === 'school-coach' ? 'School Coach' : 'Taxi'} ${item.driverName ? `· ${item.driverName}` : ''}`,
         detail: `${item.direction === 'return' ? 'To School' : 'From School'}`,
         status: 'booked',
-        termId: term?.id
+        termId: term?.id,
+        school: term?.school
       });
     });
 
     notTravelling.forEach(entry => {
       const term = termLookup.get(entry.termId);
       if (!term || !isAfter(term.startDate, now)) return;
-      if (!matchesSelectedSchool(term.school)) return;
+      if (!matches(term.school)) return;
       entries.push({
         date: term.startDate,
         title: 'Staying at school',
         detail: `${term.name}`,
         status: 'staying',
-        termId: term.id
+        termId: term.id,
+        school: term.school
       });
     });
 
     if (!entries.length) {
-      const upcomingTerm = filteredTerms.find(term => isAfter(term.startDate, now) && matchesSelectedSchool(term.school));
+      const upcomingTerm = filteredTerms.find(term => isAfter(term.startDate, now) && matches(term.school));
       if (upcomingTerm) {
         entries.push({
           date: upcomingTerm.startDate,
           title: `${upcomingTerm.name}`,
           detail: 'No travel booked yet',
           status: 'unplanned',
-          termId: upcomingTerm.id
+          termId: upcomingTerm.id,
+          school: upcomingTerm.school
         });
       }
     }
 
     return entries.sort((a, b) => a.date.getTime() - b.date.getTime())[0] ?? null;
-  }, [flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate, matchesSelectedSchool]);
+  }, [flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate]);
 
-  const handleShareItinerary = useCallback(async () => {
-    try {
-      const now = new Date();
-      const lines: string[] = [];
+  const nextTravel = useMemo(
+    () => computeNextTravel(selectedSchool as 'both' | 'benenden' | 'wycombe'),
+    [computeNextTravel, selectedSchool]
+  );
 
-      if (nextTravel) {
-        lines.push(
-          `Next: ${nextTravel.title} on ${nextTravel.date.toDateString()} (${formatDistanceToNow(nextTravel.date, { addSuffix: true })})`
-        );
-      }
+  const shareNextTravel = useCallback(
+    async (scope: 'both' | 'benenden' | 'wycombe') => {
+      try {
+        const entry = computeNextTravel(scope);
+        if (!entry) {
+          toast({
+            title: "No travel to share",
+            description: "Add a flight or transport first.",
+          });
+          return;
+        }
 
-      const upcomingFlights = flights
-        .filter(f => isAfter(f.departure.date, now))
-        .sort((a, b) => a.departure.date.getTime() - b.departure.date.getTime())
-        .slice(0, 3);
+        const schoolLabel = scope === 'both'
+          ? 'Both schools'
+          : scope === 'benenden'
+            ? 'Benenden'
+            : 'Wycombe Abbey';
 
-      upcomingFlights.forEach(flight => {
-        lines.push(
-          `✈️ ${flight.airline} ${flight.flightNumber} · ${flight.departure.airport} → ${flight.arrival.airport} on ${flight.departure.date.toDateString()}`
-        );
-      });
+        const lines = [
+          `Next travel (${schoolLabel}): ${entry.title} on ${entry.date.toDateString()} (${formatDistanceToNow(entry.date, { addSuffix: true })})`,
+        ];
+        if (entry.detail) lines.push(entry.detail);
+        lines.push(entry.status === 'booked' ? 'Booked' : entry.status === 'staying' ? 'Not travelling' : 'Needs booking');
 
-      const upcomingTransport = transport
-        .map(item => {
-          const term = termLookup.get(item.termId);
-          return { item, term, date: resolveTransportDate(item, term) };
-        })
-        .filter(entry => entry.date && isAfter(entry.date, now))
-        .sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0))
-        .slice(0, 2);
+        const shareText = lines.join('\n');
 
-      upcomingTransport.forEach(({ item, date, term }) => {
-        if (!date) return;
-        lines.push(
-          `🚐 ${item.type === 'school-coach' ? 'School Coach' : 'Taxi'} ${item.direction === 'return' ? 'to school' : 'from school'} on ${date.toDateString()}${term ? ` (${term.name})` : ''}`
-        );
-      });
-
-      if (!lines.length) {
-        lines.push('No upcoming travel found.');
-      }
-
-      const shareText = lines.join('\n');
-
-      if (typeof navigator !== 'undefined' && navigator.share) {
-        await navigator.share({
-          title: 'UK Schedules',
-          text: shareText
-        });
-      } else if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(shareText);
+        if (typeof navigator !== 'undefined' && navigator.share) {
+          await navigator.share({
+            title: 'UK Schedules',
+            text: shareText
+          });
+        } else if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareText);
+          toast({
+            title: "Itinerary copied",
+            description: "Paste it anywhere to share with family."
+          });
+        } else {
+          toast({
+            title: "Sharing unavailable",
+            description: "Copy the itinerary manually from the print view.",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Share failed', error);
         toast({
-          title: "Itinerary copied",
-          description: "Paste it anywhere to share with family."
-        });
-      } else {
-        toast({
-          title: "Sharing unavailable",
-          description: "Copy the itinerary manually from the print view.",
+          title: "Share failed",
+          description: "Try copying the itinerary instead.",
           variant: "destructive"
         });
       }
-    } catch (error) {
-      console.error('Share failed', error);
-      toast({
-        title: "Share failed",
-        description: "Try copying the itinerary instead.",
-        variant: "destructive"
-      });
-    }
-  }, [nextTravel, flights, transport, termLookup, resolveTransportDate, toast]);
+    },
+    [computeNextTravel, toast]
+  );
 
 
 
@@ -544,7 +535,15 @@ export default function Index() {
           <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
             Refresh data
           </Button>
-          <Button variant="outline" onClick={handleShareItinerary} size="sm" className="gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShareScope(selectedSchool as 'both' | 'benenden' | 'wycombe');
+              setShareDialogOpen(true);
+            }}
+            size="sm"
+            className="gap-2"
+          >
             Share itinerary
           </Button>
           <ExportDialog
@@ -775,6 +774,44 @@ export default function Index() {
             </DialogContent>
           </Dialog>
         )}
+
+        <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Share itinerary</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Choose which school’s next travel to share. We’ll only share the single next item.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {(['both', 'benenden', 'wycombe'] as const).map(scope => (
+                  <Button
+                    key={scope}
+                    variant={shareScope === scope ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setShareScope(scope)}
+                  >
+                    {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="ghost" onClick={() => setShareDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={async () => {
+                    await shareNextTravel(shareScope);
+                    setShareDialogOpen(false);
+                  }}
+                >
+                  Share next travel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
