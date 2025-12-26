@@ -114,6 +114,12 @@ export default function Index() {
     return Number.isNaN(base.getTime()) ? null : base;
   }, []);
 
+  const matchesSelectedSchool = useCallback(
+    (school: 'benenden' | 'wycombe') =>
+      selectedSchool === 'both' || selectedSchool === school,
+    [selectedSchool]
+  );
+
   const handleAddFlight = useCallback((termId: string) => {
     const term = termLookup.get(termId);
     if (term) {
@@ -256,6 +262,7 @@ export default function Index() {
     flights.forEach(flight => {
       if (!isAfter(flight.departure.date, now)) return;
       const term = termLookup.get(flight.termId);
+      if (term && !matchesSelectedSchool(term.school)) return;
       entries.push({
         date: flight.departure.date,
         title: `${flight.airline} ${flight.flightNumber}`,
@@ -267,6 +274,7 @@ export default function Index() {
 
     transport.forEach(item => {
       const term = termLookup.get(item.termId);
+      if (term && !matchesSelectedSchool(term.school)) return;
       const eventDate = resolveTransportDate(item, term);
       if (!eventDate || !isAfter(eventDate, now)) return;
       entries.push({
@@ -281,6 +289,7 @@ export default function Index() {
     notTravelling.forEach(entry => {
       const term = termLookup.get(entry.termId);
       if (!term || !isAfter(term.startDate, now)) return;
+      if (!matchesSelectedSchool(term.school)) return;
       entries.push({
         date: term.startDate,
         title: 'Staying at school',
@@ -291,7 +300,7 @@ export default function Index() {
     });
 
     if (!entries.length) {
-      const upcomingTerm = filteredTerms.find(term => isAfter(term.startDate, now));
+      const upcomingTerm = filteredTerms.find(term => isAfter(term.startDate, now) && matchesSelectedSchool(term.school));
       if (upcomingTerm) {
         entries.push({
           date: upcomingTerm.startDate,
@@ -304,7 +313,7 @@ export default function Index() {
     }
 
     return entries.sort((a, b) => a.date.getTime() - b.date.getTime())[0] ?? null;
-  }, [flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate]);
+  }, [flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate, matchesSelectedSchool]);
 
   const handleShareItinerary = useCallback(async () => {
     try {
