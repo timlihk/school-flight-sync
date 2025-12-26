@@ -13,15 +13,19 @@ interface InteractiveHoverCardProps {
  * allowing users to click on interactive elements inside.
  */
 export function InteractiveHoverCard({ children, open, onOpenChange }: InteractiveHoverCardProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
+ const [isOpen, setIsOpen] = React.useState(false);
   const [isOverContent, setIsOverContent] = React.useState(false);
   const [isOverTrigger, setIsOverTrigger] = React.useState(false);
+  const [isTouchOpen, setIsTouchOpen] = React.useState(false);
   const closeTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const controlled = open !== undefined;
   const actualOpen = controlled ? open : isOpen;
 
   const doClose = React.useCallback(() => {
+    setIsTouchOpen(false);
+    setIsOverContent(false);
+    setIsOverTrigger(false);
     if (controlled && onOpenChange) {
       onOpenChange(false);
     } else {
@@ -30,6 +34,7 @@ export function InteractiveHoverCard({ children, open, onOpenChange }: Interacti
   }, [controlled, onOpenChange]);
 
   const scheduleClose = React.useCallback(() => {
+    if (isTouchOpen) return;
     // Cancel any existing timeout before scheduling a new one
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
@@ -39,7 +44,7 @@ export function InteractiveHoverCard({ children, open, onOpenChange }: Interacti
         doClose();
       }
     }, 100);
-  }, [isOverContent, isOverTrigger, doClose]);
+  }, [isOverContent, isOverTrigger, doClose, isTouchOpen]);
 
   const cancelClose = React.useCallback(() => {
     if (closeTimeoutRef.current) {
@@ -65,6 +70,8 @@ export function InteractiveHoverCard({ children, open, onOpenChange }: Interacti
 
   const openOnTouch = React.useCallback(() => {
     cancelClose();
+    setIsTouchOpen(true);
+    setIsOverTrigger(true);
     if (controlled && onOpenChange) {
       onOpenChange(true);
     } else {
@@ -90,6 +97,7 @@ export function InteractiveHoverCard({ children, open, onOpenChange }: Interacti
         onOpenChange={(newOpen) => {
           if (newOpen) {
             cancelClose();
+            setIsTouchOpen(false);
             if (controlled && onOpenChange) {
               onOpenChange(true);
             } else {
@@ -97,8 +105,17 @@ export function InteractiveHoverCard({ children, open, onOpenChange }: Interacti
             }
           } else {
             // ESC, click-outside, focus loss, or hover-leave
-            // Schedule close with short delay - if mouse reaches content, it'll cancel
-            scheduleClose();
+            // Touch interactions should close immediately; hover closes with a short delay
+            setIsTouchOpen(false);
+            setIsOverContent(false);
+            setIsOverTrigger(false);
+            if (controlled && onOpenChange) {
+              onOpenChange(false);
+            } else if (isTouchOpen) {
+              setIsOpen(false);
+            } else {
+              scheduleClose();
+            }
           }
         }}
         openDelay={200}
