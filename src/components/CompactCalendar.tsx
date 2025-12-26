@@ -30,7 +30,7 @@ interface CompactCalendarProps {
   onEventClick?: (event: CalendarEvent) => void;
 }
 
-export function CompactCalendar({ selectedSchool, onEventClick }: CompactCalendarProps) {
+export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTermIds, onEventClick }: CompactCalendarProps) {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthsToShow, setMonthsToShow] = useState(1);
