@@ -63,6 +63,15 @@ export function InteractiveHoverCard({ children, open, onOpenChange }: Interacti
     }
   }, [isOverContent, isOverTrigger, actualOpen, scheduleClose]);
 
+  const openOnTouch = React.useCallback(() => {
+    cancelClose();
+    if (controlled && onOpenChange) {
+      onOpenChange(true);
+    } else {
+      setIsOpen(true);
+    }
+  }, [controlled, onOpenChange, cancelClose]);
+
   return (
     <InteractiveHoverCardContext.Provider
       value={{
@@ -72,6 +81,8 @@ export function InteractiveHoverCard({ children, open, onOpenChange }: Interacti
         setIsOverTrigger,
         cancelClose,
         scheduleClose,
+        openOnTouch,
+        isOpen: actualOpen,
       }}
     >
       <HoverCardPrimitive.Root
@@ -106,6 +117,8 @@ interface InteractiveHoverCardContextValue {
   setIsOverTrigger: (value: boolean) => void;
   cancelClose: () => void;
   scheduleClose: () => void;
+  openOnTouch: () => void;
+  isOpen: boolean;
 }
 
 const InteractiveHoverCardContext = React.createContext<InteractiveHoverCardContextValue | null>(null);
@@ -118,11 +131,17 @@ function useInteractiveHoverCard() {
   return context;
 }
 
+interface InteractiveHoverCardTriggerProps
+  extends React.ComponentPropsWithoutRef<typeof HoverCardPrimitive.Trigger> {
+  /** Callback when clicked on touch device - receives whether popup is now open */
+  onTouchOpen?: () => void;
+}
+
 export const InteractiveHoverCardTrigger = React.forwardRef<
   React.ElementRef<typeof HoverCardPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof HoverCardPrimitive.Trigger>
->(({ children, ...props }, ref) => {
-  const { setIsOverTrigger, cancelClose } = useInteractiveHoverCard();
+  InteractiveHoverCardTriggerProps
+>(({ children, onTouchOpen, ...props }, ref) => {
+  const { setIsOverTrigger, cancelClose, openOnTouch, isOpen } = useInteractiveHoverCard();
 
   return (
     <HoverCardPrimitive.Trigger
@@ -136,6 +155,15 @@ export const InteractiveHoverCardTrigger = React.forwardRef<
       onMouseLeave={(e) => {
         setIsOverTrigger(false);
         props.onMouseLeave?.(e);
+      }}
+      onTouchEnd={(e) => {
+        // On touch devices, open the popup on tap
+        if (!isOpen) {
+          e.preventDefault();
+          openOnTouch();
+          onTouchOpen?.();
+        }
+        props.onTouchEnd?.(e);
       }}
     >
       {children}

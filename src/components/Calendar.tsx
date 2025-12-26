@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   format,
   startOfMonth,
@@ -30,6 +30,8 @@ export function Calendar() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSchool, setSelectedSchool] = useState<School>('both');
+  // Track if a touch event just opened the popup - prevent click from also firing
+  const touchOpenedRef = useRef(false);
 
   const { getEventsForDate, hasEventsOnDate } = useCalendarEvents(selectedSchool);
 
@@ -299,9 +301,27 @@ export function Calendar() {
               const isCurrentMonth = isSameMonth(day, currentDate);
               const isCurrentDay = isToday(day);
 
+              const handleDayClick = () => {
+                // If touch just opened the popup, don't also navigate
+                if (touchOpenedRef.current) {
+                  touchOpenedRef.current = false;
+                  return;
+                }
+                handleDateClick(day);
+              };
+
+              const handleTouchOpen = () => {
+                // Mark that touch opened the popup - click handler should not fire
+                touchOpenedRef.current = true;
+                // Reset after a short delay in case click doesn't fire
+                setTimeout(() => {
+                  touchOpenedRef.current = false;
+                }, 300);
+              };
+
               return (
                 <InteractiveHoverCard key={day.toString()}>
-                  <InteractiveHoverCardTrigger asChild>
+                  <InteractiveHoverCardTrigger asChild onTouchOpen={handleTouchOpen}>
                     <div
                       className={cn(
                         'bg-background p-2 min-h-[80px] relative cursor-pointer hover:bg-accent transition-colors',
@@ -309,7 +329,7 @@ export function Calendar() {
                         isCurrentDay && 'ring-2 ring-primary ring-inset',
                         hasEvents && 'cursor-pointer hover:ring-2 hover:ring-primary/50'
                       )}
-                      onClick={() => handleDateClick(day)}
+                      onClick={handleDayClick}
                     >
                       <div className={cn(
                         'text-sm font-medium',

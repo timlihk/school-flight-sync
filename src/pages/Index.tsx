@@ -196,6 +196,9 @@ export default function Index() {
     // Scroll after DOM updates
     const [firstTerm] = termIds;
     setTimeout(() => scrollToTerm(firstTerm), 75);
+
+    // Clear highlight after 3 seconds
+    setTimeout(() => setHighlightedTerms(new Set()), 3000);
   }, [scrollToTerm]);
 
   const handleCalendarEventClick = useCallback((event: CalendarEvent) => {

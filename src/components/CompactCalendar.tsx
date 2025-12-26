@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   format,
   startOfMonth,
@@ -35,6 +35,8 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthsToShow, setMonthsToShow] = useState(1);
   const { getEventsForDate } = useCalendarEvents(selectedSchool);
+  // Track if a touch event just opened the popup - prevent click from also firing
+  const touchOpenedRef = useRef(false);
 
   // Calculate how many months to show based on screen width; update on resize
   useEffect(() => {
@@ -216,6 +218,12 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
             const isCurrentDay = isToday(day);
 
             const handleDayClick = () => {
+              // If touch just opened the popup, don't also navigate
+              if (touchOpenedRef.current) {
+                touchOpenedRef.current = false;
+                return;
+              }
+
               if (!hasEvents) return;
 
               const termIds = getTermIdsFromEvents(events);
@@ -231,9 +239,18 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
               }
             };
 
+            const handleTouchOpen = () => {
+              // Mark that touch opened the popup - click handler should not fire
+              touchOpenedRef.current = true;
+              // Reset after a short delay in case click doesn't fire
+              setTimeout(() => {
+                touchOpenedRef.current = false;
+              }, 300);
+            };
+
             return (
               <InteractiveHoverCard key={day.toString()}>
-                <InteractiveHoverCardTrigger asChild>
+                <InteractiveHoverCardTrigger asChild onTouchOpen={handleTouchOpen}>
                   <div
                     className={cn(
                       'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative cursor-pointer hover:bg-accent transition-colors',

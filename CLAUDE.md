@@ -112,6 +112,18 @@ const filteredEvents = allEvents.filter(event =>
 - `CompactCalendar.tsx`: Responsive compact calendar for dashboard display
 - Both components use `getEventsForDate()` from the hook for consistent event retrieval
 
+**Interactive Hover Card (Desktop & Mobile):**
+- `InteractiveHoverCard` component wraps calendar date cells for event details popup
+- Desktop: Hover over a date to see event list, click specific event to navigate
+- Mobile/Touch: First tap opens the popup, second tap on specific event navigates
+- Uses `onTouchEnd` to detect touch devices and prevent immediate navigation
+- `touchOpenedRef` pattern prevents click handler from firing when touch opens popup
+
+**Term Card Highlighting:**
+- `handleHighlightTerms()` in Index.tsx highlights terms when navigating from calendar
+- Highlighted cards show `animate-pulse` ring effect for 3 seconds then auto-clear
+- Prevents permanent blinking by using `setTimeout` to clear `highlightedTerms` state
+
 ### Database Migration Workflow
 
 New migrations go in `supabase/migrations/` with timestamp format: `YYYYMMDD_HHMMSS_description.sql`
