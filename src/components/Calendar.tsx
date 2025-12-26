@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
   format,
   startOfMonth,
@@ -9,7 +9,6 @@ import {
   addMonths,
   subMonths,
   isSameMonth,
-  isSameDay,
   isToday
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ArrowLeft } from 'lucide-react';
@@ -23,45 +22,13 @@ import {
   InteractiveHoverCardTrigger,
 } from '@/components/ui/interactive-hover-card';
 import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
-import { mockTerms } from '@/data/mock-terms';
 import { cn } from '@/lib/utils';
 
 export function Calendar() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSchool, setSelectedSchool] = useState<School>('both');
-  // Track if a touch event just opened the popup - prevent click from also firing
-  const touchOpenedRef = useRef(false);
-
-  const { getEventsForDate, hasEventsOnDate } = useCalendarEvents(selectedSchool);
-
-  // Function to find terms for a given date
-  // Navigate using events present on the clicked day to ensure all visible items are actionable
-  const handleDateClick = (date: Date) => {
-    const events = getEventsForDate(date);
-    if (!events.length) return;
-
-    // Prefer the first event for dialog opening; send all termIds for highlighting
-    const firstEvent = events[0];
-    const termIds = Array.from(
-      new Set(
-        events
-          .map(event => {
-            if (event.type === 'term') return (event.details as any)?.id;
-            if (event.type === 'not-travelling') {
-              return (event.details?.term as any)?.id ?? event.details?.termId;
-            }
-            return event.details?.termId ?? event.details?.term?.id;
-          })
-          .filter(Boolean) as string[]
-      )
-    );
-
-    const firstTermId = termIds[0];
-    if (!firstTermId) return;
-
-    navigate(`/?highlight=${termIds.join(',')}&open=${firstEvent.type}&termId=${firstTermId}`);
-  };
+  const { getEventsForDate } = useCalendarEvents(selectedSchool);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -301,35 +268,16 @@ export function Calendar() {
               const isCurrentMonth = isSameMonth(day, currentDate);
               const isCurrentDay = isToday(day);
 
-              const handleDayClick = () => {
-                // If touch just opened the popup, don't also navigate
-                if (touchOpenedRef.current) {
-                  touchOpenedRef.current = false;
-                  return;
-                }
-                handleDateClick(day);
-              };
-
-              const handleTouchOpen = () => {
-                // Mark that touch opened the popup - click handler should not fire
-                touchOpenedRef.current = true;
-                // Reset after a short delay in case click doesn't fire
-                setTimeout(() => {
-                  touchOpenedRef.current = false;
-                }, 300);
-              };
-
               return (
                 <InteractiveHoverCard key={day.toString()}>
-                  <InteractiveHoverCardTrigger asChild onTouchOpen={handleTouchOpen}>
+                  <InteractiveHoverCardTrigger asChild>
                     <div
                       className={cn(
-                        'bg-background p-2 min-h-[80px] relative cursor-pointer hover:bg-accent transition-colors',
+                        'bg-background p-2 min-h-[80px] relative hover:bg-accent transition-colors',
                         !isCurrentMonth && 'opacity-40',
                         isCurrentDay && 'ring-2 ring-primary ring-inset',
                         hasEvents && 'cursor-pointer hover:ring-2 hover:ring-primary/50'
                       )}
-                      onClick={handleDayClick}
                     >
                       <div className={cn(
                         'text-sm font-medium',

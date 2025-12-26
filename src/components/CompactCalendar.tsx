@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import {
   format,
   startOfMonth,
@@ -30,13 +30,11 @@ interface CompactCalendarProps {
   onEventClick?: (event: CalendarEvent) => void;
 }
 
-export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick }: CompactCalendarProps) {
+export function CompactCalendar({ selectedSchool, onEventClick }: CompactCalendarProps) {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthsToShow, setMonthsToShow] = useState(1);
   const { getEventsForDate } = useCalendarEvents(selectedSchool);
-  // Track if a touch event just opened the popup - prevent click from also firing
-  const touchOpenedRef = useRef(false);
 
   // Calculate how many months to show based on screen width; update on resize
   useEffect(() => {
@@ -217,47 +215,16 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds, onEventClick 
             const isCurrentMonth = isSameMonth(day, monthDate);
             const isCurrentDay = isToday(day);
 
-            const handleDayClick = () => {
-              // If touch just opened the popup, don't also navigate
-              if (touchOpenedRef.current) {
-                touchOpenedRef.current = false;
-                return;
-              }
-
-              if (!hasEvents) return;
-
-              const termIds = getTermIdsFromEvents(events);
-
-              if (termIds.length && onSelectTermIds) {
-                onSelectTermIds(termIds);
-              }
-
-              if (onEventClick) {
-                onEventClick(events[0]);
-              } else {
-                openTermViaUrl(termIds, events[0]);
-              }
-            };
-
-            const handleTouchOpen = () => {
-              // Mark that touch opened the popup - click handler should not fire
-              touchOpenedRef.current = true;
-              // Reset after a short delay in case click doesn't fire
-              setTimeout(() => {
-                touchOpenedRef.current = false;
-              }, 300);
-            };
-
             return (
               <InteractiveHoverCard key={day.toString()}>
-                <InteractiveHoverCardTrigger asChild onTouchOpen={handleTouchOpen}>
+                <InteractiveHoverCardTrigger asChild>
                   <div
                     className={cn(
-                      'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative cursor-pointer hover:bg-accent transition-colors',
+                      'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative hover:bg-accent transition-colors',
                       !isCurrentMonth && 'opacity-30',
-                      isCurrentDay && 'ring-1 ring-primary ring-inset'
+                      isCurrentDay && 'ring-1 ring-primary ring-inset',
+                      hasEvents && 'cursor-pointer'
                     )}
-                    onClick={handleDayClick}
                   >
                     <div className={cn(
                       'text-xs text-center',

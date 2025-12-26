@@ -442,7 +442,7 @@ const TermCard = memo(function TermCard({
         id={`term-card-${term.id}`}
         className={cn(
           "transition-all duration-300 hover:shadow-elegant group animate-fade-in overflow-hidden",
-          highlighted && "ring-2 ring-primary ring-offset-2 animate-pulse",
+          highlighted && "ring-2 ring-primary ring-offset-2",
           className
         )}
       >
