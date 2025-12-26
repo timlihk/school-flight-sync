@@ -3,7 +3,7 @@ import { useFlights } from './use-flights';
 import { useTransport } from './use-transport';
 import { useNotTravelling } from './use-not-travelling';
 import { mockTerms } from '@/data/mock-terms';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import type { Term, TransportDetails } from '@/types/school';
 
 const resolveTransportDate = (item: TransportDetails, term?: Term): Date | null => {
@@ -53,6 +53,14 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
     return map;
   }, []);
 
+  const addEvent = (allEvents: CalendarEvent[], event: CalendarEvent) => {
+    if (!isValid(event.date)) {
+      console.warn('[useCalendarEvents] Skipping event with invalid date', { id: event.id, type: event.type });
+      return;
+    }
+    allEvents.push(event);
+  };
+
   const events = useMemo(() => {
     const allEvents: CalendarEvent[] = [];
 
@@ -63,7 +71,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
 
     relevantTerms.forEach(term => {
       // Add term start event
-      allEvents.push({
+      addEvent(allEvents, {
         id: `term-start-${term.id}`,
         date: term.startDate,
         type: 'term',
@@ -74,7 +82,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       });
 
       // Add term end event
-      allEvents.push({
+      addEvent(allEvents, {
         id: `term-end-${term.id}`,
         date: term.endDate,
         type: 'term',
@@ -87,7 +95,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       // Add schedule detail events
       if (term.scheduleDetails) {
         term.scheduleDetails.forEach((detail, index) => {
-          allEvents.push({
+          addEvent(allEvents, {
             id: `schedule-${term.id}-${index}`,
             date: new Date(detail.date),
             type: 'term',
@@ -114,7 +122,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       if (flight.departure?.date) {
         const departureDate = new Date(flight.departure.date);
         if (!Number.isNaN(departureDate.getTime())) {
-          allEvents.push({
+          addEvent(allEvents, {
             id: `flight-${flight.id}`,
             date: departureDate,
             type: 'flight',
@@ -143,7 +151,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
         return;
       }
 
-      allEvents.push({
+      addEvent(allEvents, {
         id: `transport-${item.id}`,
         date: eventDate,
         type: 'transport',
@@ -177,7 +185,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
         titleDetails.push('transport');
       }
 
-      allEvents.push({
+      addEvent(allEvents, {
         id: `not-travelling-${item.id ?? item.termId}`,
         date: new Date(term.startDate),
         type: 'not-travelling',
@@ -196,6 +204,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
     const grouped = new Map<string, CalendarEvent[]>();
 
     events.forEach(event => {
+      if (!isValid(event.date)) return;
       const dateKey = format(event.date, 'yyyy-MM-dd');
       if (!grouped.has(dateKey)) {
         grouped.set(dateKey, []);

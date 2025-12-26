@@ -9,7 +9,8 @@ import {
   addMonths,
   subMonths,
   isSameMonth,
-  isToday
+  isToday,
+  isValid
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -93,10 +94,14 @@ export function Calendar() {
   };
 
   const renderEventDetails = (events: CalendarEvent[]) => {
+    const formattedDate = events[0]?.date && isValid(events[0].date)
+      ? format(events[0].date, 'MMMM d, yyyy')
+      : 'Date to be confirmed';
+
     return (
       <div className="space-y-3 max-w-sm">
         <div className="font-semibold text-sm">
-          {format(events[0].date, 'MMMM d, yyyy')}
+          {formattedDate}
         </div>
         {events.map((event, index) => (
           <button

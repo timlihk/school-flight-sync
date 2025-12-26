@@ -9,7 +9,8 @@ import {
   addMonths,
   subMonths,
   isSameMonth,
-  isToday
+  isToday,
+  isValid
 } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -90,10 +91,14 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   };
 
   const renderEventDetails = (events: CalendarEvent[]) => {
+    const formattedDate = events[0]?.date && isValid(events[0].date)
+      ? format(events[0].date, 'MMMM d, yyyy')
+      : 'Date to be confirmed';
+
     return (
       <div className="space-y-2 max-w-xs">
         <div className="font-semibold text-xs">
-          {format(events[0].date, 'MMMM d, yyyy')}
+          {formattedDate}
         </div>
         {events.map((event, index) => (
           <button
