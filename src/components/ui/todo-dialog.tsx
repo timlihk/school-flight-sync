@@ -84,8 +84,8 @@ export function ToDoDialog({
             else if (daysUntil <= 60) urgency = 'medium';
 
             const missingTypes = [];
-            if (!hasOutbound) missingTypes.push('departure');
-            if (!hasReturn) missingTypes.push('return');
+            if (!hasOutbound) missingTypes.push('from school');
+            if (!hasReturn) missingTypes.push('to school');
 
             items.push({
               id: `flight-${term.id}`,

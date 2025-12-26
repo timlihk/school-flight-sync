@@ -203,15 +203,15 @@ export function FlightDialog({
                   key={flight.id} 
                   className="p-4 border border-border rounded-lg bg-card hover:shadow-soft transition-shadow"
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">
-                        {flight.type === 'outbound' ? '✈️' : '🛬'}
-                      </span>
-                      <span className="font-semibold text-foreground">
-                        {flight.type === 'outbound' ? 'Outbound Flight' : 'Return Flight'}
-                      </span>
-                    </div>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">
+                          {flight.type === 'outbound' ? '✈️' : '🛬'}
+                        </span>
+                        <span className="font-semibold text-foreground">
+                        {flight.type === 'outbound' ? 'From School Flight' : 'To School Flight'}
+                        </span>
+                      </div>
                     <div className="flex items-center gap-1">
                       {onEditFlight && (
                         <Button
@@ -288,8 +288,8 @@ export function FlightDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="outbound">Outbound</SelectItem>
-                      <SelectItem value="return">Return</SelectItem>
+                      <SelectItem value="outbound">From School</SelectItem>
+                      <SelectItem value="return">To School</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

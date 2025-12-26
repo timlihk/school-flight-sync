@@ -516,7 +516,7 @@ const TermCard = memo(function TermCard({
                                      {flight.type === 'outbound' ? '✈️' : '🛬'}
                                    </span>
                                    <span className="text-xs font-medium text-foreground">
-                                     {flight.type === 'outbound' ? 'Outbound' : 'Return'}
+                                     {flight.type === 'outbound' ? 'From School' : 'To School'}
                                    </span>
                                    {getStatusIcon(flight)}
                                  </div>

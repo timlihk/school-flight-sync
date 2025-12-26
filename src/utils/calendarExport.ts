@@ -48,7 +48,7 @@ export function exportFlightToCalendar(flight: FlightDetails, term: Term) {
 
   const event: CalendarEvent = {
     summary: `Flight ${flight.flightNumber} - ${flight.airline}`,
-    description: `${flight.type === 'outbound' ? 'Outbound' : 'Return'} flight for ${term.termName}\\n` +
+    description: `${flight.type === 'outbound' ? 'From School' : 'To School'} flight for ${term.termName}\\n` +
                  `From: ${flight.departureAirport}\\n` +
                  `To: ${flight.arrivalAirport}\\n` +
                  (flight.confirmationCode ? `Confirmation: ${flight.confirmationCode}\\n` : '') +

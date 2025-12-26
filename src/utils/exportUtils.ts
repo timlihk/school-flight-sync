@@ -53,7 +53,7 @@ export function transformFlightsForCSV(flights: FlightDetails[], terms: Term[]) 
       'Term': term?.name || 'Unknown',
       'School': term?.school || 'Unknown',
       'Academic Year': term?.academicYear || 'Unknown',
-      'Flight Type': flight.type === 'outbound' ? 'Outbound' : 'Return',
+      'Flight Type': flight.type === 'outbound' ? 'From School' : 'To School',
       'Airline': flight.airline,
       'Flight Number': flight.flightNumber,
       'Departure Airport': flight.departure.airport,

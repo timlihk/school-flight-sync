@@ -97,7 +97,7 @@ export function useFlights() {
       
       toast({
         title: "Flight Added",
-        description: `${addedFlight.type === 'outbound' ? 'Outbound' : 'Return'} flight ${addedFlight.flightNumber} has been saved.`,
+        description: `${addedFlight.type === 'outbound' ? 'From School' : 'To School'} flight ${addedFlight.flightNumber} has been saved.`,
       });
     },
   });
@@ -142,7 +142,7 @@ export function useFlights() {
       
       toast({
         title: "Flight Updated",
-        description: `${editedFlight.type === 'outbound' ? 'Outbound' : 'Return'} flight ${editedFlight.flightNumber} has been updated.`,
+        description: `${editedFlight.type === 'outbound' ? 'From School' : 'To School'} flight ${editedFlight.flightNumber} has been updated.`,
       });
     },
   });

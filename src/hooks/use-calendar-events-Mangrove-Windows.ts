@@ -30,6 +30,9 @@ const resolveTransportDate = (item: TransportDetails, term?: Term): Date | null 
   return Number.isNaN(fallback.getTime()) ? null : fallback;
 };
 
+const getFlightTypeLabel = (type: 'outbound' | 'return') =>
+  type === 'outbound' ? 'From School' : 'To School';
+
 export type School = 'benenden' | 'wycombe' | 'both';
 
 export interface CalendarEvent {
@@ -120,7 +123,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
             type: 'flight',
             school: term.school,
             title: `Flight ${flight.flightNumber}`,
-            description: `${flight.airline} - ${flight.type}`,
+            description: `${flight.airline} - ${getFlightTypeLabel(flight.type)}`,
             details: flight
           });
         }

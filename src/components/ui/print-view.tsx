@@ -117,7 +117,7 @@ export function PrintView({ flights, transport, notTravelling, terms, printOptio
                 {termFlights.map((flight) => (
                   <div key={flight.id} className="flight-row">
                     <div className="font-medium mb-1">
-                      {flight.type === 'outbound' ? 'Outbound' : 'Return'} Flight
+                      {flight.type === 'outbound' ? 'From School' : 'To School'} Flight
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
