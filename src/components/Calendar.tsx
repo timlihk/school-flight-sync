@@ -311,6 +311,29 @@ export function Calendar() {
                 }
               };
 
+              if (isMobile) {
+                return (
+                  <div
+                    key={day.toString()}
+                    className={cn(
+                      'bg-background p-2 min-h-[80px] relative hover:bg-accent transition-colors',
+                      !isCurrentMonth && 'opacity-40',
+                      isCurrentDay && 'ring-2 ring-primary ring-inset',
+                      hasEvents && 'cursor-pointer hover:ring-2 hover:ring-primary/50'
+                    )}
+                    onClick={handleMobileOpen}
+                  >
+                    <div className={cn(
+                      'text-sm font-medium',
+                      isCurrentDay && 'text-primary font-bold'
+                    )}>
+                      {format(day, 'd')}
+                    </div>
+                    {hasEvents && renderEventDots(events)}
+                  </div>
+                );
+              }
+
               return (
                 <InteractiveHoverCard key={day.toString()}>
                   <InteractiveHoverCardTrigger asChild>
@@ -321,7 +344,6 @@ export function Calendar() {
                         isCurrentDay && 'ring-2 ring-primary ring-inset',
                         hasEvents && 'cursor-pointer hover:ring-2 hover:ring-primary/50'
                       )}
-                      onClick={handleMobileOpen}
                     >
                       <div className={cn(
                         'text-sm font-medium',
@@ -332,7 +354,7 @@ export function Calendar() {
                       {hasEvents && renderEventDots(events)}
                     </div>
                   </InteractiveHoverCardTrigger>
-                  {hasEvents && !isMobile && (
+                  {hasEvents && (
                     <InteractiveHoverCardContent className="w-auto" side="top">
                       {renderEventDetails(events)}
                     </InteractiveHoverCardContent>

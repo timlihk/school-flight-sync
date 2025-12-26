@@ -251,6 +251,29 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
               }
             };
 
+            if (isMobile) {
+              return (
+                <div
+                  key={day.toString()}
+                  className={cn(
+                    'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative hover:bg-accent transition-colors',
+                    !isCurrentMonth && 'opacity-30',
+                    isCurrentDay && 'ring-1 ring-primary ring-inset',
+                    hasEvents && 'cursor-pointer'
+                  )}
+                  onClick={handleMobileOpen}
+                >
+                  <div className={cn(
+                    'text-xs text-center',
+                    isCurrentDay && 'text-primary font-bold'
+                  )}>
+                    {format(day, 'd')}
+                  </div>
+                  {hasEvents && renderEventDots(events)}
+                </div>
+              );
+            }
+
             return (
               <InteractiveHoverCard key={day.toString()}>
                 <InteractiveHoverCardTrigger asChild>
@@ -261,7 +284,6 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                       isCurrentDay && 'ring-1 ring-primary ring-inset',
                       hasEvents && 'cursor-pointer'
                     )}
-                    onClick={handleMobileOpen}
                   >
                     <div className={cn(
                       'text-xs text-center',
@@ -272,7 +294,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                     {hasEvents && renderEventDots(events)}
                   </div>
                 </InteractiveHoverCardTrigger>
-                {hasEvents && !isMobile && (
+                {hasEvents && (
                   <InteractiveHoverCardContent className="w-auto" side="top">
                     {renderEventDetails(events)}
                   </InteractiveHoverCardContent>
