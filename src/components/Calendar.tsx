@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   format,
   startOfMonth,
@@ -18,6 +18,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle
+} from '@/components/ui/sheet';
+import {
   InteractiveHoverCard,
   InteractiveHoverCardContent,
   InteractiveHoverCardTrigger,
@@ -30,6 +36,16 @@ export function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSchool, setSelectedSchool] = useState<School>('both');
   const { getEventsForDate } = useCalendarEvents(selectedSchool);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileEvents, setMobileEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setIsMobile(window.innerWidth < 768);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -93,6 +109,18 @@ export function Calendar() {
     );
   };
 
+  const eventTypeLabel = useMemo(() => ({
+    term: 'School Date',
+    flight: 'Flight',
+    transport: 'Transport',
+    'not-travelling': 'Not travelling'
+  }), []);
+
+  const flightDirectionLabel = (event: CalendarEvent) => {
+    if (event.type !== 'flight') return eventTypeLabel[event.type];
+    return (event as any)?.details?.type === 'outbound' ? 'From School' : 'To School';
+  };
+
   const renderEventDetails = (events: CalendarEvent[]) => {
     const formattedDate = events[0]?.date && isValid(events[0].date)
       ? format(events[0].date, 'MMMM d, yyyy')
@@ -131,6 +159,17 @@ export function Calendar() {
                 {event.description && (
                   <div className="text-xs text-muted-foreground mt-0.5">{event.description}</div>
                 )}
+                <div className="mt-1 flex flex-wrap gap-2 items-center">
+                  <Badge variant="secondary" className="text-[10px]">
+                    {flightDirectionLabel(event)}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="text-[10px]"
+                  >
+                    {event.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+                  </Badge>
+                </div>
                 {event.type === 'flight' && (
                   <div className="text-xs text-muted-foreground mt-1">
                     <div>{event.details.departure.airport} → {event.details.arrival.airport}</div>
@@ -143,12 +182,6 @@ export function Calendar() {
                   </div>
                 )}
               </div>
-              <Badge
-                variant="outline"
-                className="text-xs"
-              >
-                {event.school === 'benenden' ? 'Ben' : 'WA'}
-              </Badge>
             </div>
           </button>
         ))}
@@ -272,6 +305,11 @@ export function Calendar() {
               const hasEvents = events.length > 0;
               const isCurrentMonth = isSameMonth(day, currentDate);
               const isCurrentDay = isToday(day);
+              const handleMobileOpen = () => {
+                if (isMobile && hasEvents) {
+                  setMobileEvents({ date: day, events });
+                }
+              };
 
               return (
                 <InteractiveHoverCard key={day.toString()}>
@@ -283,6 +321,7 @@ export function Calendar() {
                         isCurrentDay && 'ring-2 ring-primary ring-inset',
                         hasEvents && 'cursor-pointer hover:ring-2 hover:ring-primary/50'
                       )}
+                      onClick={handleMobileOpen}
                     >
                       <div className={cn(
                         'text-sm font-medium',
@@ -293,7 +332,7 @@ export function Calendar() {
                       {hasEvents && renderEventDots(events)}
                     </div>
                   </InteractiveHoverCardTrigger>
-                  {hasEvents && (
+                  {hasEvents && !isMobile && (
                     <InteractiveHoverCardContent className="w-auto" side="top">
                       {renderEventDetails(events)}
                     </InteractiveHoverCardContent>
@@ -305,6 +344,20 @@ export function Calendar() {
         </CardContent>
       </Card>
       </div>
+      {isMobile && mobileEvents && (
+        <Sheet open={!!mobileEvents} onOpenChange={(open) => !open && setMobileEvents(null)}>
+          <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>
+                {mobileEvents.date && isValid(mobileEvents.date) ? format(mobileEvents.date, 'MMMM d, yyyy') : 'Events'}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="mt-4">
+              {renderEventDetails(mobileEvents.events)}
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

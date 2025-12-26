@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
 import { Plane, ChevronDown, ChevronUp, LogOut, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -9,8 +10,8 @@ import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { SchoolHeader } from "@/components/school-header";
 import { CompactCalendar } from "@/components/CompactCalendar";
 
-import FlightDialog from "@/components/ui/flight-dialog";
-import TransportDialog from "@/components/ui/transport-dialog";
+const FlightDialog = lazy(() => import("@/components/ui/flight-dialog"));
+const TransportDialog = lazy(() => import("@/components/ui/transport-dialog"));
 import ToDoDialog from "@/components/ui/todo-dialog";
 import ExportDialog from "@/components/ui/export-dialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -18,11 +19,12 @@ import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
-import { Term } from "@/types/school";
+import { Term, TransportDetails } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { isAfter, isToday } from "date-fns";
+import { isAfter, isToday, formatDistanceToNow } from "date-fns";
 import { CalendarEvent } from "@/hooks/use-calendar-events";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -44,6 +46,7 @@ export default function Index() {
   const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus } = useNotTravelling();
+  const { toast } = useToast();
 
   // Memoize expensive term filtering and sorting operations
   const filteredTerms = useMemo(() => {
@@ -98,6 +101,18 @@ export default function Index() {
     new Map(mockTerms.map(term => [term.id, term])), 
     []
   );
+
+  const resolveTransportDate = useCallback((item: TransportDetails, term?: Term): Date | null => {
+    if (!term) return null;
+    if (item.pickupTime) {
+      const directDate = new Date(item.pickupTime);
+      if (!Number.isNaN(directDate.getTime())) {
+        return directDate;
+      }
+    }
+    const base = new Date(item.direction === 'return' ? term.endDate : term.startDate);
+    return Number.isNaN(base.getTime()) ? null : base;
+  }, []);
 
   const handleAddFlight = useCallback((termId: string) => {
     const term = termLookup.get(termId);
@@ -227,6 +242,141 @@ export default function Index() {
         break;
     }
   }, [extractTermIdFromEvent, termLookup, handleHighlightTerms, showTermCardPopup]);
+
+  const nextTravel = useMemo(() => {
+    const now = new Date();
+    const entries: {
+      date: Date;
+      title: string;
+      detail: string;
+      status: 'booked' | 'unplanned' | 'staying';
+      termId?: string;
+    }[] = [];
+
+    flights.forEach(flight => {
+      if (!isAfter(flight.departure.date, now)) return;
+      const term = termLookup.get(flight.termId);
+      entries.push({
+        date: flight.departure.date,
+        title: `${flight.airline} ${flight.flightNumber}`,
+        detail: `${flight.departure.airport} → ${flight.arrival.airport}`,
+        status: 'booked',
+        termId: term?.id
+      });
+    });
+
+    transport.forEach(item => {
+      const term = termLookup.get(item.termId);
+      const eventDate = resolveTransportDate(item, term);
+      if (!eventDate || !isAfter(eventDate, now)) return;
+      entries.push({
+        date: eventDate,
+        title: `${item.type === 'school-coach' ? 'School Coach' : 'Taxi'} ${item.driverName ? `· ${item.driverName}` : ''}`,
+        detail: `${item.direction === 'return' ? 'To School' : 'From School'}`,
+        status: 'booked',
+        termId: term?.id
+      });
+    });
+
+    notTravelling.forEach(entry => {
+      const term = termLookup.get(entry.termId);
+      if (!term || !isAfter(term.startDate, now)) return;
+      entries.push({
+        date: term.startDate,
+        title: 'Staying at school',
+        detail: `${term.name}`,
+        status: 'staying',
+        termId: term.id
+      });
+    });
+
+    if (!entries.length) {
+      const upcomingTerm = filteredTerms.find(term => isAfter(term.startDate, now));
+      if (upcomingTerm) {
+        entries.push({
+          date: upcomingTerm.startDate,
+          title: `${upcomingTerm.name}`,
+          detail: 'No travel booked yet',
+          status: 'unplanned',
+          termId: upcomingTerm.id
+        });
+      }
+    }
+
+    return entries.sort((a, b) => a.date.getTime() - b.date.getTime())[0] ?? null;
+  }, [flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate]);
+
+  const handleShareItinerary = useCallback(async () => {
+    try {
+      const now = new Date();
+      const lines: string[] = [];
+
+      if (nextTravel) {
+        lines.push(
+          `Next: ${nextTravel.title} on ${nextTravel.date.toDateString()} (${formatDistanceToNow(nextTravel.date, { addSuffix: true })})`
+        );
+      }
+
+      const upcomingFlights = flights
+        .filter(f => isAfter(f.departure.date, now))
+        .sort((a, b) => a.departure.date.getTime() - b.departure.date.getTime())
+        .slice(0, 3);
+
+      upcomingFlights.forEach(flight => {
+        lines.push(
+          `✈️ ${flight.airline} ${flight.flightNumber} · ${flight.departure.airport} → ${flight.arrival.airport} on ${flight.departure.date.toDateString()}`
+        );
+      });
+
+      const upcomingTransport = transport
+        .map(item => {
+          const term = termLookup.get(item.termId);
+          return { item, term, date: resolveTransportDate(item, term) };
+        })
+        .filter(entry => entry.date && isAfter(entry.date, now))
+        .sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0))
+        .slice(0, 2);
+
+      upcomingTransport.forEach(({ item, date, term }) => {
+        if (!date) return;
+        lines.push(
+          `🚐 ${item.type === 'school-coach' ? 'School Coach' : 'Taxi'} ${item.direction === 'return' ? 'to school' : 'from school'} on ${date.toDateString()}${term ? ` (${term.name})` : ''}`
+        );
+      });
+
+      if (!lines.length) {
+        lines.push('No upcoming travel found.');
+      }
+
+      const shareText = lines.join('\n');
+
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({
+          title: 'UK Schedules',
+          text: shareText
+        });
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareText);
+        toast({
+          title: "Itinerary copied",
+          description: "Paste it anywhere to share with family."
+        });
+      } else {
+        toast({
+          title: "Sharing unavailable",
+          description: "Copy the itinerary manually from the print view.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Share failed', error);
+      toast({
+        title: "Share failed",
+        description: "Try copying the itinerary instead.",
+        variant: "destructive"
+      });
+    }
+  }, [nextTravel, flights, transport, termLookup, resolveTransportDate, toast]);
 
 
 
@@ -382,6 +532,12 @@ export default function Index() {
             onAddTransport={handleAddTransport}
             onShowTerm={handleShowTerm}
           />
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            Refresh data
+          </Button>
+          <Button variant="outline" onClick={handleShareItinerary} size="sm" className="gap-2">
+            Share itinerary
+          </Button>
           <ExportDialog
             flights={flights}
             transport={transport}
@@ -390,6 +546,35 @@ export default function Index() {
           />
         </div>
       </div>
+
+      {nextTravel && (
+        <div className="container mx-auto px-6 pt-4">
+          <div className="rounded-xl border border-border/60 bg-card/70 p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Next travel</div>
+              <div className="text-lg font-semibold text-foreground">{nextTravel.title}</div>
+              <div className="text-sm text-muted-foreground">{nextTravel.detail}</div>
+              <div className="text-xs text-muted-foreground">
+                {formatDistanceToNow(nextTravel.date, { addSuffix: true })}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant={nextTravel.status === 'booked' ? 'default' : nextTravel.status === 'staying' ? 'secondary' : 'outline'}>
+                {nextTravel.status === 'booked' ? 'Booked' : nextTravel.status === 'staying' ? 'Not travelling' : 'Needs booking'}
+              </Badge>
+              {nextTravel.termId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleHighlightTerms([nextTravel.termId!])}
+                >
+                  Go to term
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Calendar View */}
       <div className="container mx-auto px-6 py-4">
@@ -507,15 +692,17 @@ export default function Index() {
                 </div>
               </div>
             }>
-              <FlightDialog
-                term={selectedTerm}
-                flights={flights.filter(f => f.termId === selectedTerm.id)}
-                onAddFlight={addFlight}
-                onEditFlight={editFlight}
-                onRemoveFlight={removeFlight}
-                open={showFlightDialog}
-                onOpenChange={setShowFlightDialog}
-              />
+              <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading flight details…</div>}>
+                <FlightDialog
+                  term={selectedTerm}
+                  flights={flights.filter(f => f.termId === selectedTerm.id)}
+                  onAddFlight={addFlight}
+                  onEditFlight={editFlight}
+                  onRemoveFlight={removeFlight}
+                  open={showFlightDialog}
+                  onOpenChange={setShowFlightDialog}
+                />
+              </Suspense>
             </ErrorBoundary>
             
             <ErrorBoundary fallback={
@@ -526,15 +713,17 @@ export default function Index() {
                 </div>
               </div>
             }>
-              <TransportDialog
-                term={selectedTerm}
-                transport={getTransportForTerm(selectedTerm.id)}
-                onAddTransport={addTransport}
-                onEditTransport={editTransport}
-                onRemoveTransport={removeTransport}
-                open={showTransportDialog}
-                onOpenChange={setShowTransportDialog}
-              />
+              <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading transport…</div>}>
+                <TransportDialog
+                  term={selectedTerm}
+                  transport={getTransportForTerm(selectedTerm.id)}
+                  onAddTransport={addTransport}
+                  onEditTransport={editTransport}
+                  onRemoveTransport={removeTransport}
+                  open={showTransportDialog}
+                  onOpenChange={setShowTransportDialog}
+                />
+              </Suspense>
             </ErrorBoundary>
 
             <TermDetailsDialog

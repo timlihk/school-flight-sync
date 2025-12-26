@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   format,
   startOfMonth,
@@ -16,6 +16,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle
+} from '@/components/ui/sheet';
 import {
   InteractiveHoverCard,
   InteractiveHoverCardContent,
@@ -35,6 +41,8 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthsToShow, setMonthsToShow] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileEvents, setMobileEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
   const { getEventsForDate } = useCalendarEvents(selectedSchool);
 
   // Calculate how many months to show based on screen width; update on resize
@@ -43,6 +51,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
 
     const calculateMonths = () => {
       const width = window.innerWidth;
+      setIsMobile(width < 768);
       if (width >= 1536) return 3; // 2xl
       if (width >= 1024) return 2; // lg
       return 1;
@@ -90,6 +99,18 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
     );
   };
 
+  const eventTypeLabel = useMemo(() => ({
+    term: 'School Date',
+    flight: 'Flight',
+    transport: 'Transport',
+    'not-travelling': 'Not travelling'
+  }), []);
+
+  const flightDirectionLabel = (event: CalendarEvent) => {
+    if (event.type !== 'flight') return eventTypeLabel[event.type];
+    return (event as any)?.details?.type === 'outbound' ? 'From School' : 'To School';
+  };
+
   const renderEventDetails = (events: CalendarEvent[]) => {
     const formattedDate = events[0]?.date && isValid(events[0].date)
       ? format(events[0].date, 'MMMM d, yyyy')
@@ -129,6 +150,14 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                 {event.description && (
                   <div className="text-xs text-muted-foreground mt-0.5">{event.description}</div>
                 )}
+                <div className="mt-1 flex flex-wrap gap-1.5 items-center">
+                  <Badge variant="secondary" className="text-[10px]">
+                    {flightDirectionLabel(event)}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] shrink-0">
+                    {event.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+                  </Badge>
+                </div>
                 {event.type === 'flight' && (
                   <div className="text-xs text-muted-foreground mt-0.5">
                     <div>{event.details.departure.airport} → {event.details.arrival.airport}</div>
@@ -140,9 +169,6 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                   </div>
                 )}
               </div>
-              <Badge variant="outline" className="text-xs shrink-0">
-                {event.school === 'benenden' ? 'Ben' : 'WA'}
-              </Badge>
             </div>
           </button>
         ))}
@@ -219,6 +245,11 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
             const hasEvents = events.length > 0;
             const isCurrentMonth = isSameMonth(day, monthDate);
             const isCurrentDay = isToday(day);
+            const handleMobileOpen = () => {
+              if (isMobile && hasEvents) {
+                setMobileEvents({ date: day, events });
+              }
+            };
 
             return (
               <InteractiveHoverCard key={day.toString()}>
@@ -230,6 +261,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                       isCurrentDay && 'ring-1 ring-primary ring-inset',
                       hasEvents && 'cursor-pointer'
                     )}
+                    onClick={handleMobileOpen}
                   >
                     <div className={cn(
                       'text-xs text-center',
@@ -240,7 +272,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                     {hasEvents && renderEventDots(events)}
                   </div>
                 </InteractiveHoverCardTrigger>
-                {hasEvents && (
+                {hasEvents && !isMobile && (
                   <InteractiveHoverCardContent className="w-auto" side="top">
                     {renderEventDetails(events)}
                   </InteractiveHoverCardContent>
@@ -254,64 +286,80 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Upcoming Events</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-            >
-              <ChevronLeft className="w-3 h-3" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setCurrentDate(new Date())}
-            >
-              Today
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-            >
-              <ChevronRight className="w-3 h-3" />
-            </Button>
+    <>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Upcoming Events</CardTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+              >
+                <ChevronLeft className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setCurrentDate(new Date())}
+              >
+                Today
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+              >
+                <ChevronRight className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        {/* Legend */}
-        <div className="flex gap-3 mb-3 text-xs flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-purple-500" />
-            <span>Term Dates</span>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {/* Legend */}
+          <div className="flex gap-3 mb-3 text-xs flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-purple-500" />
+              <span>Term Dates</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span>Flights</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span>Transport</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-orange-500" />
+              <span>Not Travelling</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
-            <span>Flights</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
-            <span>Transport</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-orange-500" />
-            <span>Not Travelling</span>
-          </div>
-        </div>
 
-        {/* Responsive Month Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
-          {Array.from({ length: monthsToShow }, (_, i) => renderMonth(i))}
-        </div>
-      </CardContent>
-    </Card>
+          {/* Responsive Month Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
+            {Array.from({ length: monthsToShow }, (_, i) => renderMonth(i))}
+          </div>
+        </CardContent>
+      </Card>
+      {isMobile && mobileEvents && (
+        <Sheet open={!!mobileEvents} onOpenChange={(open) => !open && setMobileEvents(null)}>
+          <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>
+                {mobileEvents.date && isValid(mobileEvents.date) ? format(mobileEvents.date, 'MMMM d, yyyy') : 'Events'}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="mt-3">
+              {renderEventDetails(mobileEvents.events)}
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
+    </>
   );
 }
