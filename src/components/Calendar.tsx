@@ -338,6 +338,13 @@ export function Calendar() {
                 <InteractiveHoverCard key={day.toString()}>
                   <InteractiveHoverCardTrigger asChild>
                     <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label={
+                        hasEvents
+                          ? `Events on ${format(day, 'MMMM d')}`
+                          : `No events on ${format(day, 'MMMM d')}`
+                      }
                       className={cn(
                         'bg-background p-2 min-h-[80px] relative hover:bg-accent transition-colors',
                         !isCurrentMonth && 'opacity-40',
@@ -369,10 +376,14 @@ export function Calendar() {
       {isMobile && mobileEvents && (
         <Sheet open={!!mobileEvents} onOpenChange={(open) => !open && setMobileEvents(null)}>
           <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
-            <SheetHeader>
+            <div className="mx-auto h-1 w-12 rounded-full bg-muted-foreground/40 mb-3" />
+            <SheetHeader className="flex flex-row items-center justify-between">
               <SheetTitle>
                 {mobileEvents.date && isValid(mobileEvents.date) ? format(mobileEvents.date, 'MMMM d, yyyy') : 'Events'}
               </SheetTitle>
+              <Button variant="ghost" size="sm" onClick={() => setMobileEvents(null)}>
+                Close
+              </Button>
             </SheetHeader>
             <div className="mt-4">
               {renderEventDetails(mobileEvents.events)}

@@ -30,6 +30,7 @@ import {
 import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 
 interface CompactCalendarProps {
   selectedSchool: School;
@@ -43,7 +44,39 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   const [monthsToShow, setMonthsToShow] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileEvents, setMobileEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { getEventsForDate } = useCalendarEvents(selectedSchool);
+  const hasAnyEvents = useMemo(() => {
+    for (let i = 0; i < monthsToShow; i++) {
+      const monthDate = addMonths(currentDate, i);
+      const monthStart = startOfWeek(startOfMonth(monthDate));
+      const monthEnd = endOfWeek(endOfMonth(monthDate));
+      let day = monthStart;
+      while (day <= monthEnd) {
+        if (getEventsForDate(day).length > 0) return true;
+        day = addDays(day, 1);
+      }
+    }
+    return false;
+  }, [currentDate, monthsToShow, getEventsForDate]);
+
+  const flatEvents = useMemo(() => {
+    const items: { date: Date; events: CalendarEvent[] }[] = [];
+    for (let i = 0; i < monthsToShow; i++) {
+      const monthDate = addMonths(currentDate, i);
+      const monthStart = startOfWeek(startOfMonth(monthDate));
+      const monthEnd = endOfWeek(endOfMonth(monthDate));
+      let day = monthStart;
+      while (day <= monthEnd) {
+        const events = getEventsForDate(day);
+        if (events.length) {
+          items.push({ date: day, events });
+        }
+        day = addDays(day, 1);
+      }
+    }
+    return items.sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [currentDate, monthsToShow, getEventsForDate]);
 
   // Calculate how many months to show based on screen width; update on resize
   useEffect(() => {
@@ -51,7 +84,11 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
 
     const calculateMonths = () => {
       const width = window.innerWidth;
-      setIsMobile(width < 768);
+      const mobile = width < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setViewMode('grid');
+      }
       if (width >= 1536) return 3; // 2xl
       if (width >= 1024) return 2; // lg
       return 1;
@@ -255,6 +292,13 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
               return (
                 <div
                   key={day.toString()}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={
+                    hasEvents
+                      ? `Events on ${format(day, 'MMMM d')}`
+                      : `No events on ${format(day, 'MMMM d')}`
+                  }
                   className={cn(
                     'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative hover:bg-accent transition-colors',
                     !isCurrentMonth && 'opacity-30',
@@ -278,6 +322,13 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
               <InteractiveHoverCard key={day.toString()}>
                 <InteractiveHoverCardTrigger asChild>
                   <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label={
+                      hasEvents
+                        ? `Events on ${format(day, 'MMMM d')}`
+                        : `No events on ${format(day, 'MMMM d')}`
+                    }
                     className={cn(
                       'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative hover:bg-accent transition-colors',
                       !isCurrentMonth && 'opacity-30',
@@ -310,37 +361,57 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   return (
     <>
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Upcoming Events</CardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-              >
-                <ChevronLeft className="w-3 h-3" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => setCurrentDate(new Date())}
-              >
-                Today
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-              >
-                <ChevronRight className="w-3 h-3" />
-              </Button>
-            </div>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Upcoming Events</CardTitle>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+            >
+              <ChevronLeft className="w-3 h-3" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setCurrentDate(new Date())}
+            >
+              Today
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+            >
+              <ChevronRight className="w-3 h-3" />
+            </Button>
+            {isMobile && (
+              <div className="flex items-center gap-1 ml-2">
+                <Button
+                  size="sm"
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  className="h-7 text-xs"
+                  onClick={() => setViewMode('grid')}
+                >
+                  Grid
+                </Button>
+                <Button
+                  size="sm"
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  className="h-7 text-xs"
+                  onClick={() => setViewMode('list')}
+                >
+                  List
+                </Button>
+              </div>
+            )}
           </div>
-        </CardHeader>
+        </div>
+      </CardHeader>
         <CardContent className="pt-0">
           {/* Legend */}
           <div className="flex gap-3 mb-3 text-xs flex-wrap">
@@ -362,24 +433,72 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
             </div>
           </div>
 
-          {/* Responsive Month Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
-            {Array.from({ length: monthsToShow }, (_, i) => renderMonth(i))}
-          </div>
+          {viewMode === 'grid' && (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
+                {Array.from({ length: monthsToShow }, (_, i) => renderMonth(i))}
+              </div>
+              {!hasAnyEvents && (
+                <div className="mt-3 text-xs text-muted-foreground">
+                  No events visible for these months yet.
+                </div>
+              )}
+            </>
+          )}
+
+          {viewMode === 'list' && (
+            <div className="space-y-2">
+              {flatEvents.length === 0 && (
+                <div className="text-xs text-muted-foreground">No events to show yet.</div>
+              )}
+              {flatEvents.map(({ date, events }) => (
+                <button
+                  key={date.toISOString()}
+                  type="button"
+                  className="w-full text-left rounded-lg border border-border/60 bg-card/60 p-3 hover:bg-accent transition-colors"
+                  onClick={() => setMobileEvents({ date, events })}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold">
+                      {isValid(date) ? format(date, 'EEE, MMM d') : 'Date'}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {renderEventDots(events)}
+                    </div>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    {events.map(event => (
+                      <div key={event.id} className="flex items-center gap-2 text-xs">
+                        <div className={cn('w-1.5 h-1.5 rounded-full', getEventTypeColor(event.type))} />
+                        <span className="font-medium truncate">{event.title}</span>
+                        <Badge variant="outline" className="text-[10px]">
+                          {event.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
       {isMobile && mobileEvents && (
-        <Sheet open={!!mobileEvents} onOpenChange={(open) => !open && setMobileEvents(null)}>
-          <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>
-                {mobileEvents.date && isValid(mobileEvents.date) ? format(mobileEvents.date, 'MMMM d, yyyy') : 'Events'}
-              </SheetTitle>
-            </SheetHeader>
-            <div className="mt-3">
-              {renderEventDetails(mobileEvents.events)}
-            </div>
-          </SheetContent>
+      <Sheet open={!!mobileEvents} onOpenChange={(open) => !open && setMobileEvents(null)}>
+        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
+          <div className="mx-auto h-1 w-12 rounded-full bg-muted-foreground/40 mb-3" />
+          <SheetHeader className="flex flex-row items-center justify-between">
+            <SheetTitle>
+              {mobileEvents.date && isValid(mobileEvents.date) ? format(mobileEvents.date, 'MMMM d, yyyy') : 'Events'}
+            </SheetTitle>
+            <Button variant="ghost" size="sm" onClick={() => setMobileEvents(null)}>
+              Close
+            </Button>
+          </SheetHeader>
+          <div className="mt-3">
+            {renderEventDetails(mobileEvents.events)}
+          </div>
+        </SheetContent>
         </Sheet>
       )}
     </>

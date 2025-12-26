@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
-import { Plane, ChevronDown, ChevronUp, LogOut, Calendar } from "lucide-react";
+import { Plane, ChevronDown, ChevronUp, LogOut, Calendar, Home, CalendarDays, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -12,8 +12,8 @@ import { CompactCalendar } from "@/components/CompactCalendar";
 
 const FlightDialog = lazy(() => import("@/components/ui/flight-dialog"));
 const TransportDialog = lazy(() => import("@/components/ui/transport-dialog"));
+const ExportDialog = lazy(() => import("@/components/ui/export-dialog"));
 import ToDoDialog from "@/components/ui/todo-dialog";
-import ExportDialog from "@/components/ui/export-dialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { mockTerms, getAcademicYears } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
@@ -40,6 +40,7 @@ export default function Index() {
   const [highlightedTerms, setHighlightedTerms] = useState<Set<string>>(new Set());
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareScope, setShareScope] = useState<'both' | 'benenden' | 'wycombe'>('both');
+  const calendarSectionRef = useRef<HTMLDivElement | null>(null);
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const { logout } = useFamilyAuth();
@@ -244,6 +245,14 @@ export default function Index() {
         break;
     }
   }, [extractTermIdFromEvent, termLookup, handleHighlightTerms, showTermCardPopup]);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const scrollToCalendar = useCallback(() => {
+    calendarSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   const computeNextTravel = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
     const now = new Date();
@@ -532,9 +541,6 @@ export default function Index() {
             onAddTransport={handleAddTransport}
             onShowTerm={handleShowTerm}
           />
-          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-            Refresh data
-          </Button>
           <Button
             variant="outline"
             onClick={() => {
@@ -546,12 +552,14 @@ export default function Index() {
           >
             Share itinerary
           </Button>
-          <ExportDialog
-            flights={flights}
-            transport={transport}
-            notTravelling={notTravelling}
-            terms={mockTerms}
-          />
+          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading export…</div>}>
+            <ExportDialog
+              flights={flights}
+              transport={transport}
+              notTravelling={notTravelling}
+              terms={mockTerms}
+            />
+          </Suspense>
         </div>
       </div>
 
@@ -586,6 +594,7 @@ export default function Index() {
 
       {/* Calendar View */}
       <div className="container mx-auto px-6 py-4">
+        <div ref={calendarSectionRef} />
         <CompactCalendar
           selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'}
           onEventClick={handleCalendarEventClick}
@@ -594,7 +603,7 @@ export default function Index() {
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-6 py-8 pb-24 lg:pb-8">
         {flights.length === 0 && transport.length === 0 && notTravelling.length === 0 && earliestTerm && (
           <div className="mb-6 rounded-xl border border-dashed border-muted-foreground/30 bg-card/60 p-4 md:p-6 flex flex-col gap-3 md:items-center md:text-center">
             <div className="text-sm md:text-base text-muted-foreground">
@@ -796,6 +805,23 @@ export default function Index() {
                   </Button>
                 ))}
               </div>
+              <div className="rounded-lg border bg-muted/40 p-3 text-sm whitespace-pre-line">
+                {(() => {
+                  const entry = computeNextTravel(shareScope);
+                  if (!entry) return 'No travel found to share yet.';
+                  const schoolLabel = shareScope === 'both'
+                    ? 'Both schools'
+                    : shareScope === 'benenden'
+                      ? 'Benenden'
+                      : 'Wycombe Abbey';
+                  const lines = [
+                    `Next travel (${schoolLabel}): ${entry.title} on ${entry.date.toDateString()} (${formatDistanceToNow(entry.date, { addSuffix: true })})`,
+                  ];
+                  if (entry.detail) lines.push(entry.detail);
+                  lines.push(entry.status === 'booked' ? 'Booked' : entry.status === 'staying' ? 'Not travelling' : 'Needs booking');
+                  return lines.join('\n');
+                })()}
+              </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="ghost" onClick={() => setShareDialogOpen(false)}>
                   Cancel
@@ -812,6 +838,38 @@ export default function Index() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border/60 shadow-inner">
+          <div className="grid grid-cols-3 divide-x divide-border">
+            <Button
+              variant="ghost"
+              className="flex flex-col items-center gap-1 py-3"
+              onClick={scrollToTop}
+            >
+              <Home className="h-5 w-5" />
+              <span className="text-xs">Home</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="flex flex-col items-center gap-1 py-3"
+              onClick={scrollToCalendar}
+            >
+              <CalendarDays className="h-5 w-5" />
+              <span className="text-xs">Calendar</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="flex flex-col items-center gap-1 py-3"
+              onClick={() => {
+                setShareScope(selectedSchool as 'both' | 'benenden' | 'wycombe');
+                setShareDialogOpen(true);
+              }}
+            >
+              <Share2 className="h-5 w-5" />
+              <span className="text-xs">Share</span>
+            </Button>
+          </div>
+        </div>
       </main>
     </div>
   );
