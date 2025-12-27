@@ -124,6 +124,8 @@ export default function Index() {
     return matchesSearch && matchesStatus;
   }, [searchTerm, statusFilter]);
 
+  const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
+
   useEffect(() => {
     if (isOnline && pendingOps.length) {
       pendingOps.forEach(op => {
@@ -153,7 +155,7 @@ export default function Index() {
       triggerHaptic('success');
     }
   }, [isOnline, pendingOps, addFlight, editFlight, addTransport, editTransport, setNotTravellingStatus, clearNotTravellingStatus, toast, triggerHaptic]);
-  const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
+
   const fabLabel = activeTab === 'today'
     ? 'Add flight'
     : activeTab === 'trips'
