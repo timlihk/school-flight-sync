@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
-import { Plane, LogOut, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw } from "lucide-react";
+import { Plane, LogOut, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid } from "lucide-react";
+import { TripTimeline } from "@/components/ui/trip-timeline";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -47,6 +48,7 @@ export default function Index() {
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [tripsView, setTripsView] = useState<'timeline' | 'cards'>('timeline');
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const { logout } = useFamilyAuth();
@@ -779,10 +781,28 @@ export default function Index() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase text-muted-foreground">Trips</p>
-                <h2 className="text-xl font-semibold">By term</h2>
+                <h2 className="text-xl font-semibold">{tripsView === 'timeline' ? 'Timeline' : 'By term'}</h2>
               </div>
               <div className="flex items-center gap-2">
-                <ToDoDialog 
+                <div className="flex rounded-lg border border-border p-0.5">
+                  <Button
+                    variant={tripsView === 'timeline' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={() => setTripsView('timeline')}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={tripsView === 'cards' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={() => setTripsView('cards')}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
+                <ToDoDialog
                   terms={filteredTerms}
                   flights={flights}
                   transport={transport}
@@ -791,22 +811,23 @@ export default function Index() {
                   onAddTransport={handleAddTransport}
                   onShowTerm={handleShowTerm}
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setShareScope(selectedSchool as 'both' | 'benenden' | 'wycombe');
-                    setShareDialogOpen(true);
-                  }}
-                  className="gap-2"
-                >
-                  <Share2 className="h-4 w-4" />
-                  Share next travel
-                </Button>
               </div>
             </div>
 
             <SchoolPills />
+
+            {tripsView === 'timeline' ? (
+              <TripTimeline
+                terms={filteredTerms}
+                flights={flights}
+                transport={transport}
+                onFlightClick={handleViewFlights}
+                onTransportClick={handleViewTransport}
+                onTermClick={handleShowTerm}
+                selectedSchool={selectedSchool}
+              />
+            ) : (
+              <>
 
             <div className={`grid ${selectedSchool === 'both' ? 'lg:grid-cols-2' : 'lg:grid-cols-1 max-w-4xl'} gap-6`}>
               {/* Benenden School */}
@@ -893,6 +914,8 @@ export default function Index() {
                 </div>
               )}
             </div>
+              </>
+            )}
           </div>
         );
       case 'calendar':
