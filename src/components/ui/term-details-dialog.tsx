@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Calendar, Clock, School } from "lucide-react";
 import { format } from "date-fns";
 import { Term } from "@/types/school";
@@ -34,24 +34,23 @@ export function TermDetailsDialog({ term, open, onOpenChange }: TermDetailsDialo
     return "bg-secondary/20 text-secondary-foreground";
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <div className={`p-2 rounded-full ${term.school === 'benenden' ? 'bg-benenden/10' : 'bg-wycombe/10'}`}>
-              <School className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="font-semibold text-foreground">{term.name}</div>
-              <div className="text-sm text-muted-foreground font-normal">
-                {term.school === 'benenden' ? 'Benenden School' : 'Wycombe Abbey School'}
-              </div>
-            </div>
-          </DialogTitle>
-        </DialogHeader>
+  const dialogTitle = (
+    <div className="flex items-center gap-3">
+      <div className={`p-2 rounded-full ${term.school === 'benenden' ? 'bg-benenden/10' : 'bg-wycombe/10'}`}>
+        <School className="h-5 w-5" />
+      </div>
+      <div>
+        <div className="font-semibold text-foreground">{term.name}</div>
+        <div className="text-sm text-muted-foreground font-normal">
+          {term.school === 'benenden' ? 'Benenden School' : 'Wycombe Abbey School'}
+        </div>
+      </div>
+    </div>
+  );
 
-        <div className="space-y-4">
+  return (
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={dialogTitle} className="max-w-2xl">
+      <div className="space-y-4">
           <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
             <Calendar className="h-5 w-5 text-muted-foreground" />
             <div>
@@ -125,8 +124,7 @@ export function TermDetailsDialog({ term, open, onOpenChange }: TermDetailsDialo
               *Existing day students are very welcome to come back at the same time as boarders if they wish to personalise spaces in their Houses.
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveDialog>
   );
 }

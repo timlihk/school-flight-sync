@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -174,16 +174,15 @@ export function TransportDialog({
     }
   }, [newTransport.type, editingTransport, selectedProvider]);
 
-  const dialogContent = (
-    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <Car className="h-5 w-5" />
-          Transport for {term.name}
-        </DialogTitle>
-      </DialogHeader>
+  const dialogTitle = (
+    <span className="flex items-center gap-2">
+      <Car className="h-5 w-5" />
+      Transport for {term.name}
+    </span>
+  );
 
-      <div className="space-y-6">
+  const dialogContent = (
+    <div className="space-y-6">
         {transport.length > 0 && (
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-foreground">Current Transport</h3>
@@ -423,18 +422,22 @@ export function TransportDialog({
             </Button>
           </div>
         )}
-      </div>
-    </DialogContent>
+    </div>
   );
 
   if (children) {
     return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
-        {dialogContent}
-      </Dialog>
+      <div onClick={() => setIsOpen(true)}>
+        {children}
+        <ResponsiveDialog
+          open={isOpen}
+          onOpenChange={setIsOpen}
+          title={dialogTitle}
+          className="max-w-2xl"
+        >
+          {dialogContent}
+        </ResponsiveDialog>
+      </div>
     );
   }
 
@@ -446,9 +449,14 @@ export function TransportDialog({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <ResponsiveDialog
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        title={dialogTitle}
+        className="max-w-2xl"
+      >
         {dialogContent}
-      </Dialog>
+      </ResponsiveDialog>
 
       <ConfirmDialog
         open={confirmDelete.open}

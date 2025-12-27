@@ -191,25 +191,36 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
         <div className="font-semibold text-xs">
           {formattedDate}
         </div>
-        {events.map((event, index) => (
+        {events.map((event, index) => {
+          const handleEventNav = () => {
+            console.log('[CompactCalendar] Event clicked:', event.title, event.type);
+            if (onEventClick) {
+              console.log('[CompactCalendar] Using onEventClick callback');
+              onEventClick(event);
+            } else {
+              const termIds = getTermIdsFromEvents([event]);
+              console.log('[CompactCalendar] termIds:', termIds);
+              openTermViaUrl(termIds, event);
+            }
+          };
+          return (
           <button
             key={event.id}
             type="button"
             className={cn(
-              'w-full text-left pb-1.5',
+              'w-full text-left pb-1.5 touch-manipulation select-none',
               index !== events.length - 1 && 'border-b',
-              'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
+              'cursor-pointer rounded-sm px-1 transition-colors active:bg-accent/80'
             )}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleEventNav();
+            }}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('[CompactCalendar] Event clicked:', event.title, event.type);
-              if (onEventClick) {
-                console.log('[CompactCalendar] Using onEventClick callback');
-                onEventClick(event);
-              } else {
-                const termIds = getTermIdsFromEvents([event]);
-                console.log('[CompactCalendar] termIds:', termIds);
-                openTermViaUrl(termIds, event);
+              if (!('ontouchend' in window)) {
+                handleEventNav();
               }
             }}
           >
@@ -241,7 +252,8 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
               </div>
             </div>
           </button>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -338,20 +350,31 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                       : `No events on ${format(day, 'MMMM d')}`
                   }
                   className={cn(
-                    'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative hover:bg-accent transition-colors',
+                    'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative transition-colors touch-manipulation select-none',
                     !isCurrentMonth && 'opacity-30',
                     isCurrentDay && 'ring-1 ring-primary ring-inset',
-                    hasEvents && 'cursor-pointer'
+                    hasEvents && 'cursor-pointer active:bg-accent/80'
                   )}
-                  onClick={handleMobileOpen}
+                  onTouchEnd={(e) => {
+                    if (hasEvents) {
+                      e.preventDefault();
+                      handleMobileOpen();
+                    }
+                  }}
+                  onClick={(e) => {
+                    // Fallback for non-touch devices
+                    if (!('ontouchend' in window)) {
+                      handleMobileOpen();
+                    }
+                  }}
                 >
                   <div className={cn(
-                    'text-xs text-center',
+                    'text-xs text-center pointer-events-none',
                     isCurrentDay && 'text-primary font-bold'
                   )}>
                     {format(day, 'd')}
                   </div>
-                  {hasEvents && renderEventDots(events)}
+                  {hasEvents && <div className="pointer-events-none">{renderEventDots(events)}</div>}
                 </div>
               );
             }
@@ -491,10 +514,17 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                 <button
                   key={date.toISOString()}
                   type="button"
-                  className="w-full text-left rounded-lg border border-border/60 bg-card/60 p-3 hover:bg-accent transition-colors"
-                  onClick={() => {
+                  className="w-full text-left rounded-lg border border-border/60 bg-card/60 p-3 transition-colors touch-manipulation select-none active:bg-accent/80"
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
                     openedAtRef.current = Date.now();
                     setMobileEvents({ date, events });
+                  }}
+                  onClick={() => {
+                    if (!('ontouchend' in window)) {
+                      openedAtRef.current = Date.now();
+                      setMobileEvents({ date, events });
+                    }
                   }}
                 >
                   <div className="flex items-center justify-between">

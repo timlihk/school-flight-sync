@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { Calendar, Clock, Plane, Plus, X, Edit2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -183,16 +177,15 @@ export function FlightDialog({
   };
 
 
-  const dialogContent = (
-    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2 text-xl">
-          <Plane className="h-5 w-5" />
-          Flight Details - {term.name}
-        </DialogTitle>
-      </DialogHeader>
+  const dialogTitle = (
+    <span className="flex items-center gap-2">
+      <Plane className="h-5 w-5" />
+      Flight Details - {term.name}
+    </span>
+  );
 
-      <div className="space-y-6">
+  const dialogContent = (
+    <div className="space-y-6">
         {/* Existing Flights */}
         {flights.length > 0 && (
           <div className="space-y-4">
@@ -425,18 +418,23 @@ export function FlightDialog({
             Add New Flight
           </Button>
         )}
-      </div>
-    </DialogContent>
+    </div>
   );
 
   if (children) {
+    // When used with a trigger, we need to handle the trigger separately
     return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
-        {dialogContent}
-      </Dialog>
+      <div onClick={() => setIsOpen(true)}>
+        {children}
+        <ResponsiveDialog
+          open={isOpen}
+          onOpenChange={setIsOpen}
+          title={dialogTitle}
+          className="max-w-4xl"
+        >
+          {dialogContent}
+        </ResponsiveDialog>
+      </div>
     );
   }
 
@@ -448,9 +446,14 @@ export function FlightDialog({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <ResponsiveDialog
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        title={dialogTitle}
+        className="max-w-4xl"
+      >
         {dialogContent}
-      </Dialog>
+      </ResponsiveDialog>
 
       <ConfirmDialog
         open={confirmDelete.open}

@@ -149,25 +149,36 @@ export function Calendar() {
         <div className="font-semibold text-sm">
           {formattedDate}
         </div>
-        {events.map((event, index) => (
+        {events.map((event, index) => {
+          const handleEventNav = () => {
+            console.log('[Calendar] Event clicked:', event.title, event.type);
+            const termId = getTermIdFromEvent(event);
+            console.log('[Calendar] termId:', termId);
+            if (!termId) return;
+
+            const url = `/?highlight=${termId}&open=${event.type}&termId=${termId}`;
+            console.log('[Calendar] Navigating to:', url);
+            navigate(url);
+          };
+          return (
           <button
             key={event.id}
             type="button"
             className={cn(
-              'w-full text-left pb-2',
+              'w-full text-left pb-2 touch-manipulation select-none',
               index !== events.length - 1 && 'border-b',
-              'cursor-pointer hover:bg-accent/60 rounded-sm px-1 transition-colors'
+              'cursor-pointer rounded-sm px-1 transition-colors active:bg-accent/80'
             )}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleEventNav();
+            }}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('[Calendar] Event clicked:', event.title, event.type);
-              const termId = getTermIdFromEvent(event);
-              console.log('[Calendar] termId:', termId);
-              if (!termId) return;
-
-              const url = `/?highlight=${termId}&open=${event.type}&termId=${termId}`;
-              console.log('[Calendar] Navigating to:', url);
-              navigate(url);
+              if (!('ontouchend' in window)) {
+                handleEventNav();
+              }
             }}
           >
             <div className="flex items-start gap-2">
@@ -202,7 +213,8 @@ export function Calendar() {
               </div>
             </div>
           </button>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -334,15 +346,25 @@ export function Calendar() {
                   <div
                     key={day.toString()}
                     className={cn(
-                      'bg-background p-2 min-h-[80px] relative hover:bg-accent transition-colors',
+                      'bg-background p-2 min-h-[80px] relative transition-colors touch-manipulation select-none',
                       !isCurrentMonth && 'opacity-40',
                       isCurrentDay && 'ring-2 ring-primary ring-inset',
-                      hasEvents && 'cursor-pointer hover:ring-2 hover:ring-primary/50'
+                      hasEvents && 'cursor-pointer active:bg-accent/80'
                     )}
-                    onClick={handleMobileOpen}
+                    onTouchEnd={(e) => {
+                      if (hasEvents) {
+                        e.preventDefault();
+                        handleMobileOpen();
+                      }
+                    }}
+                    onClick={() => {
+                      if (!('ontouchend' in window)) {
+                        handleMobileOpen();
+                      }
+                    }}
                   >
                     <div className={cn(
-                      'text-sm font-medium',
+                      'text-sm font-medium pointer-events-none',
                       isCurrentDay && 'text-primary font-bold'
                     )}>
                       {format(day, 'd')}
