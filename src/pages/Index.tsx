@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
-import { Plane, LogOut, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid } from "lucide-react";
+import { Plane, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid } from "lucide-react";
 import { TripTimeline } from "@/components/ui/trip-timeline";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CountdownRing } from "@/components/ui/countdown-ring";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { AccountChip } from "@/components/ui/account-chip";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { TermCard } from "@/components/ui/term-card";
@@ -1055,12 +1056,7 @@ export default function Index() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            {!isMobile && (
-              <Button variant="ghost" size="sm" onClick={() => logout()} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                Sign out
-              </Button>
-            )}
+            <AccountChip onLogout={logout} />
           </div>
         </div>
       </header>
