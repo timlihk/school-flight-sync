@@ -35,14 +35,6 @@ import { CalendarEvent, useCalendarEvents } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 
-type PendingOp =
-  | { kind: 'flight-add'; flight: Omit<FlightDetails, 'id'> }
-  | { kind: 'flight-edit'; flightId: string; flight: Omit<FlightDetails, 'id'> }
-  | { kind: 'transport-add'; transport: Omit<TransportDetails, 'id'> }
-  | { kind: 'transport-edit'; transportId: string; updates: Partial<TransportDetails> }
-  | { kind: 'nottrav-set'; termId: string }
-  | { kind: 'nottrav-clear'; termId: string };
-
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
   const [showFlightDialog, setShowFlightDialog] = useState(false);
@@ -82,79 +74,6 @@ export default function Index() {
   const combinedUpdatedAt = dataTimestamps.length ? Math.max(...dataTimestamps) : undefined;
   const isAnyFetching = isFlightsFetching || isTransportFetching || isNotTravFetching || isRefreshing;
   const { isOnline } = useNetworkStatus();
-  const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
-
-  const pendingByTerm = useMemo(() => {
-    const map: Record<string, number> = {};
-    pendingOps.forEach(op => {
-      let termId: string | undefined;
-      switch (op.kind) {
-        case 'flight-add':
-          termId = op.flight.termId;
-          break;
-        case 'flight-edit':
-          termId = op.flight.termId;
-          break;
-        case 'transport-add':
-          termId = op.transport.termId;
-          break;
-        case 'transport-edit':
-          termId = op.updates.termId;
-          break;
-        case 'nottrav-set':
-        case 'nottrav-clear':
-          termId = op.termId;
-          break;
-      }
-      if (termId) {
-        map[termId] = (map[termId] || 0) + 1;
-      }
-    });
-    return map;
-  }, [pendingOps]);
-
-  const calendarEventFilter = useCallback((event: CalendarEvent) => {
-    const text = `${event.title} ${event.description || ''}`.toLowerCase();
-    const matchesSearch = !searchTerm.trim() || text.includes(searchTerm.toLowerCase());
-    const status =
-      event.type === 'flight' || event.type === 'transport'
-        ? 'booked'
-        : event.type === 'not-travelling'
-          ? 'staying'
-          : 'needs';
-    const matchesStatus = statusFilter === 'all' || statusFilter === status;
-    return matchesSearch && matchesStatus;
-  }, [searchTerm, statusFilter]);
-
-  useEffect(() => {
-    if (isOnline && pendingOps.length) {
-      pendingOps.forEach(op => {
-        switch (op.kind) {
-          case 'flight-add':
-            addFlight(op.flight);
-            break;
-          case 'flight-edit':
-            editFlight(op.flightId, op.flight);
-            break;
-          case 'transport-add':
-            addTransport(op.transport);
-            break;
-          case 'transport-edit':
-            editTransport(op.transportId, op.updates);
-            break;
-          case 'nottrav-set':
-            setNotTravellingStatus(op.termId);
-            break;
-          case 'nottrav-clear':
-            clearNotTravellingStatus(op.termId);
-            break;
-        }
-      });
-      setPendingOps([]);
-      toast({ title: "Queued changes synced" });
-      triggerHaptic('success');
-    }
-  }, [isOnline, pendingOps, addFlight, editFlight, addTransport, editTransport, setNotTravellingStatus, clearNotTravellingStatus, toast, triggerHaptic]);
 
   const fabLabel = activeTab === 'today'
     ? 'Add flight'
@@ -256,20 +175,6 @@ export default function Index() {
     return Number.isNaN(base.getTime()) ? null : base;
   }, []);
 
-  const queueOrRun = useCallback((op: PendingOp, action: () => void, successMessage?: string) => {
-    if (!isOnline) {
-      setPendingOps(prev => [...prev, op]);
-      triggerHaptic('warning');
-      toast({ title: "Queued offline", description: "Will sync when back online." });
-      return;
-    }
-    action();
-    if (successMessage) {
-      triggerHaptic('success');
-      toast({ title: successMessage });
-    }
-  }, [isOnline, toast, triggerHaptic]);
-
   const handleAddFlight = useCallback((termId: string) => {
     const term = termLookup.get(termId);
     if (term) {
@@ -290,12 +195,12 @@ export default function Index() {
   }, [termLookup]);
 
   const handleSetNotTravelling = useCallback((termId: string) => {
-    queueOrRun({ kind: 'nottrav-set', termId }, () => setNotTravellingStatus(termId));
-  }, [queueOrRun, setNotTravellingStatus]);
+    setNotTravellingStatus(termId);
+  }, [setNotTravellingStatus]);
 
   const handleClearNotTravelling = useCallback((termId: string) => {
-    queueOrRun({ kind: 'nottrav-clear', termId }, () => clearNotTravellingStatus(termId));
-  }, [queueOrRun, clearNotTravellingStatus]);
+    clearNotTravellingStatus(termId);
+  }, [clearNotTravellingStatus]);
 
   const handleAddTransport = useCallback((termId: string) => {
     const term = termLookup.get(termId);
@@ -318,12 +223,12 @@ export default function Index() {
   }, [termLookup]);
 
   const handleAddFlightPersist = useCallback((flight: Omit<FlightDetails, 'id'>) => {
-    queueOrRun({ kind: 'flight-add', flight }, () => addFlight(flight));
-  }, [addFlight, queueOrRun]);
+    addFlight(flight);
+  }, [addFlight]);
 
   const handleEditFlightPersist = useCallback((flightId: string, flight: Omit<FlightDetails, 'id'>) => {
-    queueOrRun({ kind: 'flight-edit', flightId, flight }, () => editFlight(flightId, flight));
-  }, [editFlight, queueOrRun]);
+    editFlight(flightId, flight);
+  }, [editFlight]);
 
   const handleRemoveFlightPersist = useCallback((flightId: string) => {
     if (!isOnline) {
@@ -334,12 +239,12 @@ export default function Index() {
   }, [isOnline, removeFlight, toast]);
 
   const handleAddTransportPersist = useCallback((transportItem: Omit<TransportDetails, 'id'>) => {
-    queueOrRun({ kind: 'transport-add', transport: transportItem }, () => addTransport(transportItem));
-  }, [addTransport, queueOrRun]);
+    addTransport(transportItem);
+  }, [addTransport]);
 
   const handleEditTransportPersist = useCallback((transportId: string, updates: Partial<TransportDetails>) => {
-    queueOrRun({ kind: 'transport-edit', transportId, updates }, () => editTransport(transportId, updates));
-  }, [editTransport, queueOrRun]);
+    editTransport(transportId, updates);
+  }, [editTransport]);
 
   const handleRemoveTransportPersist = useCallback((transportId: string) => {
     if (!isOnline) {
@@ -1151,7 +1056,7 @@ export default function Index() {
                     )}
                     {benendenTerms.map((term) => {
                       if (!termMatchesFilters(term)) return null;
-                      const pendingCount = pendingByTerm[term.id] || 0;
+                      const pendingCount = 0;
                       return (
                         <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
                           <TermCard
@@ -1198,7 +1103,7 @@ export default function Index() {
                     )}
                     {wycombeTerms.map((term) => {
                       if (!termMatchesFilters(term)) return null;
-                      const pendingCount = pendingByTerm[term.id] || 0;
+                      const pendingCount = 0;
                       return (
                         <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
                           <TermCard
@@ -1249,7 +1154,6 @@ export default function Index() {
               selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'}
               onEventClick={handleCalendarEventClick}
               onSelectTermIds={handleHighlightTerms}
-              eventFilter={calendarEventFilter}
             />
           </div>
         );
@@ -1488,7 +1392,7 @@ export default function Index() {
               onUpdateFlightStatus={updateFlightStatus}
               isUpdatingFlightStatus={isUpdatingFlightStatus}
               highlighted={highlightedTerms.has(popupTerm.id)}
-              pendingCount={pendingByTerm[popupTerm.id] || 0}
+              pendingCount={0}
             />
           </div>
         </ResponsiveDialog>
