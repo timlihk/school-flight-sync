@@ -29,7 +29,7 @@ import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term, TransportDetails } from "@/types/school";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format } from "date-fns";
+import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format, differenceInHours } from "date-fns";
 import { CalendarEvent, useCalendarEvents } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
@@ -382,6 +382,13 @@ export default function Index() {
     () => computeNextTravel(heroScope),
     [computeNextTravel, heroScope]
   );
+  const nextTravelDetail = useMemo(() => {
+    if (!nextTravel) return '';
+    const hours = differenceInHours(nextTravel.date, new Date());
+    const days = Math.floor(hours / 24);
+    const remHours = hours % 24;
+    return `${days}d ${remHours}h`;
+  }, [nextTravel]);
 
   const buildShareText = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
     const entry = computeNextTravel(scope);
@@ -707,8 +714,14 @@ export default function Index() {
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
                     <div className="text-base text-muted-foreground truncate">{nextTravel.detail}</div>
-                    <div className="text-[13px] text-muted-foreground">
-                      {format(nextTravel.date, 'EEE, MMM d')} · {formatDistanceToNow(nextTravel.date, { addSuffix: true })} · {formatDistanceToNow(nextTravel.date, { includeSeconds: false })}
+                    <div className="text-[13px] text-muted-foreground flex items-center gap-2">
+                      <span>{format(nextTravel.date, 'EEE, MMM d')}</span>
+                      <Badge variant="secondary" className="text-[11px]">
+                        {nextTravelDetail}
+                      </Badge>
+                      <span className="text-[11px] text-muted-foreground">
+                        {formatDistanceToNow(nextTravel.date, { addSuffix: true })}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 pt-1 flex-wrap">
                       <Badge
@@ -913,35 +926,38 @@ export default function Index() {
                   ] : undefined}
                 />
               )}
-              <div className="space-y-2">
-                {thisWeekEvents.map(event => (
-                  <button
-                    key={event.id}
-                    className="w-full rounded-xl border border-border/60 bg-muted/40 p-3 text-left hover:bg-accent transition-colors"
-                    onClick={() => handleCalendarEventClick(event)}
-                  >
-                    <div className="flex items-center justify-between gap-2">
+              <div className="overflow-x-auto -mx-2 px-2">
+                <div className="flex gap-3 snap-x snap-mandatory">
+                  {thisWeekEvents.map(event => (
+                    <button
+                      key={event.id}
+                      className="snap-start min-w-[260px] rounded-xl border border-border/60 bg-muted/40 p-3 text-left hover:bg-accent transition-colors"
+                      onClick={() => handleCalendarEventClick(event)}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <Badge variant="outline" className="text-[10px] whitespace-nowrap">
+                          {event.type === 'flight'
+                            ? ((event as any)?.details?.type === 'outbound' ? 'From School' : 'To School')
+                            : event.type === 'transport'
+                              ? 'Transport'
+                              : event.type === 'term'
+                                ? 'School date'
+                                : 'Not travelling'}
+                        </Badge>
+                        <span className="text-[11px] text-muted-foreground">{format(event.date, 'EEE, MMM d')}</span>
+                      </div>
                       <div className="min-w-0">
                         <div className="text-sm font-semibold truncate">{event.title}</div>
-                        <div className="text-xs text-muted-foreground">{format(event.date, 'EEE, MMM d')} · {event.school === 'benenden' ? 'Benenden' : 'Wycombe'}</div>
+                        <div className="text-xs text-muted-foreground truncate">{event.school === 'benenden' ? 'Benenden' : 'Wycombe'}</div>
                       </div>
-                      <Badge variant="outline" className="text-[10px] whitespace-nowrap">
-                        {event.type === 'flight'
-                          ? ((event as any)?.details?.type === 'outbound' ? 'From School' : 'To School')
-                          : event.type === 'transport'
-                            ? 'Transport'
-                            : event.type === 'term'
-                              ? 'School date'
-                              : 'Not travelling'}
-                      </Badge>
-                    </div>
-                    {event.description && (
-                      <div className="mt-2 text-xs text-muted-foreground line-clamp-2">
-                        {event.description}
-                      </div>
-                    )}
-                  </button>
-                ))}
+                      {event.description && (
+                        <div className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                          {event.description}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1459,50 +1475,32 @@ export default function Index() {
 
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border/60 shadow-inner pb-[env(safe-area-inset-bottom)]">
         <div className="grid grid-cols-4 divide-x divide-border">
-          <Button
-            variant={activeTab === 'today' ? 'default' : 'ghost'}
-            className="flex flex-col items-center gap-1 py-3"
-            onClick={() => {
-              triggerHaptic();
-              setActiveTab('today');
-            }}
-          >
-            <Home className="h-5 w-5" />
-            <span className="text-xs">Today</span>
-          </Button>
-          <Button
-            variant={activeTab === 'trips' ? 'default' : 'ghost'}
-            className="flex flex-col items-center gap-1 py-3"
-            onClick={() => {
-              triggerHaptic();
-              setActiveTab('trips');
-            }}
-          >
-            <Plane className="h-5 w-5" />
-            <span className="text-xs">Trips</span>
-          </Button>
-          <Button
-            variant={activeTab === 'calendar' ? 'default' : 'ghost'}
-            className="flex flex-col items-center gap-1 py-3"
-            onClick={() => {
-              triggerHaptic();
-              setActiveTab('calendar');
-            }}
-          >
-            <CalendarDays className="h-5 w-5" />
-            <span className="text-xs">Calendar</span>
-          </Button>
-          <Button
-            variant={activeTab === 'settings' ? 'default' : 'ghost'}
-            className="flex flex-col items-center gap-1 py-3"
-            onClick={() => {
-              triggerHaptic();
-              setActiveTab('settings');
-            }}
-          >
-            <Settings className="h-5 w-5" />
-            <span className="text-xs">Settings</span>
-          </Button>
+          {([
+            { key: 'today', label: 'Today', icon: Home },
+            { key: 'trips', label: 'Trips', icon: Plane },
+            { key: 'calendar', label: 'Calendar', icon: CalendarDays },
+            { key: 'settings', label: 'Settings', icon: Settings },
+          ] as const).map(item => {
+            const active = activeTab === item.key;
+            const Icon = item.icon;
+            return (
+              <Button
+                key={item.key}
+                variant={active ? 'default' : 'ghost'}
+                className={cn(
+                  "flex flex-col items-center gap-1 py-3 transition-all",
+                  active ? "scale-[1.02]" : "opacity-90"
+                )}
+                onClick={() => {
+                  triggerHaptic('select');
+                  setActiveTab(item.key);
+                }}
+              >
+                <Icon className={cn("h-5 w-5", active && "fill-foreground")} />
+                <span className="text-xs">{item.label}</span>
+              </Button>
+            );
+          })}
         </div>
       </div>
     </div>
