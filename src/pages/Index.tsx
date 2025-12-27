@@ -48,6 +48,7 @@ export default function Index() {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const isBusy = loading || isTransportLoading || notTravellingLoading || isRefreshing;
 
   const { logout } = useFamilyAuth();
   const navigate = useNavigate();
@@ -57,6 +58,15 @@ export default function Index() {
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus, refetch: refetchNotTravelling } = useNotTravelling();
   const { toast } = useToast();
   const { events: calendarEvents } = useCalendarEvents(selectedSchool as 'both' | 'benenden' | 'wycombe');
+
+  const triggerHaptic = useCallback(() => {
+    if (typeof navigator === 'undefined' || !(navigator as any).vibrate) return;
+    try {
+      (navigator as any).vibrate(10);
+    } catch (err) {
+      console.debug('Haptic vibrate failed', err);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -452,6 +462,7 @@ export default function Index() {
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
+    triggerHaptic();
     try {
       await Promise.all([
         refetchFlights(),
@@ -465,7 +476,7 @@ export default function Index() {
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing, refetchFlights, refetchTransport, refetchNotTravelling, toast]);
+  }, [isRefreshing, refetchFlights, refetchTransport, refetchNotTravelling, toast, triggerHaptic]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (!isMobile) return;
@@ -502,6 +513,7 @@ export default function Index() {
         ? Math.min(tabOrder.length - 1, currentIndex + 1)
         : Math.max(0, currentIndex - 1);
       if (tabOrder[nextIndex] !== activeTab) {
+        triggerHaptic();
         setActiveTab(tabOrder[nextIndex]);
       }
     }
@@ -576,7 +588,10 @@ export default function Index() {
           size="sm"
           variant={selectedSchool === scope ? 'default' : 'outline'}
           className="rounded-full px-4"
-          onClick={() => setSelectedSchool(scope)}
+          onClick={() => {
+            triggerHaptic();
+            setSelectedSchool(scope);
+          }}
         >
           {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
         </Button>
@@ -659,28 +674,53 @@ export default function Index() {
                 </Button>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Button className="h-12" onClick={() => earliestTerm ? handleAddFlight(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' })}>
+                <Button
+                  className="h-12"
+                  disabled={isBusy}
+                  onClick={() => {
+                    if (isBusy) return;
+                    triggerHaptic();
+                    earliestTerm ? handleAddFlight(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                  }}
+                >
+                  {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
                   Add flight
                 </Button>
                 <Button
                   variant="outline"
                   className="h-12"
-                  onClick={() => earliestTerm ? handleAddTransport(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' })}
+                  disabled={isBusy}
+                  onClick={() => {
+                    if (isBusy) return;
+                    triggerHaptic();
+                    earliestTerm ? handleAddTransport(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                  }}
                 >
+                  {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
                   Add transport
                 </Button>
                 <Button
                   variant="secondary"
                   className="h-12"
-                  onClick={() => setAddSheetOpen(true)}
+                  disabled={isBusy}
+                  onClick={() => {
+                    triggerHaptic();
+                    setAddSheetOpen(true);
+                  }}
                 >
+                  {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
                   Quick add sheet
                 </Button>
                 <Button
                   variant="outline"
                   className="h-12"
-                  onClick={() => setActiveTab('calendar')}
+                  disabled={isBusy}
+                  onClick={() => {
+                    triggerHaptic();
+                    setActiveTab('calendar');
+                  }}
                 >
+                  {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
                   Open calendar
                 </Button>
               </div>
@@ -946,7 +986,7 @@ export default function Index() {
       onTouchEnd={handleTouchEnd}
     >
       {isPulling && (
-        <div className="fixed top-14 left-0 right-0 z-50 flex justify-center pointer-events-none">
+        <div className="fixed top-20 left-0 right-0 z-50 flex justify-center pointer-events-none">
           <div className="px-3 py-1 rounded-full border bg-card/90 text-xs shadow-sm">
             {pullDistance > 70 ? 'Release to refresh' : 'Pull to refresh'}
           </div>
@@ -966,14 +1006,13 @@ export default function Index() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={() => logout()} className="gap-2">
-              <LogOut className="h-4 w-4" />
-              Sign out
-            </Button>
+            {!isMobile && (
+              <Button variant="ghost" size="sm" onClick={() => logout()} className="gap-2">
+                <LogOut className="h-4 w-4" />
+                Sign out
+              </Button>
+            )}
           </div>
-        </div>
-        <div className="px-4 md:px-6 pb-3">
-          <SchoolPills />
         </div>
       </header>
 
@@ -983,8 +1022,11 @@ export default function Index() {
 
       {isMobile && (
         <Button
-          className="fixed bottom-24 right-4 z-40 rounded-full shadow-lg h-12 px-4 gap-2"
-          onClick={() => setAddSheetOpen(true)}
+          className="fixed bottom-32 right-4 z-40 rounded-full shadow-lg h-12 px-4 gap-2"
+          onClick={() => {
+            triggerHaptic();
+            setAddSheetOpen(true);
+          }}
         >
           <Plus className="h-5 w-5" />
           <span className="text-sm">Add travel</span>
@@ -1130,7 +1172,10 @@ export default function Index() {
           <div className="mt-4 space-y-2">
             <Button
               className="w-full h-12"
+              disabled={isBusy}
               onClick={() => {
+                if (isBusy) return;
+                triggerHaptic();
                 if (!earliestTerm) {
                   toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
                   return;
@@ -1144,7 +1189,10 @@ export default function Index() {
             <Button
               variant="outline"
               className="w-full h-12"
+              disabled={isBusy}
               onClick={() => {
+                if (isBusy) return;
+                triggerHaptic();
                 if (!earliestTerm) {
                   toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
                   return;
@@ -1158,7 +1206,10 @@ export default function Index() {
             <Button
               variant="outline"
               className="w-full h-12"
+              disabled={isBusy}
               onClick={() => {
+                if (isBusy) return;
+                triggerHaptic();
                 if (!earliestTerm) {
                   toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
                   return;
@@ -1178,7 +1229,10 @@ export default function Index() {
           <Button
             variant={activeTab === 'today' ? 'default' : 'ghost'}
             className="flex flex-col items-center gap-1 py-3"
-            onClick={() => setActiveTab('today')}
+            onClick={() => {
+              triggerHaptic();
+              setActiveTab('today');
+            }}
           >
             <Home className="h-5 w-5" />
             <span className="text-xs">Today</span>
@@ -1186,7 +1240,10 @@ export default function Index() {
           <Button
             variant={activeTab === 'trips' ? 'default' : 'ghost'}
             className="flex flex-col items-center gap-1 py-3"
-            onClick={() => setActiveTab('trips')}
+            onClick={() => {
+              triggerHaptic();
+              setActiveTab('trips');
+            }}
           >
             <Plane className="h-5 w-5" />
             <span className="text-xs">Trips</span>
@@ -1194,7 +1251,10 @@ export default function Index() {
           <Button
             variant={activeTab === 'calendar' ? 'default' : 'ghost'}
             className="flex flex-col items-center gap-1 py-3"
-            onClick={() => setActiveTab('calendar')}
+            onClick={() => {
+              triggerHaptic();
+              setActiveTab('calendar');
+            }}
           >
             <CalendarDays className="h-5 w-5" />
             <span className="text-xs">Calendar</span>
@@ -1202,7 +1262,10 @@ export default function Index() {
           <Button
             variant={activeTab === 'settings' ? 'default' : 'ghost'}
             className="flex flex-col items-center gap-1 py-3"
-            onClick={() => setActiveTab('settings')}
+            onClick={() => {
+              triggerHaptic();
+              setActiveTab('settings');
+            }}
           >
             <Settings className="h-5 w-5" />
             <span className="text-xs">Settings</span>
