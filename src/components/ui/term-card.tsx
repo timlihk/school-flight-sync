@@ -28,6 +28,7 @@ interface TermCardProps {
   isUpdatingFlightStatus?: (flightId: string) => boolean;
   highlighted?: boolean;
   isMobile?: boolean;
+  pendingCount?: number;
 }
 
 const TermCard = memo(function TermCard({
@@ -39,7 +40,7 @@ const TermCard = memo(function TermCard({
   onAddTransport,
   onViewTransport,
   onSetNotTravelling,
-  onClearNotTravelling,
+  onClearNotTravelling: _onClearNotTravelling,
   notTravellingStatus,
   className,
   isExpanded,
@@ -47,7 +48,8 @@ const TermCard = memo(function TermCard({
   onUpdateFlightStatus,
   isUpdatingFlightStatus,
   highlighted = false,
-  isMobile = false
+  isMobile: _isMobile = false,
+  pendingCount = 0
 }: TermCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [isOpen, setIsOpen] = useState(isExpanded || false);
@@ -454,6 +456,11 @@ const TermCard = memo(function TermCard({
                 </div>
                 
                 <div className="flex items-center gap-2">
+                  {pendingCount > 0 && (
+                    <Badge variant="secondary" className="text-[10px]">
+                      Queued ({pendingCount})
+                    </Badge>
+                  )}
                   <Badge className={cn("text-xs font-medium", getTermTypeColor())}>
                     {getTypeDisplayName()}
                   </Badge>

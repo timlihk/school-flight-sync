@@ -32,7 +32,11 @@ import {
 import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
 import { cn } from '@/lib/utils';
 
-export function Calendar() {
+interface CalendarProps {
+  eventFilter?: (event: CalendarEvent) => boolean;
+}
+
+export function Calendar({ eventFilter }: CalendarProps = {}) {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSchool, setSelectedSchool] = useState<School>('both');
@@ -40,6 +44,7 @@ export function Calendar() {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileEvents, setMobileEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
   const autoSetRef = useRef(false);
+  const _filteredEvents = useMemo(() => (events || []).filter(ev => !eventFilter || eventFilter(ev)), [events, eventFilter]);
   const touchHandledRef = useRef(false);
 
   const markTouchHandled = () => {
@@ -88,15 +93,18 @@ export function Calendar() {
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  const getTermIdFromEvent = (event: CalendarEvent) => {
+  const getTermIdFromEvent = (event: CalendarEvent): string | undefined => {
+    const details = event.details as Record<string, unknown>;
     if (event.type === 'term') {
-      return (event.details as any)?.id;
+      return details?.id as string | undefined;
     }
     if (event.type === 'not-travelling') {
-      return (event.details?.term as any)?.id ?? event.details?.termId;
+      const term = details?.term as Record<string, unknown> | undefined;
+      return (term?.id as string | undefined) ?? (details?.termId as string | undefined);
     }
 
-    return event.details?.termId ?? event.details?.term?.id;
+    const term = details?.term as Record<string, unknown> | undefined;
+    return (details?.termId as string | undefined) ?? (term?.id as string | undefined);
   };
 
   const getEventTypeColor = (type: CalendarEvent['type']) => {
@@ -133,7 +141,8 @@ export function Calendar() {
 
   const flightDirectionLabel = (event: CalendarEvent) => {
     if (event.type !== 'flight') return eventTypeLabel[event.type];
-    return (event as any)?.details?.type === 'outbound' ? 'From School' : 'To School';
+    const details = event.details as { type?: 'outbound' | 'return' } | undefined;
+    return details?.type === 'outbound' ? 'From School' : 'To School';
   };
 
   const renderEventDetails = (events: CalendarEvent[]) => {

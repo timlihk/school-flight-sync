@@ -37,9 +37,10 @@ interface CompactCalendarProps {
   selectedSchool: School;
   onSelectTermIds?: (termIds: string[]) => void;
   onEventClick?: (event: CalendarEvent) => void;
+  eventFilter?: (event: CalendarEvent) => boolean;
 }
 
-export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTermIds, onEventClick }: CompactCalendarProps) {
+export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTermIds, onEventClick, eventFilter }: CompactCalendarProps) {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthsToShow, setMonthsToShow] = useState(1);
@@ -50,6 +51,15 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   const autoSetRef = useRef(false);
   const openedAtRef = useRef<number | null>(null);
   const touchHandledRef = useRef(false);
+
+  const filteredEvents = useMemo(() => {
+    return (events || []).filter(ev => !eventFilter || eventFilter(ev));
+  }, [events, eventFilter]);
+
+  const getFilteredEventsForDate = useCallback((date: Date) => {
+    const start = startOfDay(date);
+    return filteredEvents.filter(e => startOfDay(e.date).getTime() === start.getTime());
+  }, [filteredEvents]);
 
   const markTouchHandled = () => {
     touchHandledRef.current = true;
@@ -64,12 +74,12 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
       const monthEnd = endOfWeek(endOfMonth(monthDate));
       let day = monthStart;
       while (day <= monthEnd) {
-        if (getEventsForDate(day).length > 0) return true;
+        if (getFilteredEventsForDate(day).length > 0) return true;
         day = addDays(day, 1);
       }
     }
     return false;
-  }, [currentDate, monthsToShow, getEventsForDate]);
+  }, [currentDate, monthsToShow, getFilteredEventsForDate]);
 
   const flatEvents = useMemo(() => {
     const today = startOfDay(new Date());
@@ -80,7 +90,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
       const monthEnd = endOfWeek(endOfMonth(monthDate));
       let day = monthStart;
       while (day <= monthEnd) {
-        const events = getEventsForDate(day);
+        const events = getFilteredEventsForDate(day);
         if (events.length && day >= today) {
           items.push({ date: day, events });
         }
@@ -100,7 +110,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
       }
     }
     return sorted;
-  }, [currentDate, monthsToShow, getEventsForDate, events]);
+  }, [currentDate, monthsToShow, getFilteredEventsForDate, events]);
 
   // Calculate how many months to show based on screen width; update on resize
   useEffect(() => {
@@ -178,7 +188,8 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
 
   const flightDirectionLabel = (event: CalendarEvent) => {
     if (event.type !== 'flight') return eventTypeLabel[event.type];
-    return (event as any)?.details?.type === 'outbound' ? 'From School' : 'To School';
+    const details = event.details as { type?: 'outbound' | 'return' } | undefined;
+    return details?.type === 'outbound' ? 'From School' : 'To School';
   };
 
   const renderEventDetails = (events: CalendarEvent[]) => {
@@ -263,11 +274,14 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
       new Set(
         events
           .map(event => {
-            if (event.type === 'term') return (event.details as any)?.id;
+            const details = event.details as Record<string, unknown>;
+            if (event.type === 'term') return details?.id as string | undefined;
             if (event.type === 'not-travelling') {
-              return (event.details?.term as any)?.id ?? event.details?.termId;
+              const term = details?.term as Record<string, unknown> | undefined;
+              return (term?.id as string | undefined) ?? (details?.termId as string | undefined);
             }
-            return (event.details as any)?.termId || (event.details as any)?.term?.id;
+            const term = details?.term as Record<string, unknown> | undefined;
+            return (details?.termId as string | undefined) ?? (term?.id as string | undefined);
           })
           .filter(Boolean) as string[]
       )
@@ -362,7 +376,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                       handleMobileOpen();
                     }
                   }}
-                  onClick={(e) => {
+                  onClick={() => {
                     if (touchHandledRef.current) return;
                     handleMobileOpen();
                   }}

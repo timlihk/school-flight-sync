@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
 import { Plane, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid } from "lucide-react";
-import { TripTimeline } from "@/components/ui/trip-timeline";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CountdownRing } from "@/components/ui/countdown-ring";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,8 @@ import { NetworkStatusBanner } from "@/components/ui/network-status-banner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNetworkStatus } from "@/hooks/use-network-status";
+import { FlightDetails } from "@/types/school";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { TermCard } from "@/components/ui/term-card";
@@ -33,8 +34,14 @@ import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format, dif
 import { CalendarEvent, useCalendarEvents } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import AccountChip from "@/components/ui/account-chip";
-import NetworkStatusBanner from "@/components/ui/network-status-banner";
+
+type PendingOp =
+  | { kind: 'flight-add'; flight: Omit<FlightDetails, 'id'> }
+  | { kind: 'flight-edit'; flightId: string; flight: Omit<FlightDetails, 'id'> }
+  | { kind: 'transport-add'; transport: Omit<TransportDetails, 'id'> }
+  | { kind: 'transport-edit'; transportId: string; updates: Partial<TransportDetails> }
+  | { kind: 'nottrav-set'; termId: string }
+  | { kind: 'nottrav-clear'; termId: string };
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -75,6 +82,78 @@ export default function Index() {
   const combinedUpdatedAt = dataTimestamps.length ? Math.max(...dataTimestamps) : undefined;
   const isAnyFetching = isFlightsFetching || isTransportFetching || isNotTravFetching || isRefreshing;
   const { isOnline } = useNetworkStatus();
+  const pendingByTerm = useMemo(() => {
+    const map: Record<string, number> = {};
+    pendingOps.forEach(op => {
+      let termId: string | undefined;
+      switch (op.kind) {
+        case 'flight-add':
+          termId = op.flight.termId;
+          break;
+        case 'flight-edit':
+          termId = op.flight.termId;
+          break;
+        case 'transport-add':
+          termId = op.transport.termId;
+          break;
+        case 'transport-edit':
+          termId = op.updates.termId;
+          break;
+        case 'nottrav-set':
+        case 'nottrav-clear':
+          termId = op.termId;
+          break;
+      }
+      if (termId) {
+        map[termId] = (map[termId] || 0) + 1;
+      }
+    });
+    return map;
+  }, [pendingOps]);
+
+  const calendarEventFilter = useCallback((event: CalendarEvent) => {
+    const text = `${event.title} ${event.description || ''}`.toLowerCase();
+    const matchesSearch = !searchTerm.trim() || text.includes(searchTerm.toLowerCase());
+    const status =
+      event.type === 'flight' || event.type === 'transport'
+        ? 'booked'
+        : event.type === 'not-travelling'
+          ? 'staying'
+          : 'needs';
+    const matchesStatus = statusFilter === 'all' || statusFilter === status;
+    return matchesSearch && matchesStatus;
+  }, [searchTerm, statusFilter]);
+
+  useEffect(() => {
+    if (isOnline && pendingOps.length) {
+      pendingOps.forEach(op => {
+        switch (op.kind) {
+          case 'flight-add':
+            addFlight(op.flight);
+            break;
+          case 'flight-edit':
+            editFlight(op.flightId, op.flight);
+            break;
+          case 'transport-add':
+            addTransport(op.transport);
+            break;
+          case 'transport-edit':
+            editTransport(op.transportId, op.updates);
+            break;
+          case 'nottrav-set':
+            setNotTravellingStatus(op.termId);
+            break;
+          case 'nottrav-clear':
+            clearNotTravellingStatus(op.termId);
+            break;
+        }
+      });
+      setPendingOps([]);
+      toast({ title: "Queued changes synced" });
+      triggerHaptic('success');
+    }
+  }, [isOnline, pendingOps, addFlight, editFlight, addTransport, editTransport, setNotTravellingStatus, clearNotTravellingStatus, toast, triggerHaptic]);
+  const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
   const fabLabel = activeTab === 'today'
     ? 'Add flight'
     : activeTab === 'trips'
@@ -102,16 +181,16 @@ export default function Index() {
   };
 
   const triggerHaptic = useCallback((type: 'select' | 'success' | 'warning' = 'select') => {
-    if (typeof navigator === 'undefined' || !(navigator as any).vibrate) return;
+    if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return;
     const patterns: Record<typeof type, number | number[]> = {
       select: 15,
       success: [10, 30, 10],
       warning: [40, 30, 40],
     };
     try {
-      (navigator as any).vibrate(patterns[type] || 10);
-    } catch (err) {
-      console.debug('Haptic vibrate failed', err);
+      navigator.vibrate(patterns[type] || 10);
+    } catch {
+      // Vibration not supported
     }
   }, []);
 
@@ -175,12 +254,25 @@ export default function Index() {
     return Number.isNaN(base.getTime()) ? null : base;
   }, []);
 
+  const queueOrRun = useCallback((op: PendingOp, action: () => void, successMessage?: string) => {
+    if (!isOnline) {
+      setPendingOps(prev => [...prev, op]);
+      triggerHaptic('warning');
+      toast({ title: "Queued offline", description: "Will sync when back online." });
+      return;
+    }
+    action();
+    if (successMessage) {
+      triggerHaptic('success');
+      toast({ title: successMessage });
+    }
+  }, [isOnline, toast, triggerHaptic]);
+
   const handleAddFlight = useCallback((termId: string) => {
     const term = termLookup.get(termId);
     if (term) {
       setSelectedTerm(term);
       setShowFlightDialog(true);
-      // Close popup if it's open
       if (showTermCardPopup) {
         setShowTermCardPopup(false);
       }
@@ -196,12 +288,12 @@ export default function Index() {
   }, [termLookup]);
 
   const handleSetNotTravelling = useCallback((termId: string) => {
-    setNotTravellingStatus(termId);
-  }, [setNotTravellingStatus]);
+    queueOrRun({ kind: 'nottrav-set', termId }, () => setNotTravellingStatus(termId));
+  }, [queueOrRun, setNotTravellingStatus]);
 
   const handleClearNotTravelling = useCallback((termId: string) => {
-    clearNotTravellingStatus(termId);
-  }, [clearNotTravellingStatus]);
+    queueOrRun({ kind: 'nottrav-clear', termId }, () => clearNotTravellingStatus(termId));
+  }, [queueOrRun, clearNotTravellingStatus]);
 
   const handleAddTransport = useCallback((termId: string) => {
     const term = termLookup.get(termId);
@@ -222,6 +314,38 @@ export default function Index() {
       setShowTransportDialog(true);
     }
   }, [termLookup]);
+
+  const handleAddFlightPersist = useCallback((flight: Omit<FlightDetails, 'id'>) => {
+    queueOrRun({ kind: 'flight-add', flight }, () => addFlight(flight));
+  }, [addFlight, queueOrRun]);
+
+  const handleEditFlightPersist = useCallback((flightId: string, flight: Omit<FlightDetails, 'id'>) => {
+    queueOrRun({ kind: 'flight-edit', flightId, flight }, () => editFlight(flightId, flight));
+  }, [editFlight, queueOrRun]);
+
+  const handleRemoveFlightPersist = useCallback((flightId: string) => {
+    if (!isOnline) {
+      toast({ title: "Can't delete offline", description: "Go online to remove flights.", variant: "destructive" });
+      return;
+    }
+    removeFlight(flightId);
+  }, [isOnline, removeFlight, toast]);
+
+  const handleAddTransportPersist = useCallback((transportItem: Omit<TransportDetails, 'id'>) => {
+    queueOrRun({ kind: 'transport-add', transport: transportItem }, () => addTransport(transportItem));
+  }, [addTransport, queueOrRun]);
+
+  const handleEditTransportPersist = useCallback((transportId: string, updates: Partial<TransportDetails>) => {
+    queueOrRun({ kind: 'transport-edit', transportId, updates }, () => editTransport(transportId, updates));
+  }, [editTransport, queueOrRun]);
+
+  const handleRemoveTransportPersist = useCallback((transportId: string) => {
+    if (!isOnline) {
+      toast({ title: "Can't delete offline", description: "Go online to remove transport.", variant: "destructive" });
+      return;
+    }
+    removeTransport(transportId);
+  }, [isOnline, removeTransport, toast]);
 
   // Memoize school URLs to prevent recreation on every render
   const schoolUrls = useMemo(() => ({
@@ -436,6 +560,24 @@ export default function Index() {
     });
   }, [thisWeekEvents, searchTerm, statusFilter]);
 
+  const termMatchesFilters = useCallback((term: Term) => {
+    const text = `${term.name} ${term.school}`.toLowerCase();
+    const termFlights = flights.filter(f => f.termId === term.id);
+    const termTransport = transport.filter(t => t.termId === term.id);
+    const status = termFlights.length || termTransport.length
+      ? 'booked'
+      : notTravelling.find(nt => nt.termId === term.id)
+        ? 'staying'
+        : 'needs';
+    const matchesStatus = statusFilter === 'all' || statusFilter === status;
+    const searchLower = searchTerm.trim().toLowerCase();
+    const matchesSearch = !searchLower
+      || text.includes(searchLower)
+      || termFlights.some(f => `${f.flightNumber} ${f.airline} ${f.departure.airport} ${f.arrival.airport}`.toLowerCase().includes(searchLower))
+      || termTransport.some(t => `${t.driverName || ''} ${t.type}`.toLowerCase().includes(searchLower));
+    return matchesSearch && matchesStatus;
+  }, [flights, transport, notTravelling, searchTerm, statusFilter]);
+
   const shareNextTravel = useCallback(
     async (scope: 'both' | 'benenden' | 'wycombe') => {
       try {
@@ -588,7 +730,7 @@ export default function Index() {
     touchStartY.current = null;
     setIsPulling(false);
     setPullDistance(0);
-  }, [activeTab, handleRefresh, isMobile, isPulling, pullDistance]);
+  }, [activeTab, handleRefresh, isMobile, isPulling, pullDistance, triggerHaptic]);
 
 
 
@@ -801,7 +943,7 @@ export default function Index() {
                       placeholder="Search flights, transport, events"
                       className="h-11"
                     />
-                    <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+                    <Select value={statusFilter} onValueChange={(v: 'all' | 'booked' | 'needs' | 'staying') => setStatusFilter(v)}>
                       <SelectTrigger className="h-11 w-32">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
@@ -820,7 +962,11 @@ export default function Index() {
                       onClick={() => {
                         if (isBusy) return;
                         triggerHaptic();
-                        earliestTerm ? handleAddFlight(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                        if (earliestTerm) {
+                          handleAddFlight(earliestTerm.id);
+                        } else {
+                          toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                        }
                       }}
                     >
                       {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
@@ -833,7 +979,11 @@ export default function Index() {
                       onClick={() => {
                         if (isBusy) return;
                         triggerHaptic();
-                        earliestTerm ? handleAddTransport(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                        if (earliestTerm) {
+                          handleAddTransport(earliestTerm.id);
+                        } else {
+                          toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                        }
                       }}
                     >
                       {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
@@ -865,43 +1015,6 @@ export default function Index() {
                     </Button>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  className="h-12"
-                  disabled={isBusy}
-                  onClick={() => {
-                    if (isBusy) return;
-                    triggerHaptic();
-                    earliestTerm ? handleAddTransport(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
-                  }}
-                >
-                  {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                  Add transport
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="h-12"
-                  disabled={isBusy}
-                  onClick={() => {
-                    triggerHaptic();
-                    setAddSheetOpen(true);
-                  }}
-                >
-                  {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                  Quick add sheet
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-12"
-                  disabled={isBusy}
-                  onClick={() => {
-                    triggerHaptic();
-                    setActiveTab('calendar');
-                  }}
-                >
-                  {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                  Open calendar
-                </Button>
               </div>
             </div>
 
@@ -916,7 +1029,7 @@ export default function Index() {
                   Calendar
                 </Button>
               </div>
-              {thisWeekEvents.length === 0 && (
+              {filteredThisWeek.length === 0 && (
                 <EmptyState
                   variant="week"
                   compact
@@ -928,7 +1041,7 @@ export default function Index() {
               )}
               <div className="overflow-x-auto -mx-2 px-2">
                 <div className="flex gap-3 snap-x snap-mandatory">
-                  {thisWeekEvents.map(event => (
+                  {filteredThisWeek.map(event => (
                     <button
                       key={event.id}
                       className="snap-start min-w-[260px] rounded-xl border border-border/60 bg-muted/40 p-3 text-left hover:bg-accent transition-colors"
@@ -937,7 +1050,7 @@ export default function Index() {
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <Badge variant="outline" className="text-[10px] whitespace-nowrap">
                           {event.type === 'flight'
-                            ? ((event as any)?.details?.type === 'outbound' ? 'From School' : 'To School')
+                            ? ((event.details as { type?: 'outbound' | 'return' })?.type === 'outbound' ? 'From School' : 'To School')
                             : event.type === 'transport'
                               ? 'Transport'
                               : event.type === 'term'
@@ -1034,29 +1147,34 @@ export default function Index() {
                         No future terms left for Benenden.
                       </div>
                     )}
-                    {benendenTerms.map((term) => (
-                      <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
-                        <TermCard
-                          term={term}
-                          flights={flights.filter(f => f.termId === term.id)}
-                          transport={getTransportForTerm(term.id)}
-                          onAddFlight={handleAddFlight}
-                          onViewFlights={handleViewFlights}
-                          onAddTransport={handleAddTransport}
-                          onViewTransport={handleViewTransport}
-                          onSetNotTravelling={handleSetNotTravelling}
-                          onClearNotTravelling={handleClearNotTravelling}
-                          notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
-                          className="h-full"
-                          isExpanded={expandedCards.has(term.id)}
-                          onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
-                          onUpdateFlightStatus={updateFlightStatus}
-                          isUpdatingFlightStatus={isUpdatingFlightStatus}
-                          highlighted={highlightedTerms.has(term.id)}
-                          isMobile={isMobile}
-                        />
-                      </div>
-                    ))}
+                    {benendenTerms.map((term) => {
+                      if (!termMatchesFilters(term)) return null;
+                      const pendingCount = pendingByTerm[term.id] || 0;
+                      return (
+                        <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
+                          <TermCard
+                            term={term}
+                            flights={flights.filter(f => f.termId === term.id)}
+                            transport={getTransportForTerm(term.id)}
+                            onAddFlight={handleAddFlight}
+                            onViewFlights={handleViewFlights}
+                            onAddTransport={handleAddTransport}
+                            onViewTransport={handleViewTransport}
+                            onSetNotTravelling={handleSetNotTravelling}
+                            onClearNotTravelling={handleClearNotTravelling}
+                            notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
+                            className="h-full"
+                            isExpanded={expandedCards.has(term.id)}
+                            onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
+                            onUpdateFlightStatus={updateFlightStatus}
+                            isUpdatingFlightStatus={isUpdatingFlightStatus}
+                            highlighted={highlightedTerms.has(term.id)}
+                            isMobile={isMobile}
+                            pendingCount={pendingCount}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1076,29 +1194,34 @@ export default function Index() {
                         No future terms left for Wycombe Abbey.
                       </div>
                     )}
-                    {wycombeTerms.map((term) => (
-                      <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
-                        <TermCard
-                          term={term}
-                          flights={flights.filter(f => f.termId === term.id)}
-                          transport={getTransportForTerm(term.id)}
-                          onAddFlight={handleAddFlight}
-                          onViewFlights={handleViewFlights}
-                          onAddTransport={handleAddTransport}
-                          onViewTransport={handleViewTransport}
-                          onSetNotTravelling={handleSetNotTravelling}
-                          onClearNotTravelling={handleClearNotTravelling}
-                          notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
-                          className="h-full"
-                          isExpanded={expandedCards.has(term.id)}
-                          onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
-                          onUpdateFlightStatus={updateFlightStatus}
-                          isUpdatingFlightStatus={isUpdatingFlightStatus}
-                          highlighted={highlightedTerms.has(term.id)}
-                          isMobile={isMobile}
-                        />
-                      </div>
-                    ))}
+                    {wycombeTerms.map((term) => {
+                      if (!termMatchesFilters(term)) return null;
+                      const pendingCount = pendingByTerm[term.id] || 0;
+                      return (
+                        <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
+                          <TermCard
+                            term={term}
+                            flights={flights.filter(f => f.termId === term.id)}
+                            transport={getTransportForTerm(term.id)}
+                            onAddFlight={handleAddFlight}
+                            onViewFlights={handleViewFlights}
+                            onAddTransport={handleAddTransport}
+                            onViewTransport={handleViewTransport}
+                            onSetNotTravelling={handleSetNotTravelling}
+                            onClearNotTravelling={handleClearNotTravelling}
+                            notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
+                            className="h-full"
+                            isExpanded={expandedCards.has(term.id)}
+                            onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
+                            onUpdateFlightStatus={updateFlightStatus}
+                            isUpdatingFlightStatus={isUpdatingFlightStatus}
+                            highlighted={highlightedTerms.has(term.id)}
+                            isMobile={isMobile}
+                            pendingCount={pendingCount}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1124,6 +1247,7 @@ export default function Index() {
               selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'}
               onEventClick={handleCalendarEventClick}
               onSelectTermIds={handleHighlightTerms}
+              eventFilter={calendarEventFilter}
             />
           </div>
         );
@@ -1293,9 +1417,9 @@ export default function Index() {
                 term={selectedTerm}
                 flights={flights.filter(f => f.termId === selectedTerm.id)}
                 previousFlights={flights}
-                onAddFlight={addFlight}
-                onEditFlight={editFlight}
-                onRemoveFlight={removeFlight}
+                onAddFlight={handleAddFlightPersist}
+                onEditFlight={handleEditFlightPersist}
+                onRemoveFlight={handleRemoveFlightPersist}
                 open={showFlightDialog}
                 onOpenChange={setShowFlightDialog}
               />
@@ -1315,9 +1439,9 @@ export default function Index() {
                 term={selectedTerm}
                 transport={getTransportForTerm(selectedTerm.id)}
                 previousTransport={transport}
-                onAddTransport={addTransport}
-                onEditTransport={editTransport}
-                onRemoveTransport={removeTransport}
+                onAddTransport={handleAddTransportPersist}
+                onEditTransport={handleEditTransportPersist}
+                onRemoveTransport={handleRemoveTransportPersist}
                 open={showTransportDialog}
                 onOpenChange={setShowTransportDialog}
               />
@@ -1362,6 +1486,7 @@ export default function Index() {
               onUpdateFlightStatus={updateFlightStatus}
               isUpdatingFlightStatus={isUpdatingFlightStatus}
               highlighted={highlightedTerms.has(popupTerm.id)}
+              pendingCount={pendingByTerm[popupTerm.id] || 0}
             />
           </div>
         </ResponsiveDialog>
