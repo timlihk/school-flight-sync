@@ -40,6 +40,14 @@ export function Calendar() {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileEvents, setMobileEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
   const autoSetRef = useRef(false);
+  const touchHandledRef = useRef(false);
+
+  const markTouchHandled = () => {
+    touchHandledRef.current = true;
+    setTimeout(() => {
+      touchHandledRef.current = false;
+    }, 250);
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -172,13 +180,13 @@ export function Calendar() {
             onTouchEnd={(e) => {
               e.stopPropagation();
               e.preventDefault();
+              markTouchHandled();
               handleEventNav();
             }}
             onClick={(e) => {
               e.stopPropagation();
-              if (!('ontouchend' in window)) {
-                handleEventNav();
-              }
+              if (touchHandledRef.current) return;
+              handleEventNav();
             }}
           >
             <div className="flex items-start gap-2">
@@ -345,24 +353,24 @@ export function Calendar() {
                 return (
                   <div
                     key={day.toString()}
-                    className={cn(
-                      'bg-background p-2 min-h-[80px] relative transition-colors touch-manipulation select-none',
-                      !isCurrentMonth && 'opacity-40',
-                      isCurrentDay && 'ring-2 ring-primary ring-inset',
-                      hasEvents && 'cursor-pointer active:bg-accent/80'
-                    )}
-                    onTouchEnd={(e) => {
-                      if (hasEvents) {
-                        e.preventDefault();
-                        handleMobileOpen();
-                      }
-                    }}
-                    onClick={() => {
-                      if (!('ontouchend' in window)) {
-                        handleMobileOpen();
-                      }
-                    }}
-                  >
+                  className={cn(
+                    'bg-background p-2 min-h-[80px] relative transition-colors touch-manipulation select-none',
+                    !isCurrentMonth && 'opacity-40',
+                    isCurrentDay && 'ring-2 ring-primary ring-inset',
+                    hasEvents && 'cursor-pointer active:bg-accent/80'
+                  )}
+                  onTouchEnd={(e) => {
+                    if (hasEvents) {
+                      e.preventDefault();
+                      markTouchHandled();
+                      handleMobileOpen();
+                    }
+                  }}
+                  onClick={() => {
+                    if (touchHandledRef.current) return;
+                    handleMobileOpen();
+                  }}
+                >
                     <div className={cn(
                       'text-sm font-medium pointer-events-none',
                       isCurrentDay && 'text-primary font-bold'

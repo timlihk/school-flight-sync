@@ -25,11 +25,13 @@ import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term, TransportDetails } from "@/types/school";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format } from "date-fns";
 import { CalendarEvent, useCalendarEvents } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import AccountChip from "@/components/ui/account-chip";
+import NetworkStatusBanner from "@/components/ui/network-status-banner";
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -58,12 +60,15 @@ export default function Index() {
   const { logout } = useFamilyAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus, refetch: refetchFlights, dataUpdatedAt, isFetching: isFlightsFetching } = useFlights();
-  const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm, refetch: refetchTransport } = useTransport();
-  const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus, refetch: refetchNotTravelling } = useNotTravelling();
+  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus, refetch: refetchFlights, dataUpdatedAt: flightsUpdatedAt, isFetching: isFlightsFetching } = useFlights();
+  const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm, refetch: refetchTransport, dataUpdatedAt: transportUpdatedAt, isFetching: isTransportFetching } = useTransport();
+  const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus, refetch: refetchNotTravelling, dataUpdatedAt: notTravUpdatedAt, isFetching: isNotTravFetching } = useNotTravelling();
   const { toast } = useToast();
   const { events: calendarEvents } = useCalendarEvents(selectedSchool as 'both' | 'benenden' | 'wycombe');
   const isBusy = isRefreshing;
+  const dataTimestamps = [flightsUpdatedAt, transportUpdatedAt, notTravUpdatedAt].filter(Boolean) as number[];
+  const combinedUpdatedAt = dataTimestamps.length ? Math.min(...dataTimestamps) : undefined;
+  const isAnyFetching = isFlightsFetching || isTransportFetching || isNotTravFetching || isRefreshing;
 
   const triggerHaptic = useCallback(() => {
     if (typeof navigator === 'undefined' || !(navigator as any).vibrate) return;
@@ -1057,14 +1062,17 @@ export default function Index() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <AccountChip onLogout={logout} />
+            <AccountChip
+              onLogout={logout}
+              subtitle={selectedSchool === 'both' ? 'Both schools' : selectedSchool === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+            />
           </div>
         </div>
       </header>
 
       <NetworkStatusBanner
-        dataUpdatedAt={dataUpdatedAt}
-        isRefreshing={isFlightsFetching}
+        dataUpdatedAt={combinedUpdatedAt}
+        isRefreshing={isAnyFetching}
         onRefresh={() => {
           refetchFlights();
           refetchTransport();
@@ -1142,36 +1150,38 @@ export default function Index() {
       )}
 
       {popupTerm && (
-        <Dialog open={showTermCardPopup} onOpenChange={setShowTermCardPopup}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                {popupTerm.name}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="mt-4">
-              <TermCard
-                term={popupTerm}
-                flights={flights.filter(f => f.termId === popupTerm.id)}
-                transport={getTransportForTerm(popupTerm.id)}
-                onAddFlight={handleAddFlight}
-                onViewFlights={handleViewFlights}
-                onAddTransport={handleAddTransport}
-                onViewTransport={handleViewTransport}
-                onSetNotTravelling={handleSetNotTravelling}
-                onClearNotTravelling={handleClearNotTravelling}
-                notTravellingStatus={notTravelling.find(nt => nt.termId === popupTerm.id)}
-                isExpanded={true}
-                onExpandedChange={() => {}}
-                className="border-0 shadow-none bg-transparent"
-                onUpdateFlightStatus={updateFlightStatus}
-                isUpdatingFlightStatus={isUpdatingFlightStatus}
-                highlighted={highlightedTerms.has(popupTerm.id)}
-              />
+        <ResponsiveDialog
+          open={showTermCardPopup}
+          onOpenChange={setShowTermCardPopup}
+          title={
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              {popupTerm.name}
             </div>
-          </DialogContent>
-        </Dialog>
+          }
+          className="max-w-2xl"
+        >
+          <div className="mt-2">
+            <TermCard
+              term={popupTerm}
+              flights={flights.filter(f => f.termId === popupTerm.id)}
+              transport={getTransportForTerm(popupTerm.id)}
+              onAddFlight={handleAddFlight}
+              onViewFlights={handleViewFlights}
+              onAddTransport={handleAddTransport}
+              onViewTransport={handleViewTransport}
+              onSetNotTravelling={handleSetNotTravelling}
+              onClearNotTravelling={handleClearNotTravelling}
+              notTravellingStatus={notTravelling.find(nt => nt.termId === popupTerm.id)}
+              isExpanded={true}
+              onExpandedChange={() => {}}
+              className="border-0 shadow-none bg-transparent"
+              onUpdateFlightStatus={updateFlightStatus}
+              isUpdatingFlightStatus={isUpdatingFlightStatus}
+              highlighted={highlightedTerms.has(popupTerm.id)}
+            />
+          </div>
+        </ResponsiveDialog>
       )}
 
       <Sheet open={shareDialogOpen} onOpenChange={setShareDialogOpen}>

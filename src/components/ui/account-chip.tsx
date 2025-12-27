@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils";
 interface AccountChipProps {
   onLogout: () => void;
   className?: string;
+  title?: string;
+  subtitle?: string;
 }
 
-export function AccountChip({ onLogout, className }: AccountChipProps) {
+export function AccountChip({ onLogout, className, title = "Family Account", subtitle }: AccountChipProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -36,10 +38,12 @@ export function AccountChip({ onLogout, className }: AccountChipProps) {
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium">Family Account</p>
-            <p className="text-xs text-muted-foreground">
-              Benenden & Wycombe Abbey
-            </p>
+            <p className="text-sm font-medium">{title}</p>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground">
+                {subtitle}
+              </p>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

@@ -49,6 +49,14 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   const { getEventsForDate, events } = useCalendarEvents(selectedSchool);
   const autoSetRef = useRef(false);
   const openedAtRef = useRef<number | null>(null);
+  const touchHandledRef = useRef(false);
+
+  const markTouchHandled = () => {
+    touchHandledRef.current = true;
+    setTimeout(() => {
+      touchHandledRef.current = false;
+    }, 250);
+  };
   const hasAnyEvents = useMemo(() => {
     for (let i = 0; i < monthsToShow; i++) {
       const monthDate = addMonths(currentDate, i);
@@ -215,13 +223,13 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
             onTouchEnd={(e) => {
               e.stopPropagation();
               e.preventDefault();
+              markTouchHandled();
               handleEventNav();
             }}
             onClick={(e) => {
               e.stopPropagation();
-              if (!('ontouchend' in window)) {
-                handleEventNav();
-              }
+              if (touchHandledRef.current) return;
+              handleEventNav();
             }}
           >
             <div className="flex items-start gap-1.5">
@@ -358,14 +366,13 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                   onTouchEnd={(e) => {
                     if (hasEvents) {
                       e.preventDefault();
+                      markTouchHandled();
                       handleMobileOpen();
                     }
                   }}
                   onClick={(e) => {
-                    // Fallback for non-touch devices
-                    if (!('ontouchend' in window)) {
-                      handleMobileOpen();
-                    }
+                    if (touchHandledRef.current) return;
+                    handleMobileOpen();
                   }}
                 >
                   <div className={cn(
@@ -517,14 +524,14 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                   className="w-full text-left rounded-lg border border-border/60 bg-card/60 p-3 transition-colors touch-manipulation select-none active:bg-accent/80"
                   onTouchEnd={(e) => {
                     e.preventDefault();
+                    markTouchHandled();
                     openedAtRef.current = Date.now();
                     setMobileEvents({ date, events });
                   }}
                   onClick={() => {
-                    if (!('ontouchend' in window)) {
-                      openedAtRef.current = Date.now();
-                      setMobileEvents({ date, events });
-                    }
+                    if (touchHandledRef.current) return;
+                    openedAtRef.current = Date.now();
+                    setMobileEvents({ date, events });
                   }}
                 >
                   <div className="flex items-center justify-between">

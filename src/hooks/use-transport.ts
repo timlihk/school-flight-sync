@@ -38,6 +38,8 @@ export function useTransport() {
     isLoading,
     error,
     refetch,
+    dataUpdatedAt,
+    isFetching,
   } = useQuery({
     queryKey: QUERY_KEYS.transport,
     queryFn: fetchTransport,
@@ -226,6 +228,8 @@ export function useTransport() {
     editTransport,
     getTransportForTerm,
     refetch,
+    dataUpdatedAt,
+    isFetching,
     // Expose mutation states
     isAddingTransport: addTransportMutation.isPending,
     isRemovingTransport: removeTransportMutation.isPending,

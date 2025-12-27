@@ -32,6 +32,8 @@ export function useNotTravelling() {
     isLoading: loading,
     error,
     refetch,
+    dataUpdatedAt,
+    isFetching,
   } = useQuery({
     queryKey: QUERY_KEYS.notTravelling,
     queryFn: fetchNotTravelling,
@@ -106,5 +108,7 @@ export function useNotTravelling() {
     setNotTravellingStatus,
     clearNotTravellingStatus,
     refetch,
+    dataUpdatedAt,
+    isFetching,
   };
 }
