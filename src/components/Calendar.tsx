@@ -204,7 +204,7 @@ export function Calendar() {
                     variant="outline"
                     className="text-[10px]"
                   >
-                    {event.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+                    {event.school === 'benenden' ? 'Benenden' : 'Wycombe'}
                   </Badge>
                 </div>
                 {event.type === 'flight' && (
@@ -278,7 +278,7 @@ export function Calendar() {
                 size="sm"
                 onClick={() => setSelectedSchool('wycombe')}
               >
-                Wycombe Abbey
+                Wycombe
               </Button>
             </div>
           </div>

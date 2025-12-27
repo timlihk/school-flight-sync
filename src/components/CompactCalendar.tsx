@@ -244,7 +244,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                     {flightDirectionLabel(event)}
                   </Badge>
                   <Badge variant="outline" className="text-[10px] shrink-0">
-                    {event.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+                    {event.school === 'benenden' ? 'Benenden' : 'Wycombe'}
                   </Badge>
                 </div>
                 {event.type === 'flight' && (
@@ -548,7 +548,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                         <div className={cn('w-1.5 h-1.5 rounded-full', getEventTypeColor(event.type))} />
                         <span className="font-medium truncate">{event.title}</span>
                         <Badge variant="outline" className="text-[10px]">
-                          {event.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+                          {event.school === 'benenden' ? 'Benenden' : 'Wycombe'}
                         </Badge>
                       </div>
                     ))}

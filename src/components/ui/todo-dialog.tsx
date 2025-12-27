@@ -92,7 +92,7 @@ export function ToDoDialog({
               term,
               type: 'flight',
               title: `Book ${missingTypes.join(' & ')} flight${missingTypes.length > 1 ? 's' : ''} for ${term.name}`,
-              description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
+              description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
               urgency,
               dueDate: term.startDate
             });
@@ -110,7 +110,7 @@ export function ToDoDialog({
             term,
             type: 'flight',
             title: `Book flights for ${term.name}`,
-            description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
+            description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
             urgency,
             dueDate: term.startDate
           });
@@ -130,7 +130,7 @@ export function ToDoDialog({
           term,
           type: 'transport',
           title: `Arrange transport for ${term.name}`,
-          description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
+          description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
           urgency,
           dueDate: term.startDate
         });
@@ -240,7 +240,7 @@ export function ToDoDialog({
             <SelectContent>
               <SelectItem value="all">All Schools</SelectItem>
               <SelectItem value="benenden">Benenden</SelectItem>
-              <SelectItem value="wycombe">Wycombe Abbey</SelectItem>
+              <SelectItem value="wycombe">Wycombe</SelectItem>
             </SelectContent>
           </Select>
           

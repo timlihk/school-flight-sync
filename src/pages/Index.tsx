@@ -354,7 +354,7 @@ export default function Index() {
       ? 'Both schools'
       : scope === 'benenden'
         ? 'Benenden'
-        : 'Wycombe Abbey';
+        : 'Wycombe';
     const lines = [
       `Next travel (${schoolLabel}): ${entry.title} on ${entry.date.toDateString()} (${formatDistanceToNow(entry.date, { addSuffix: true })})`,
     ];
@@ -604,7 +604,7 @@ export default function Index() {
             setSelectedSchool(scope);
           }}
         >
-          {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+          {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
         </Button>
       ))}
     </div>
@@ -783,7 +783,7 @@ export default function Index() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-sm font-semibold truncate">{event.title}</div>
-                        <div className="text-xs text-muted-foreground">{format(event.date, 'EEE, MMM d')} · {event.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}</div>
+                        <div className="text-xs text-muted-foreground">{format(event.date, 'EEE, MMM d')} · {event.school === 'benenden' ? 'Benenden' : 'Wycombe'}</div>
                       </div>
                       <Badge variant="outline" className="text-[10px] whitespace-nowrap">
                         {event.type === 'flight'
@@ -1064,7 +1064,7 @@ export default function Index() {
             <ThemeToggle />
             <AccountChip
               onLogout={logout}
-              subtitle={selectedSchool === 'both' ? 'Both schools' : selectedSchool === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+              subtitle={selectedSchool === 'both' ? 'Both schools' : selectedSchool === 'benenden' ? 'Benenden' : 'Wycombe'}
             />
           </div>
         </div>
@@ -1199,7 +1199,7 @@ export default function Index() {
                   size="sm"
                   onClick={() => setShareScope(scope)}
                 >
-                  {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+                  {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
                 </Button>
               ))}
             </div>

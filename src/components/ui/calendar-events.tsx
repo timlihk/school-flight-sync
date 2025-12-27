@@ -64,7 +64,7 @@ export function CalendarEvents({ terms, className }: CalendarEventsProps) {
                   {term.name}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {term.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
+                  {term.school === 'benenden' ? 'Benenden' : 'Wycombe'}
                 </p>
               </div>
               
