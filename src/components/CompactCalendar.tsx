@@ -45,7 +45,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   const [isMobile, setIsMobile] = useState(false);
   const [mobileEvents, setMobileEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const { getEventsForDate } = useCalendarEvents(selectedSchool);
+  const { getEventsForDate, events } = useCalendarEvents(selectedSchool);
   const hasAnyEvents = useMemo(() => {
     for (let i = 0; i < monthsToShow; i++) {
       const monthDate = addMonths(currentDate, i);
@@ -76,8 +76,20 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
         day = addDays(day, 1);
       }
     }
-    return items.sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [currentDate, monthsToShow, getEventsForDate]);
+    const sorted = items.sort((a, b) => a.date.getTime() - b.date.getTime());
+    if (sorted.length === 0 && events?.length) {
+      const next = events
+        .filter(e => startOfDay(e.date) >= today)
+        .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+      if (next) {
+        return [{
+          date: startOfDay(next.date),
+          events: events.filter(e => startOfDay(e.date).getTime() === startOfDay(next.date).getTime())
+        }];
+      }
+    }
+    return sorted;
+  }, [currentDate, monthsToShow, getEventsForDate, events]);
 
   // Calculate how many months to show based on screen width; update on resize
   useEffect(() => {

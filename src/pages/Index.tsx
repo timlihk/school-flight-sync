@@ -15,7 +15,7 @@ const TransportDialog = lazy(() => import("@/components/ui/transport-dialog"));
 const ExportDialog = lazy(() => import("@/components/ui/export-dialog"));
 import ToDoDialog from "@/components/ui/todo-dialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { mockTerms, getAcademicYears } from "@/data/mock-terms";
+import { mockTerms } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
 import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
@@ -554,17 +554,6 @@ export default function Index() {
       {/* Filter Controls */}
       <div className="sticky top-[64px] md:top-[72px] z-30 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/40">
         <div className="container mx-auto px-6 py-4 flex flex-wrap justify-center gap-3">
-          <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
-            <SelectTrigger className="w-48 h-9">
-              <SelectValue placeholder="Academic Year" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Academic Years</SelectItem>
-              {getAcademicYears().map(year => (
-                <SelectItem key={year} value={year}>{year}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <Select value={selectedSchool} onValueChange={setSelectedSchool}>
             <SelectTrigger className="w-48 h-9">
               <SelectValue placeholder="Select School" />
@@ -575,23 +564,25 @@ export default function Index() {
               <SelectItem value="wycombe">Wycombe Abbey School</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            onClick={handleToggleExpandAll}
-            className="gap-2 w-32 h-9 font-normal"
-          >
-            {allExpanded ? (
-              <>
-                <ChevronUp className="h-4 w-4" />
-                Collapse All
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-4 w-4" />
-                Expand All
-              </>
-            )}
-          </Button>
+          {!isMobile && (
+            <Button
+              variant="outline"
+              onClick={handleToggleExpandAll}
+              className="gap-2 w-32 h-9 font-normal"
+            >
+              {allExpanded ? (
+                <>
+                  <ChevronUp className="h-4 w-4" />
+                  Collapse All
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4" />
+                  Expand All
+                </>
+              )}
+            </Button>
+          )}
           <ToDoDialog 
             terms={filteredTerms}
             flights={flights}
