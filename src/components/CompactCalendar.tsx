@@ -343,7 +343,6 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                     hasEvents && 'cursor-pointer'
                   )}
                   onClick={handleMobileOpen}
-                  onTouchEnd={handleMobileOpen}
                 >
                   <div className={cn(
                     'text-xs text-center',

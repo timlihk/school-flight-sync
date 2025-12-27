@@ -59,7 +59,7 @@ export default function Index() {
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus, refetch: refetchNotTravelling } = useNotTravelling();
   const { toast } = useToast();
   const { events: calendarEvents } = useCalendarEvents(selectedSchool as 'both' | 'benenden' | 'wycombe');
-  const isBusy = loading || isTransportLoading || notTravellingLoading || isRefreshing;
+  const isBusy = isRefreshing;
 
   const triggerHaptic = useCallback(() => {
     if (typeof navigator === 'undefined' || !(navigator as any).vibrate) return;
