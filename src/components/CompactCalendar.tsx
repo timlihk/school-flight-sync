@@ -47,6 +47,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { getEventsForDate, events } = useCalendarEvents(selectedSchool);
   const autoSetRef = useRef(false);
+  const openedAtRef = useRef<number | null>(null);
   const hasAnyEvents = useMemo(() => {
     for (let i = 0; i < monthsToShow; i++) {
       const monthDate = addMonths(currentDate, i);
@@ -319,6 +320,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
             const isCurrentDay = isToday(day);
             const handleMobileOpen = () => {
               if (isMobile && hasEvents) {
+                openedAtRef.current = Date.now();
                 setMobileEvents({ date: day, events });
               }
             };
@@ -341,6 +343,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                     hasEvents && 'cursor-pointer'
                   )}
                   onClick={handleMobileOpen}
+                  onTouchEnd={handleMobileOpen}
                 >
                   <div className={cn(
                     'text-xs text-center',
@@ -491,7 +494,10 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                   key={date.toISOString()}
                   type="button"
                   className="w-full text-left rounded-lg border border-border/60 bg-card/60 p-3 hover:bg-accent transition-colors"
-                  onClick={() => setMobileEvents({ date, events })}
+                  onClick={() => {
+                    openedAtRef.current = Date.now();
+                    setMobileEvents({ date, events });
+                  }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold">
@@ -519,7 +525,16 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
         </CardContent>
       </Card>
       {isMobile && mobileEvents && (
-      <Sheet open={!!mobileEvents} onOpenChange={(open) => !open && setMobileEvents(null)}>
+      <Sheet
+        open={!!mobileEvents}
+        onOpenChange={(open) => {
+          if (!open) {
+            const now = Date.now();
+            if (openedAtRef.current && now - openedAtRef.current < 200) return;
+            setMobileEvents(null);
+          }
+        }}
+      >
         <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
           <div className="mx-auto h-1 w-12 rounded-full bg-muted-foreground/40 mb-3" />
           <SheetHeader className="flex flex-row items-center justify-between">

@@ -88,7 +88,7 @@ export function useNotTravelling() {
 
       toast({
         title: "Status Cleared",
-        description: `Cleared not-traveling status for ${type}.`,
+        description: "Cleared not-travelling status for flights.",
       });
     } catch (error) {
       console.error('Error clearing not travelling status:', error);
