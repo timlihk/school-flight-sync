@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   format,
   startOfMonth,
@@ -10,7 +10,8 @@ import {
   subMonths,
   isSameMonth,
   isToday,
-  isValid
+  isValid,
+  startOfDay
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -35,9 +36,10 @@ export function Calendar() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSchool, setSelectedSchool] = useState<School>('both');
-  const { getEventsForDate } = useCalendarEvents(selectedSchool);
+  const { getEventsForDate, events } = useCalendarEvents(selectedSchool);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileEvents, setMobileEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
+  const autoSetRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -46,6 +48,22 @@ export function Calendar() {
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
+
+  useEffect(() => {
+    autoSetRef.current = false;
+  }, [selectedSchool]);
+
+  useEffect(() => {
+    if (autoSetRef.current) return;
+    const today = startOfDay(new Date());
+    const next = events
+      ?.filter(e => startOfDay(e.date) >= today)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+    if (next) {
+      setCurrentDate(startOfMonth(next.date));
+      autoSetRef.current = true;
+    }
+  }, [events]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);

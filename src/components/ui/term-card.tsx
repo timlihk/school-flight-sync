@@ -381,21 +381,7 @@ const TermCard = memo(function TermCard({
             )}
             
             {/* Transport section */}
-            {notTravellingStatus?.noTransport ? (
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">
-                  Not travelling (transport)
-                </Badge>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => onClearNotTravelling(term.id, 'transport')}
-                  className="text-xs h-6 px-2"
-                >
-                  Clear
-                </Button>
-              </div>
-            ) : relevantTransport.length === 0 && (
+            {relevantTransport.length === 0 && (
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
@@ -405,14 +391,6 @@ const TermCard = memo(function TermCard({
                 >
                   <Car className="h-4 w-4" />
                   Add Transport
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => onSetNotTravelling(term.id, 'transport')}
-                  className="text-xs text-muted-foreground shrink-0"
-                >
-                  Not travelling
                 </Button>
               </div>
             )}

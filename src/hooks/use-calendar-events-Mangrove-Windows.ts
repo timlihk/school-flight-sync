@@ -56,6 +56,14 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
     return map;
   }, []);
 
+  const transportCountByTerm = useMemo(() => {
+    const map = new Map<string, number>();
+    transport?.forEach(item => {
+      map.set(item.termId, (map.get(item.termId) || 0) + 1);
+    });
+    return map;
+  }, [transport]);
+
   const events = useMemo(() => {
     const allEvents: CalendarEvent[] = [];
 
@@ -169,6 +177,11 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       }
 
       if (!item.noFlights && !item.noTransport) {
+        return;
+      }
+
+      const transportCount = transportCountByTerm.get(item.termId) ?? 0;
+      if (item.noTransport && transportCount === 0) {
         return;
       }
 

@@ -56,6 +56,14 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
     return map;
   }, []);
 
+  const transportCountByTerm = useMemo(() => {
+    const map = new Map<string, number>();
+    transport?.forEach(item => {
+      map.set(item.termId, (map.get(item.termId) || 0) + 1);
+    });
+    return map;
+  }, [transport]);
+
   const addEvent = (allEvents: CalendarEvent[], event: CalendarEvent) => {
     if (!isValid(event.date)) {
       console.warn('[useCalendarEvents] Skipping event with invalid date', { id: event.id, type: event.type });
@@ -177,6 +185,12 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       }
 
       if (!item.noFlights && !item.noTransport) {
+        return;
+      }
+
+      const transportCount = transportCountByTerm.get(item.termId) ?? 0;
+      if (item.noTransport && transportCount === 0) {
+        // Don't show "not travelling" for transport when no details exist yet
         return;
       }
 

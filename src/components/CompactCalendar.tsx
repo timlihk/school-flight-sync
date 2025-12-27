@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   format,
   startOfMonth,
@@ -46,6 +46,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   const [mobileEvents, setMobileEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { getEventsForDate, events } = useCalendarEvents(selectedSchool);
+  const autoSetRef = useRef(false);
   const hasAnyEvents = useMemo(() => {
     for (let i = 0; i < monthsToShow; i++) {
       const monthDate = addMonths(currentDate, i);
@@ -114,6 +115,22 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
+
+  useEffect(() => {
+    autoSetRef.current = false;
+  }, [selectedSchool]);
+
+  useEffect(() => {
+    if (autoSetRef.current) return;
+    const today = startOfDay(new Date());
+    const next = events
+      ?.filter(e => startOfDay(e.date) >= today)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+    if (next) {
+      setCurrentDate(startOfMonth(next.date));
+      autoSetRef.current = true;
+    }
+  }, [events]);
 
   const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -258,6 +275,10 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
 
   const renderMonth = (monthOffset: number) => {
     const monthDate = addMonths(currentDate, monthOffset);
+    const today = startOfDay(new Date());
+    if (isMobile && monthDate < startOfMonth(today)) {
+      return null;
+    }
     const monthStart = startOfMonth(monthDate);
     const monthEnd = endOfMonth(monthDate);
     const startDate = startOfWeek(monthStart);
@@ -450,7 +471,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
           {viewMode === 'grid' && (
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
-                {Array.from({ length: monthsToShow }, (_, i) => renderMonth(i))}
+                {Array.from({ length: monthsToShow }, (_, i) => renderMonth(i)).filter(Boolean)}
               </div>
               {!hasAnyEvents && (
                 <div className="mt-3 text-xs text-muted-foreground">
