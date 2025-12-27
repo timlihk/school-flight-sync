@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AccountChip } from "@/components/ui/account-chip";
 import { NetworkStatusBanner } from "@/components/ui/network-status-banner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { TermCard } from "@/components/ui/term-card";
@@ -67,13 +68,18 @@ export default function Index() {
   const { events: calendarEvents } = useCalendarEvents(selectedSchool as 'both' | 'benenden' | 'wycombe');
   const isBusy = isRefreshing;
   const dataTimestamps = [flightsUpdatedAt, transportUpdatedAt, notTravUpdatedAt].filter(Boolean) as number[];
-  const combinedUpdatedAt = dataTimestamps.length ? Math.min(...dataTimestamps) : undefined;
+  const combinedUpdatedAt = dataTimestamps.length ? Math.max(...dataTimestamps) : undefined;
   const isAnyFetching = isFlightsFetching || isTransportFetching || isNotTravFetching || isRefreshing;
 
-  const triggerHaptic = useCallback(() => {
+  const triggerHaptic = useCallback((type: 'select' | 'success' | 'warning' = 'select') => {
     if (typeof navigator === 'undefined' || !(navigator as any).vibrate) return;
+    const patterns: Record<typeof type, number | number[]> = {
+      select: 15,
+      success: [10, 30, 10],
+      warning: [40, 30, 40],
+    };
     try {
-      (navigator as any).vibrate(10);
+      (navigator as any).vibrate(patterns[type] || 10);
     } catch (err) {
       console.debug('Haptic vibrate failed', err);
     }
@@ -503,7 +509,7 @@ export default function Index() {
     if (window.scrollY > 2) return;
     const deltaY = touch.clientY - (touchStartY.current ?? touch.clientY);
     if (deltaY > 0) {
-      setPullDistance(Math.min(deltaY, 140));
+      setPullDistance(Math.min(deltaY, 90));
     }
   }, [isMobile, isPulling]);
 
@@ -513,7 +519,7 @@ export default function Index() {
     const deltaX = touchStartX.current !== null ? touch.clientX - touchStartX.current : 0;
     const deltaY = touchStartY.current !== null ? touch.clientY - touchStartY.current : 0;
 
-    if (isPulling && pullDistance > 70) {
+    if (isPulling && pullDistance > 60) {
       handleRefresh();
     }
 
@@ -620,19 +626,24 @@ export default function Index() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground tracking-wide">
                   <span>Next travel</span>
+                  {combinedUpdatedAt && (
+                    <span className="text-[10px] text-muted-foreground">
+                      Updated {formatDistanceToNow(combinedUpdatedAt, { addSuffix: true })}
+                    </span>
+                  )}
                 </div>
                 <div className="flex rounded-full border border-border/60 bg-muted/40 p-0.5">
                   {(['both','benenden','wycombe'] as const).map(scope => (
                     <Button
                       key={scope}
-                      size="sm"
-                      variant={heroScope === scope ? 'default' : 'ghost'}
-                      className="h-6 px-2 text-[10px]"
-                      onClick={() => setHeroScope(scope)}
-                    >
-                      {scope === 'both' ? 'Both' : scope === 'benenden' ? 'Ben' : 'WA'}
-                    </Button>
-                  ))}
+                    size="sm"
+                    variant={heroScope === scope ? 'default' : 'ghost'}
+                    className="h-10 px-3 text-xs"
+                    onClick={() => setHeroScope(scope)}
+                  >
+                    {scope === 'both' ? 'Both' : scope === 'benenden' ? 'Ben' : 'WA'}
+                  </Button>
+                ))}
                 </div>
               </div>
 
@@ -647,9 +658,9 @@ export default function Index() {
 
                   {/* Trip details */}
                   <div className="flex-1 min-w-0 space-y-1">
-                    <div className="text-lg font-semibold leading-tight truncate">{nextTravel.title}</div>
-                    <div className="text-sm text-muted-foreground truncate">{nextTravel.detail}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
+                    <div className="text-base text-muted-foreground truncate">{nextTravel.detail}</div>
+                    <div className="text-[13px] text-muted-foreground">
                       {format(nextTravel.date, 'EEE, MMM d')} · {formatDistanceToNow(nextTravel.date, { addSuffix: true })}
                     </div>
                     <div className="flex items-center gap-2 pt-1 flex-wrap">
@@ -659,14 +670,36 @@ export default function Index() {
                       >
                         {nextTravel.status === 'booked' ? 'Booked' : nextTravel.status === 'staying' ? 'Not travelling' : 'Needs booking'}
                       </Badge>
-                      {nextTravel.termId && (
-                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handleHighlightTerms([nextTravel.termId!])}>
-                          View →
+                      <div className="flex items-center gap-2">
+                        {nextTravel.termId && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleHighlightTerms([nextTravel.termId!])}
+                          >
+                            View trip
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant={nextTravel.status === 'booked' ? 'outline' : 'default'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => {
+                            if (!nextTravel.termId) return;
+                            handleHighlightTerms([nextTravel.termId]);
+                            if (nextTravel.status !== 'booked') {
+                              setSelectedTerm(termLookup.get(nextTravel.termId) || null);
+                              setShowFlightDialog(true);
+                            }
+                          }}
+                        >
+                          {nextTravel.status === 'booked' ? 'Edit booking' : 'Add booking'}
                         </Button>
-                      )}
-                      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setShareScope(heroScope); setShareDialogOpen(true); }}>
-                        <Share2 className="h-3 w-3 mr-1" /> Share
-                      </Button>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setShareScope(heroScope); setShareDialogOpen(true); }}>
+                          <Share2 className="h-3 w-3 mr-1" /> Share
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -685,8 +718,8 @@ export default function Index() {
             <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase text-muted-foreground">Actions</p>
-                  <h3 className="text-lg font-semibold">Plan fast</h3>
+                  <p className="text-[11px] uppercase text-muted-foreground">Actions</p>
+                  <h3 className="text-xl font-semibold">Plan fast</h3>
                 </div>
                 <Button
                   variant="ghost"
@@ -1025,10 +1058,25 @@ export default function Index() {
 
   if (loading || isTransportLoading || notTravellingLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading school data...</p>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 px-4 py-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+        <Skeleton className="h-[140px] w-full rounded-2xl" />
+        <div className="grid grid-cols-2 gap-3">
+          <Skeleton className="h-[56px] rounded-xl" />
+          <Skeleton className="h-[56px] rounded-xl" />
+          <Skeleton className="h-[56px] rounded-xl" />
+          <Skeleton className="h-[56px] rounded-xl" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-[96px] w-full rounded-xl" />
+          <Skeleton className="h-[96px] w-full rounded-xl" />
         </div>
       </div>
     );
@@ -1041,13 +1089,19 @@ export default function Index() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {isPulling && (
-        <div className="fixed top-20 left-0 right-0 z-50 flex justify-center pointer-events-none">
-          <div className="px-3 py-1 rounded-full border bg-card/90 text-xs shadow-sm">
-            {pullDistance > 70 ? 'Release to refresh' : 'Pull to refresh'}
-          </div>
+      <div className="fixed top-16 left-0 right-0 z-50 flex justify-center pointer-events-none">
+        <div
+          className={cn(
+            "px-3 py-1 rounded-full border bg-card/90 text-xs shadow-sm transition-transform transition-opacity duration-150",
+            isPulling ? "opacity-100" : "opacity-0"
+          )}
+          style={{
+            transform: `scale(${1 + Math.min(pullDistance, 80) / 240}) translateY(${Math.min(pullDistance, 60) / 6}px)`,
+          }}
+        >
+          {pullDistance > 60 ? 'Release to refresh' : 'Pull to refresh'}
         </div>
-      )}
+      </div>
 
       <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 sticky top-0 z-40">
         <div className="px-4 md:px-6 py-4 flex items-center justify-between">
@@ -1064,6 +1118,8 @@ export default function Index() {
             <ThemeToggle />
             <AccountChip
               onLogout={logout}
+              title="Family Account"
+              label="Family"
               subtitle={selectedSchool === 'both' ? 'Both schools' : selectedSchool === 'benenden' ? 'Benenden' : 'Wycombe'}
             />
           </div>
@@ -1073,6 +1129,11 @@ export default function Index() {
       <NetworkStatusBanner
         dataUpdatedAt={combinedUpdatedAt}
         isRefreshing={isAnyFetching}
+        perSource={[
+          { label: 'Flights', updatedAt: flightsUpdatedAt, isFetching: isFlightsFetching },
+          { label: 'Transport', updatedAt: transportUpdatedAt, isFetching: isTransportFetching },
+          { label: 'Status', updatedAt: notTravUpdatedAt, isFetching: isNotTravFetching },
+        ]}
         onRefresh={() => {
           refetchFlights();
           refetchTransport();
@@ -1290,7 +1351,7 @@ export default function Index() {
         </SheetContent>
       </Sheet>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border/60 shadow-inner">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border/60 shadow-inner pb-[env(safe-area-inset-bottom)]">
         <div className="grid grid-cols-4 divide-x divide-border">
           <Button
             variant={activeTab === 'today' ? 'default' : 'ghost'}

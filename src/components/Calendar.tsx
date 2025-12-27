@@ -114,23 +114,12 @@ export function Calendar() {
     }
   };
 
-  const renderEventDots = (events: CalendarEvent[]) => {
-    const uniqueTypes = [...new Set(events.map(e => e.type))];
-
+  const renderEventCount = (events: CalendarEvent[]) => {
+    const count = events.length;
+    if (!count) return null;
     return (
-      <div className="flex gap-1 justify-center mt-1">
-        {uniqueTypes.slice(0, 3).map(type => (
-          <div
-            key={type}
-            className={cn(
-              'w-1.5 h-1.5 rounded-full',
-              getEventTypeColor(type)
-            )}
-          />
-        ))}
-        {uniqueTypes.length > 3 && (
-          <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-        )}
+      <div className="inline-flex items-center justify-center px-1.5 min-w-[18px] h-[18px] text-[11px] font-semibold text-foreground bg-muted rounded-full">
+        {count}
       </div>
     );
   };
@@ -406,9 +395,13 @@ export function Calendar() {
                       )}>
                         {format(day, 'd')}
                       </div>
-                      {hasEvents && renderEventDots(events)}
-                    </div>
-                  </InteractiveHoverCardTrigger>
+                    {hasEvents && (
+                      <div className="absolute top-1 right-1 pointer-events-none">
+                        {renderEventCount(events)}
+                      </div>
+                    )}
+                  </div>
+                </InteractiveHoverCardTrigger>
                   {hasEvents && (
                     <InteractiveHoverCardContent className="w-auto" side="top">
                       {renderEventDetails(events)}

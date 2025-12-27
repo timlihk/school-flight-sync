@@ -15,9 +15,10 @@ interface AccountChipProps {
   className?: string;
   title?: string;
   subtitle?: string;
+  label?: string;
 }
 
-export function AccountChip({ onLogout, className, title = "Family Account", subtitle }: AccountChipProps) {
+export function AccountChip({ onLogout, className, title = "Family Account", subtitle, label = "Family" }: AccountChipProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,7 +33,7 @@ export function AccountChip({ onLogout, className, title = "Family Account", sub
           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
             <User className="h-3.5 w-3.5 text-white" />
           </div>
-          <span className="text-sm font-medium hidden sm:inline">Family</span>
+          <span className="text-sm font-medium hidden sm:inline">{label}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

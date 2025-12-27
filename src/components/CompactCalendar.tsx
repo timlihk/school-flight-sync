@@ -159,20 +159,12 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
     }
   };
 
-  const renderEventDots = (events: CalendarEvent[]) => {
-    const uniqueTypes = [...new Set(events.map(e => e.type))];
-
+  const renderEventCount = (events: CalendarEvent[]) => {
+    const count = events.length;
+    if (!count) return null;
     return (
-      <div className="flex gap-0.5 justify-center mt-0.5">
-        {uniqueTypes.slice(0, 3).map(type => (
-          <div
-            key={type}
-            className={cn(
-              'w-1 h-1 rounded-full',
-              getEventTypeColor(type)
-            )}
-          />
-        ))}
+      <div className="inline-flex items-center justify-center px-1.5 min-w-[18px] h-[18px] text-[11px] font-semibold text-foreground bg-muted rounded-full">
+        {count}
       </div>
     );
   };
@@ -381,7 +373,11 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                   )}>
                     {format(day, 'd')}
                   </div>
-                  {hasEvents && <div className="pointer-events-none">{renderEventDots(events)}</div>}
+                  {hasEvents && (
+                    <div className="pointer-events-none absolute top-1 right-1">
+                      {renderEventCount(events)}
+                    </div>
+                  )}
                 </div>
               );
             }
@@ -410,7 +406,11 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                     )}>
                       {format(day, 'd')}
                     </div>
-                    {hasEvents && renderEventDots(events)}
+                    {hasEvents && (
+                      <div className="pointer-events-none absolute top-1 right-1">
+                        {renderEventCount(events)}
+                      </div>
+                    )}
                   </div>
                 </InteractiveHoverCardTrigger>
                 {hasEvents && (
@@ -538,9 +538,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                     <div className="text-sm font-semibold">
                       {isValid(date) ? format(date, 'EEE, MMM d') : 'Date'}
                     </div>
-                    <div className="flex items-center gap-1">
-                      {renderEventDots(events)}
-                    </div>
+                    {renderEventCount(events)}
                   </div>
                   <div className="mt-2 space-y-1">
                     {events.map(event => (

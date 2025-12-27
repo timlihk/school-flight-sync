@@ -8,12 +8,14 @@ interface NetworkStatusBannerProps {
   onRefresh?: () => void;
   isRefreshing?: boolean;
   dataUpdatedAt?: number;
+  perSource?: Array<{ label: string; updatedAt?: number; isFetching?: boolean }>;
 }
 
 export function NetworkStatusBanner({
   onRefresh,
   isRefreshing,
   dataUpdatedAt,
+  perSource = [],
 }: NetworkStatusBannerProps) {
   const { isOnline, wasOffline, clearWasOffline } = useNetworkStatus();
   const [showReconnected, setShowReconnected] = useState(false);
@@ -96,6 +98,10 @@ export function NetworkStatusBanner({
     const minutesAgo = dataUpdatedAt
       ? Math.round((Date.now() - dataUpdatedAt) / 60000)
       : null;
+    const detail = perSource
+      .filter(p => p.updatedAt)
+      .map(p => `${p.label} ${Math.round((Date.now() - (p.updatedAt || 0)) / 60000)}m ago`)
+      .join(' · ');
 
     return (
       <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2">
@@ -106,6 +112,11 @@ export function NetworkStatusBanner({
             {minutesAgo !== null && (
               <span className="text-muted-foreground">
                 - Last updated {minutesAgo} min ago
+              </span>
+            )}
+            {detail && (
+              <span className="text-muted-foreground">
+                ({detail})
               </span>
             )}
           </div>
