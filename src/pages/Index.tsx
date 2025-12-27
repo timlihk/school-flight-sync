@@ -48,7 +48,6 @@ export default function Index() {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const isBusy = loading || isTransportLoading || notTravellingLoading || isRefreshing;
 
   const { logout } = useFamilyAuth();
   const navigate = useNavigate();
@@ -58,6 +57,7 @@ export default function Index() {
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus, refetch: refetchNotTravelling } = useNotTravelling();
   const { toast } = useToast();
   const { events: calendarEvents } = useCalendarEvents(selectedSchool as 'both' | 'benenden' | 'wycombe');
+  const isBusy = loading || isTransportLoading || notTravellingLoading || isRefreshing;
 
   const triggerHaptic = useCallback(() => {
     if (typeof navigator === 'undefined' || !(navigator as any).vibrate) return;
