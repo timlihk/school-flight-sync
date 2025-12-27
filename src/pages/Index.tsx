@@ -34,6 +34,7 @@ import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format, dif
 import { CalendarEvent, useCalendarEvents } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { cn } from "@/lib/utils";
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
