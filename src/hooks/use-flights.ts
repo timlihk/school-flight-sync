@@ -30,6 +30,8 @@ export function useFlights() {
     isLoading: loading,
     error,
     refetch,
+    dataUpdatedAt,
+    isFetching,
   } = useQuery({
     queryKey: QUERY_KEYS.flights,
     queryFn: fetchFlights,
@@ -347,5 +349,8 @@ export function useFlights() {
     isAddingFlight: addFlightMutation.isPending,
     isEditingFlight: editFlightMutation.isPending,
     isRemovingFlight: removeFlightMutation.isPending,
+    // Data freshness
+    dataUpdatedAt,
+    isFetching,
   };
 }

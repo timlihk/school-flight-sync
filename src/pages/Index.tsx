@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AccountChip } from "@/components/ui/account-chip";
+import { NetworkStatusBanner } from "@/components/ui/network-status-banner";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { TermCard } from "@/components/ui/term-card";
@@ -57,7 +58,7 @@ export default function Index() {
   const { logout } = useFamilyAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus, refetch: refetchFlights } = useFlights();
+  const { flights, loading, addFlight, editFlight, removeFlight, updateFlightStatus, isUpdatingFlightStatus, refetch: refetchFlights, dataUpdatedAt, isFetching: isFlightsFetching } = useFlights();
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm, refetch: refetchTransport } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus, refetch: refetchNotTravelling } = useNotTravelling();
   const { toast } = useToast();
@@ -1060,6 +1061,16 @@ export default function Index() {
           </div>
         </div>
       </header>
+
+      <NetworkStatusBanner
+        dataUpdatedAt={dataUpdatedAt}
+        isRefreshing={isFlightsFetching}
+        onRefresh={() => {
+          refetchFlights();
+          refetchTransport();
+          refetchNotTravelling();
+        }}
+      />
 
       <div className="pb-24 lg:pb-10">
         {renderTabContent()}
