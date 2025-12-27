@@ -14,6 +14,7 @@ import {
   startOfDay
 } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -476,9 +477,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                 {Array.from({ length: monthsToShow }, (_, i) => renderMonth(i)).filter(Boolean)}
               </div>
               {!hasAnyEvents && (
-                <div className="mt-3 text-xs text-muted-foreground">
-                  No events visible for these months yet.
-                </div>
+                <EmptyState variant="calendar" compact />
               )}
             </>
           )}
@@ -486,7 +485,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
           {viewMode === 'list' && (
             <div className="space-y-2">
               {flatEvents.length === 0 && (
-                <div className="text-xs text-muted-foreground">No events to show yet.</div>
+                <EmptyState variant="calendar" compact />
               )}
               {flatEvents.map(({ date, events }) => (
                 <button

@@ -2,9 +2,9 @@ import { memo, useMemo } from "react";
 import { format, formatDistanceToNow, isAfter, isSameDay, startOfDay } from "date-fns";
 import { Plane, Car, School, Calendar, ChevronRight, Clock, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Term, FlightDetails, TransportDetails } from "@/types/school";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface TimelineEvent {
   id: string;
@@ -26,6 +26,8 @@ interface TripTimelineProps {
   onFlightClick: (termId: string) => void;
   onTransportClick: (termId: string) => void;
   onTermClick: (termId: string) => void;
+  onAddFlight?: () => void;
+  onAddTransport?: () => void;
   selectedSchool: 'both' | 'benenden' | 'wycombe';
 }
 
@@ -36,6 +38,8 @@ export const TripTimeline = memo(function TripTimeline({
   onFlightClick,
   onTransportClick,
   onTermClick,
+  onAddFlight,
+  onAddTransport,
   selectedSchool
 }: TripTimelineProps) {
   const events = useMemo(() => {
@@ -195,16 +199,19 @@ export const TripTimeline = memo(function TripTimeline({
   };
 
   if (events.length === 0) {
+    const actions = [];
+    if (onAddFlight) {
+      actions.push({ label: "Add Flight", onClick: onAddFlight });
+    }
+    if (onAddTransport) {
+      actions.push({ label: "Add Transport", onClick: onAddTransport, variant: 'outline' as const });
+    }
+
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <Plane className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-semibold mb-2">No upcoming trips</h3>
-        <p className="text-sm text-muted-foreground max-w-xs">
-          Add flights or transport to see your travel timeline here.
-        </p>
-      </div>
+      <EmptyState
+        variant="trips"
+        actions={actions}
+      />
     );
   }
 

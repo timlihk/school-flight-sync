@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
 import { Plane, LogOut, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid } from "lucide-react";
 import { TripTimeline } from "@/components/ui/trip-timeline";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -740,7 +741,14 @@ export default function Index() {
                 </Button>
               </div>
               {thisWeekEvents.length === 0 && (
-                <div className="text-sm text-muted-foreground">No events in the next few days. We’ll surface the next one automatically.</div>
+                <EmptyState
+                  variant="week"
+                  compact
+                  actions={earliestTerm ? [
+                    { label: "Add Flight", onClick: () => handleAddFlight(earliestTerm.id) },
+                    { label: "Add Transport", onClick: () => handleAddTransport(earliestTerm.id), variant: 'outline' }
+                  ] : undefined}
+                />
               )}
               <div className="space-y-2">
                 {thisWeekEvents.map(event => (
@@ -824,6 +832,8 @@ export default function Index() {
                 onFlightClick={handleViewFlights}
                 onTransportClick={handleViewTransport}
                 onTermClick={handleShowTerm}
+                onAddFlight={() => earliestTerm && handleAddFlight(earliestTerm.id)}
+                onAddTransport={() => earliestTerm && handleAddTransport(earliestTerm.id)}
                 selectedSchool={selectedSchool}
               />
             ) : (
