@@ -165,7 +165,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       });
     });
 
-    // Add not travelling events
+    // Add not travelling events (flights only)
     notTravelling?.forEach(item => {
       const term = termLookup.get(item.termId);
       if (!term) {
@@ -176,21 +176,8 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
         return;
       }
 
-      if (!item.noFlights && !item.noTransport) {
+      if (!item.noFlights) {
         return;
-      }
-
-      const transportCount = transportCountByTerm.get(item.termId) ?? 0;
-      if (item.noTransport && transportCount === 0) {
-        return;
-      }
-
-      const titleDetails: string[] = [];
-      if (item.noFlights) {
-        titleDetails.push('flights');
-      }
-      if (item.noTransport) {
-        titleDetails.push('transport');
       }
 
       allEvents.push({
@@ -198,7 +185,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
         date: new Date(term.startDate),
         type: 'not-travelling',
         school: term.school,
-        title: titleDetails.length ? `Not travelling (${titleDetails.join(' & ')})` : 'Not travelling',
+        title: 'Not travelling (flights)',
         description: 'Staying at school',
         details: { ...item, term }
       });

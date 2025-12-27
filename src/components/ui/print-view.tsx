@@ -163,11 +163,7 @@ export function PrintView({ flights, transport, notTravelling, terms, printOptio
               Ground Transport
             </h4>
 
-            {termNotTravelling?.noTransport ? (
-              <div className="text-sm text-gray-600 italic">
-                No ground transport needed for this term
-              </div>
-            ) : termTransportList.length > 0 ? (
+            {termTransportList.length > 0 ? (
               <div className="space-y-2">
                 {termTransportList.map((termTransport, index) => (
                   <div key={index} className="transport-row">

@@ -118,7 +118,7 @@ export function ToDoDialog({
       }
 
       // Check if transport is needed and missing
-      if (needsFlights && !termNotTravelling?.noTransport && termTransport.length === 0) {
+      if (needsFlights && termTransport.length === 0) {
         const daysUntil = Math.ceil((term.startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         let urgency: 'high' | 'medium' | 'low' = 'low';
         

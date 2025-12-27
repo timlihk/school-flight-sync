@@ -18,8 +18,8 @@ interface TermCardProps {
   onViewFlights: (termId: string) => void;
   onAddTransport: (termId: string) => void;
   onViewTransport: (termId: string) => void;
-  onSetNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
-  onClearNotTravelling: (termId: string, type: 'flights' | 'transport') => void;
+  onSetNotTravelling: (termId: string) => void;
+  onClearNotTravelling: (termId: string) => void;
   notTravellingStatus?: NotTravellingStatus;
   className?: string;
   isExpanded?: boolean;
@@ -27,6 +27,7 @@ interface TermCardProps {
   onUpdateFlightStatus?: (flightId: string) => void;
   isUpdatingFlightStatus?: (flightId: string) => boolean;
   highlighted?: boolean;
+  isMobile?: boolean;
 }
 
 const TermCard = memo(function TermCard({
@@ -45,7 +46,8 @@ const TermCard = memo(function TermCard({
   onExpandedChange,
   onUpdateFlightStatus,
   isUpdatingFlightStatus,
-  highlighted = false
+  highlighted = false,
+  isMobile = false
 }: TermCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [isOpen, setIsOpen] = useState(isExpanded || false);
@@ -372,7 +374,7 @@ const TermCard = memo(function TermCard({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => onSetNotTravelling(term.id, 'flights')}
+                  onClick={() => onSetNotTravelling(term.id)}
                   className="text-xs text-muted-foreground shrink-0"
                 >
                   Not travelling
@@ -586,7 +588,7 @@ const TermCard = memo(function TermCard({
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={() => onSetNotTravelling(term.id, 'flights')}
+                            onClick={() => onSetNotTravelling(term.id)}
                             className="text-xs text-muted-foreground shrink-0"
                           >
                             Not travelling
@@ -653,23 +655,7 @@ const TermCard = memo(function TermCard({
                         )}
                         
                       </div>
-                    ) : notTravellingStatus?.noTransport ? (
-                      <div className="p-3 bg-muted/20 rounded-lg">
-                        <div className="flex items-center justify-center gap-3">
-                          <Badge variant="secondary" className="text-xs">
-                            Not travelling
-                          </Badge>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => onClearNotTravelling(term.id, 'transport')}
-                            className="text-xs h-7 px-3"
-                          >
-                            Clear Status
-                          </Button>
-                        </div>
-                      </div>
-                     ) : (
+                    ) : (
                        <div className="flex gap-2">
                          <Button 
                            variant="outline" 
@@ -679,14 +665,6 @@ const TermCard = memo(function TermCard({
                          >
                            <Car className="h-4 w-4" />
                            Add Transport
-                         </Button>
-                         <Button 
-                           variant="ghost" 
-                           size="sm" 
-                           onClick={() => onSetNotTravelling(term.id, 'transport')}
-                           className="text-xs text-muted-foreground shrink-0"
-                         >
-                           Not travelling
                          </Button>
                        </div>
                      )}

@@ -23,7 +23,7 @@ export function useNotTravelling() {
       id: item.id ? String(item.id) : undefined,
       termId: item.term_id,
       noFlights: item.no_flights || undefined,
-      noTransport: item.no_transport || undefined,
+      noTransport: undefined,
     })) || [];
   };
 
@@ -51,11 +51,11 @@ export function useNotTravelling() {
 
 
   // Simplified not travelling status update with invalidation
-  const setNotTravellingStatus = async (termId: string, type: 'flights' | 'transport') => {
+  const setNotTravellingStatus = async (termId: string) => {
     try {
       const { error } = await apiClient.notTravelling.upsert({
         term_id: termId,
-        ...(type === 'flights' ? { no_flights: true } : { no_transport: true })
+        no_flights: true
       });
 
       if (error) throw error;
@@ -65,7 +65,7 @@ export function useNotTravelling() {
 
       toast({
         title: "Status Updated",
-        description: `Marked as not requiring ${type} for this term.`,
+        description: "Marked as not requiring flights for this term.",
       });
     } catch (error) {
       console.error('Error setting not travelling status:', error);
@@ -77,9 +77,9 @@ export function useNotTravelling() {
     }
   };
 
-  const clearNotTravellingStatus = async (termId: string, type: 'flights' | 'transport') => {
+  const clearNotTravellingStatus = async (termId: string) => {
     try {
-      const { error } = await apiClient.notTravelling.clear(termId, { type });
+      const { error } = await apiClient.notTravelling.clear(termId, { type: 'flights' });
 
       if (error) throw error;
 

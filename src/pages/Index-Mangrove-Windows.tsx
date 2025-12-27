@@ -137,12 +137,12 @@ export default function Index() {
     }
   }, [termLookup]);
 
-  const handleSetNotTravelling = useCallback((termId: string, type: 'flights' | 'transport') => {
-    setNotTravellingStatus(termId, type);
+  const handleSetNotTravelling = useCallback((termId: string) => {
+    setNotTravellingStatus(termId);
   }, [setNotTravellingStatus]);
 
-  const handleClearNotTravelling = useCallback((termId: string, type: 'flights' | 'transport') => {
-    clearNotTravellingStatus(termId, type);
+  const handleClearNotTravelling = useCallback((termId: string) => {
+    clearNotTravellingStatus(termId);
   }, [clearNotTravellingStatus]);
 
   const handleAddTransport = useCallback((termId: string) => {

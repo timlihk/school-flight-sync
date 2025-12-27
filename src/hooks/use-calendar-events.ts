@@ -184,22 +184,8 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
         return;
       }
 
-      if (!item.noFlights && !item.noTransport) {
+      if (!item.noFlights) {
         return;
-      }
-
-      const transportCount = transportCountByTerm.get(item.termId) ?? 0;
-      if (item.noTransport && transportCount === 0) {
-        // Don't show "not travelling" for transport when no details exist yet
-        return;
-      }
-
-      const titleDetails: string[] = [];
-      if (item.noFlights) {
-        titleDetails.push('flights');
-      }
-      if (item.noTransport) {
-        titleDetails.push('transport');
       }
 
       addEvent(allEvents, {
@@ -207,7 +193,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
         date: new Date(term.startDate),
         type: 'not-travelling',
         school: term.school,
-        title: titleDetails.length ? `Not travelling (${titleDetails.join(' & ')})` : 'Not travelling',
+        title: 'Not travelling (flights)',
         description: 'Staying at school',
         details: { ...item, term }
       });
