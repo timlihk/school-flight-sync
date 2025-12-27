@@ -9,6 +9,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AccountChip } from "@/components/ui/account-chip";
 import { NetworkStatusBanner } from "@/components/ui/network-status-banner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { TermCard } from "@/components/ui/term-card";
@@ -56,6 +58,8 @@ export default function Index() {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tripsView, setTripsView] = useState<'timeline' | 'cards'>('timeline');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'booked' | 'needs' | 'staying'>('all');
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const { logout } = useFamilyAuth();
@@ -70,6 +74,32 @@ export default function Index() {
   const dataTimestamps = [flightsUpdatedAt, transportUpdatedAt, notTravUpdatedAt].filter(Boolean) as number[];
   const combinedUpdatedAt = dataTimestamps.length ? Math.max(...dataTimestamps) : undefined;
   const isAnyFetching = isFlightsFetching || isTransportFetching || isNotTravFetching || isRefreshing;
+  const { isOnline } = useNetworkStatus();
+  const fabLabel = activeTab === 'today'
+    ? 'Add flight'
+    : activeTab === 'trips'
+      ? 'Add transport'
+      : activeTab === 'calendar'
+        ? 'Add travel'
+        : 'Share';
+  const handleFab = () => {
+    triggerHaptic();
+    switch (activeTab) {
+      case 'today':
+        if (earliestTerm) handleAddFlight(earliestTerm.id);
+        break;
+      case 'trips':
+        if (earliestTerm) handleAddTransport(earliestTerm.id);
+        break;
+      case 'calendar':
+        setAddSheetOpen(true);
+        break;
+      case 'settings':
+        setShareScope(selectedSchool);
+        setShareDialogOpen(true);
+        break;
+    }
+  };
 
   const triggerHaptic = useCallback((type: 'select' | 'success' | 'warning' = 'select') => {
     if (typeof navigator === 'undefined' || !(navigator as any).vibrate) return;
@@ -386,6 +416,18 @@ export default function Index() {
 
     return next ? [next] : [];
   }, [calendarEvents]);
+  const filteredThisWeek = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return thisWeekEvents.filter(e => {
+      const matchText = !term || e.title.toLowerCase().includes(term) || (e.description || '').toLowerCase().includes(term);
+      const matchStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'booked' && e.type !== 'not-travelling') ||
+        (statusFilter === 'needs' && e.type === 'term') ||
+        (statusFilter === 'staying' && e.type === 'not-travelling');
+      return matchText && matchStatus;
+    });
+  }, [thisWeekEvents, searchTerm, statusFilter]);
 
   const shareNextTravel = useCallback(
     async (scope: 'both' | 'benenden' | 'wycombe') => {
@@ -621,7 +663,12 @@ export default function Index() {
       case 'today':
         return (
           <div className="space-y-5 px-4 py-5 md:px-6">
-            <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm">
+            <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm relative">
+              {!isOnline && (
+                <Badge className="absolute top-3 right-3" variant="secondary">
+                  Cached
+                </Badge>
+              )}
               {/* School scope toggle */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground tracking-wide">
@@ -661,7 +708,7 @@ export default function Index() {
                     <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
                     <div className="text-base text-muted-foreground truncate">{nextTravel.detail}</div>
                     <div className="text-[13px] text-muted-foreground">
-                      {format(nextTravel.date, 'EEE, MMM d')} · {formatDistanceToNow(nextTravel.date, { addSuffix: true })}
+                      {format(nextTravel.date, 'EEE, MMM d')} · {formatDistanceToNow(nextTravel.date, { addSuffix: true })} · {formatDistanceToNow(nextTravel.date, { includeSeconds: false })}
                     </div>
                     <div className="flex items-center gap-2 pt-1 flex-wrap">
                       <Badge
@@ -733,18 +780,78 @@ export default function Index() {
                 </Button>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Button
-                  className="h-12"
-                  disabled={isBusy}
-                  onClick={() => {
-                    if (isBusy) return;
-                    triggerHaptic();
-                    earliestTerm ? handleAddFlight(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
-                  }}
-                >
-                  {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                  Add flight
-                </Button>
+                <div className="w-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search flights, transport, events"
+                      className="h-11"
+                    />
+                    <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+                      <SelectTrigger className="h-11 w-32">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="booked">Booked</SelectItem>
+                        <SelectItem value="needs">Needs booking</SelectItem>
+                        <SelectItem value="staying">Staying</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button
+                      className="h-12"
+                      disabled={isBusy}
+                      onClick={() => {
+                        if (isBusy) return;
+                        triggerHaptic();
+                        earliestTerm ? handleAddFlight(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                      }}
+                    >
+                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                      Add flight
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-12"
+                      disabled={isBusy}
+                      onClick={() => {
+                        if (isBusy) return;
+                        triggerHaptic();
+                        earliestTerm ? handleAddTransport(earliestTerm.id) : toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                      }}
+                    >
+                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                      Add transport
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="h-12"
+                      disabled={isBusy}
+                      onClick={() => {
+                        triggerHaptic();
+                        setAddSheetOpen(true);
+                      }}
+                    >
+                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                      Quick add sheet
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-12"
+                      disabled={isBusy}
+                      onClick={() => {
+                        triggerHaptic();
+                        setActiveTab('calendar');
+                      }}
+                    >
+                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                      Open calendar
+                    </Button>
+                  </div>
+                </div>
                 <Button
                   variant="outline"
                   className="h-12"
@@ -1148,13 +1255,10 @@ export default function Index() {
       {isMobile && (
         <Button
           className="fixed bottom-32 right-4 z-40 rounded-full shadow-lg h-12 px-4 gap-2"
-          onClick={() => {
-            triggerHaptic();
-            setAddSheetOpen(true);
-          }}
+          onClick={handleFab}
         >
           <Plus className="h-5 w-5" />
-          <span className="text-sm">Add travel</span>
+          <span className="text-sm">{fabLabel}</span>
         </Button>
       )}
 
@@ -1172,6 +1276,7 @@ export default function Index() {
               <FlightDialog
                 term={selectedTerm}
                 flights={flights.filter(f => f.termId === selectedTerm.id)}
+                previousFlights={flights}
                 onAddFlight={addFlight}
                 onEditFlight={editFlight}
                 onRemoveFlight={removeFlight}
@@ -1193,6 +1298,7 @@ export default function Index() {
               <TransportDialog
                 term={selectedTerm}
                 transport={getTransportForTerm(selectedTerm.id)}
+                previousTransport={transport}
                 onAddTransport={addTransport}
                 onEditTransport={editTransport}
                 onRemoveTransport={removeTransport}

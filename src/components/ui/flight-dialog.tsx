@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 interface FlightDialogProps {
   term: Term;
   flights: FlightDetails[];
+  previousFlights?: FlightDetails[];
   onAddFlight: (flight: Omit<FlightDetails, 'id'>) => void;
   onRemoveFlight: (flightId: string) => void;
   onEditFlight?: (flightId: string, flight: Omit<FlightDetails, 'id'>) => void;
@@ -31,6 +32,7 @@ interface FlightDialogProps {
 export function FlightDialog({ 
   term, 
   flights, 
+  previousFlights = [],
   onAddFlight, 
   onRemoveFlight, 
   onEditFlight,
@@ -129,6 +131,31 @@ export function FlightDialog({
     }
 
     resetForm();
+  };
+
+  const handleDuplicateLast = () => {
+    const last = previousFlights
+      .filter(f => f.termId !== term.id)
+      .sort((a, b) => b.departure.date.getTime() - a.departure.date.getTime())[0];
+    if (!last) {
+      toast({ title: "No previous flights", description: "Add a flight first to reuse it.", variant: "destructive" });
+      return;
+    }
+    setIsAddingFlight(true);
+    setNewFlight({
+      type: last.type,
+      airline: last.airline,
+      flightNumber: last.flightNumber,
+      departureAirport: last.departure.airport,
+      departureDate: format(term.startDate, 'yyyy-MM-dd'),
+      departureTime: last.departure.time,
+      arrivalAirport: last.arrival.airport,
+      arrivalDate: format(term.startDate, 'yyyy-MM-dd'),
+      arrivalTime: last.arrival.time,
+      confirmationCode: last.confirmationCode || '',
+      notes: last.notes || ''
+    });
+    toast({ title: "Copied last flight", description: "Review times and save." });
   };
 
   const resetForm = () => {
@@ -397,6 +424,9 @@ export function FlightDialog({
             </div>
 
             <div className="flex gap-2">
+              <Button variant="outline" onClick={handleDuplicateLast} className="flex-1">
+                Reuse last flight
+              </Button>
               <Button onClick={handleAddFlight} variant="flight">
                 {editingFlight ? 'Update Flight' : 'Add Flight'}
               </Button>

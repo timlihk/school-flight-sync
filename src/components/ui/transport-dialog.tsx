@@ -15,6 +15,7 @@ import { useServiceProviders } from "@/hooks/use-service-providers";
 interface TransportDialogProps {
   term: Term;
   transport: TransportDetails[];
+  previousTransport?: TransportDetails[];
   onAddTransport: (transport: Omit<TransportDetails, 'id'>) => void;
   onRemoveTransport: (transportId: string) => void;
   onEditTransport: (transportId: string, updates: Partial<TransportDetails>) => void;
@@ -26,6 +27,7 @@ interface TransportDialogProps {
 export function TransportDialog({
   term,
   transport,
+  previousTransport = [],
   onAddTransport,
   onRemoveTransport,
   onEditTransport,
@@ -119,6 +121,27 @@ export function TransportDialog({
     }
 
     resetForm();
+  };
+
+  const handleDuplicateLast = () => {
+    const last = previousTransport
+      .filter(t => t.termId !== term.id)
+      .sort((a, b) => {
+        const aDate = a.pickupTime ? new Date(a.pickupTime).getTime() : 0;
+        const bDate = b.pickupTime ? new Date(b.pickupTime).getTime() : 0;
+        return bDate - aDate;
+      })[0];
+    if (!last) return;
+    setIsAddingTransport(true);
+    setNewTransport({
+      type: last.type,
+      direction: last.direction || 'outbound',
+      driverName: last.driverName || '',
+      phoneNumber: last.phoneNumber || '',
+      licenseNumber: last.licenseNumber || '',
+      pickupTime: last.pickupTime || '',
+      notes: last.notes || ''
+    });
   };
 
   const resetForm = () => {
@@ -410,7 +433,7 @@ export function TransportDialog({
             </div>
           </div>
         ) : (
-          <div className="flex justify-center pt-4 border-t">
+          <div className="flex justify-center pt-4 border-t gap-3">
             <Button 
               onClick={() => setIsAddingTransport(true)}
               variant="outline"
@@ -419,6 +442,14 @@ export function TransportDialog({
             >
               <Plus className="h-4 w-4" />
               Add New Transport
+            </Button>
+            <Button
+              onClick={handleDuplicateLast}
+              variant="secondary"
+              size="sm"
+              className="gap-2"
+            >
+              Reuse last
             </Button>
           </div>
         )}

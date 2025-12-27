@@ -513,45 +513,48 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
           )}
 
           {viewMode === 'list' && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {flatEvents.length === 0 && (
                 <EmptyState variant="calendar" compact />
               )}
               {flatEvents.map(({ date, events }) => (
-                <button
-                  key={date.toISOString()}
-                  type="button"
-                  className="w-full text-left rounded-lg border border-border/60 bg-card/60 p-3 transition-colors touch-manipulation select-none active:bg-accent/80"
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    markTouchHandled();
-                    openedAtRef.current = Date.now();
-                    setMobileEvents({ date, events });
-                  }}
-                  onClick={() => {
-                    if (touchHandledRef.current) return;
-                    openedAtRef.current = Date.now();
-                    setMobileEvents({ date, events });
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold">
-                      {isValid(date) ? format(date, 'EEE, MMM d') : 'Date'}
-                    </div>
-                    {renderEventCount(events)}
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    {events.map(event => (
-                      <div key={event.id} className="flex items-center gap-2 text-xs">
-                        <div className={cn('w-1.5 h-1.5 rounded-full', getEventTypeColor(event.type))} />
-                        <span className="font-medium truncate">{event.title}</span>
-                        <Badge variant="outline" className="text-[10px]">
-                          {event.school === 'benenden' ? 'Benenden' : 'Wycombe'}
-                        </Badge>
+                <div key={date.toISOString()} className="space-y-1">
+                  <div className="sticky top-0 z-10 bg-card/90 backdrop-blur px-1 py-1 rounded">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-semibold">
+                        {isValid(date) ? format(date, 'EEE, MMM d') : 'Date'}
                       </div>
-                    ))}
+                      {renderEventCount(events)}
+                    </div>
                   </div>
-                </button>
+                  <button
+                    type="button"
+                    className="w-full text-left rounded-lg border border-border/60 bg-card/60 p-3 transition-colors touch-manipulation select-none active:bg-accent/80"
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      markTouchHandled();
+                      openedAtRef.current = Date.now();
+                      setMobileEvents({ date, events });
+                    }}
+                    onClick={() => {
+                      if (touchHandledRef.current) return;
+                      openedAtRef.current = Date.now();
+                      setMobileEvents({ date, events });
+                    }}
+                  >
+                    <div className="mt-2 space-y-1">
+                      {events.map(event => (
+                        <div key={event.id} className="flex items-center gap-2 text-xs">
+                          <div className={cn('w-1.5 h-1.5 rounded-full', getEventTypeColor(event.type))} />
+                          <span className="font-medium truncate">{event.title}</span>
+                          <Badge variant="outline" className="text-[10px]">
+                            {event.school === 'benenden' ? 'Benenden' : 'Wycombe'}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </button>
+                </div>
               ))}
             </div>
           )}
