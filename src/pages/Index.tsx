@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, laz
 import { Plane, LogOut, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid } from "lucide-react";
 import { TripTimeline } from "@/components/ui/trip-timeline";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CountdownRing } from "@/components/ui/countdown-ring";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -608,55 +609,70 @@ export default function Index() {
         return (
           <div className="space-y-5 px-4 py-5 md:px-6">
             <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground tracking-wide">
-                    <span>Next travel</span>
-                    <Badge variant="secondary" className="rounded-full">
-                      {heroScope === 'both' ? 'Both' : heroScope === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}
-                    </Badge>
-                  </div>
-                  {nextTravel ? (
-                    <>
-                      <div className="text-xl font-semibold leading-tight">{nextTravel.title}</div>
-                      <div className="text-sm text-muted-foreground">{nextTravel.detail}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(nextTravel.date, { addSuffix: true })}
-                      </div>
-                      <div className="flex items-center gap-2 pt-2 flex-wrap">
-                        <Badge variant={nextTravel.status === 'booked' ? 'default' : nextTravel.status === 'staying' ? 'secondary' : 'outline'}>
-                          {nextTravel.status === 'booked' ? 'Booked' : nextTravel.status === 'staying' ? 'Not travelling' : 'Needs booking'}
-                        </Badge>
-                        {nextTravel.termId && (
-                          <Button size="sm" variant="outline" onClick={() => handleHighlightTerms([nextTravel.termId!])}>
-                            Go to term
-                          </Button>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">Add flights or transport to see your next trip here.</div>
-                  )}
+              {/* School scope toggle */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground tracking-wide">
+                  <span>Next travel</span>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="flex rounded-full border border-border/60 bg-muted/40 p-1">
-                    {(['both','benenden','wycombe'] as const).map(scope => (
-                      <Button
-                        key={scope}
-                        size="sm"
-                        variant={heroScope === scope ? 'default' : 'ghost'}
-                        className="h-7 px-3 text-xs"
-                        onClick={() => setHeroScope(scope)}
-                      >
-                        {scope === 'both' ? 'Both' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
-                      </Button>
-                    ))}
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => { setShareScope(heroScope); setShareDialogOpen(true); }}>
-                    <Share2 className="h-4 w-4 mr-1.5" /> Share
-                  </Button>
+                <div className="flex rounded-full border border-border/60 bg-muted/40 p-0.5">
+                  {(['both','benenden','wycombe'] as const).map(scope => (
+                    <Button
+                      key={scope}
+                      size="sm"
+                      variant={heroScope === scope ? 'default' : 'ghost'}
+                      className="h-6 px-2 text-[10px]"
+                      onClick={() => setHeroScope(scope)}
+                    >
+                      {scope === 'both' ? 'Both' : scope === 'benenden' ? 'Ben' : 'WA'}
+                    </Button>
+                  ))}
                 </div>
               </div>
+
+              {nextTravel ? (
+                <div className="flex items-center gap-4">
+                  {/* Countdown Ring */}
+                  <CountdownRing
+                    targetDate={nextTravel.date}
+                    size="lg"
+                    school={nextTravel.school}
+                  />
+
+                  {/* Trip details */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="text-lg font-semibold leading-tight truncate">{nextTravel.title}</div>
+                    <div className="text-sm text-muted-foreground truncate">{nextTravel.detail}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {format(nextTravel.date, 'EEE, MMM d')} · {formatDistanceToNow(nextTravel.date, { addSuffix: true })}
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 flex-wrap">
+                      <Badge
+                        variant={nextTravel.status === 'booked' ? 'default' : nextTravel.status === 'staying' ? 'secondary' : 'outline'}
+                        className={nextTravel.school === 'benenden' ? 'bg-blue-500 hover:bg-blue-600' : nextTravel.school === 'wycombe' ? 'bg-green-500 hover:bg-green-600' : ''}
+                      >
+                        {nextTravel.status === 'booked' ? 'Booked' : nextTravel.status === 'staying' ? 'Not travelling' : 'Needs booking'}
+                      </Badge>
+                      {nextTravel.termId && (
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handleHighlightTerms([nextTravel.termId!])}>
+                          View →
+                        </Button>
+                      )}
+                      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setShareScope(heroScope); setShareDialogOpen(true); }}>
+                        <Share2 className="h-3 w-3 mr-1" /> Share
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  variant="trips"
+                  compact
+                  actions={earliestTerm ? [
+                    { label: "Add Flight", onClick: () => handleAddFlight(earliestTerm.id) },
+                    { label: "Add Transport", onClick: () => handleAddTransport(earliestTerm.id), variant: 'outline' }
+                  ] : undefined}
+                />
+              )}
             </div>
 
             <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm space-y-3">
