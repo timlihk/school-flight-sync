@@ -10,7 +10,8 @@ import {
   subMonths,
   isSameMonth,
   isToday,
-  isValid
+  isValid,
+  startOfDay
 } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -60,6 +61,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   }, [currentDate, monthsToShow, getEventsForDate]);
 
   const flatEvents = useMemo(() => {
+    const today = startOfDay(new Date());
     const items: { date: Date; events: CalendarEvent[] }[] = [];
     for (let i = 0; i < monthsToShow; i++) {
       const monthDate = addMonths(currentDate, i);
@@ -68,7 +70,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
       let day = monthStart;
       while (day <= monthEnd) {
         const events = getEventsForDate(day);
-        if (events.length) {
+        if (events.length && day >= today) {
           items.push({ date: day, events });
         }
         day = addDays(day, 1);
