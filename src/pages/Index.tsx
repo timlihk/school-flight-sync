@@ -82,6 +82,8 @@ export default function Index() {
   const combinedUpdatedAt = dataTimestamps.length ? Math.max(...dataTimestamps) : undefined;
   const isAnyFetching = isFlightsFetching || isTransportFetching || isNotTravFetching || isRefreshing;
   const { isOnline } = useNetworkStatus();
+  const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
+
   const pendingByTerm = useMemo(() => {
     const map: Record<string, number> = {};
     pendingOps.forEach(op => {
@@ -123,8 +125,6 @@ export default function Index() {
     const matchesStatus = statusFilter === 'all' || statusFilter === status;
     return matchesSearch && matchesStatus;
   }, [searchTerm, statusFilter]);
-
-  const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
 
   useEffect(() => {
     if (isOnline && pendingOps.length) {
