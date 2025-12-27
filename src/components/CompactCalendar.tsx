@@ -30,7 +30,6 @@ import {
 import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { useMemo } from 'react';
 
 interface CompactCalendarProps {
   selectedSchool: School;
@@ -86,9 +85,10 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
       const width = window.innerWidth;
       const mobile = width < 768;
       setIsMobile(mobile);
-      if (!mobile) {
-        setViewMode('grid');
-      }
+      setViewMode(prev => {
+        if (mobile) return 'list';
+        return prev === 'list' ? 'grid' : prev;
+      });
       if (width >= 1536) return 3; // 2xl
       if (width >= 1024) return 2; // lg
       return 1;

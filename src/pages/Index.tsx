@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
-import { Plane, ChevronDown, ChevronUp, LogOut, Calendar, Home, CalendarDays, Share2 } from "lucide-react";
+import { Plane, ChevronDown, ChevronUp, LogOut, Calendar, Home, CalendarDays, Share2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -22,6 +22,7 @@ import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term, TransportDetails } from "@/types/school";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { isAfter, isToday, formatDistanceToNow } from "date-fns";
 import { CalendarEvent } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +41,8 @@ export default function Index() {
   const [highlightedTerms, setHighlightedTerms] = useState<Set<string>>(new Set());
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareScope, setShareScope] = useState<'both' | 'benenden' | 'wycombe'>('both');
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const calendarSectionRef = useRef<HTMLDivElement | null>(null);
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -50,6 +53,14 @@ export default function Index() {
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus } = useNotTravelling();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setIsMobile(window.innerWidth < 768);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   // Memoize expensive term filtering and sorting operations
   const filteredTerms = useMemo(() => {
@@ -331,31 +342,33 @@ export default function Index() {
     [computeNextTravel, selectedSchool]
   );
 
+  const buildShareText = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
+    const entry = computeNextTravel(scope);
+    if (!entry) return '';
+    const schoolLabel = scope === 'both'
+      ? 'Both schools'
+      : scope === 'benenden'
+        ? 'Benenden'
+        : 'Wycombe Abbey';
+    const lines = [
+      `Next travel (${schoolLabel}): ${entry.title} on ${entry.date.toDateString()} (${formatDistanceToNow(entry.date, { addSuffix: true })})`,
+    ];
+    if (entry.detail) lines.push(entry.detail);
+    lines.push(entry.status === 'booked' ? 'Booked' : entry.status === 'staying' ? 'Not travelling' : 'Needs booking');
+    return lines.join('\n');
+  }, [computeNextTravel]);
+
   const shareNextTravel = useCallback(
     async (scope: 'both' | 'benenden' | 'wycombe') => {
       try {
-        const entry = computeNextTravel(scope);
-        if (!entry) {
+        const shareText = buildShareText(scope);
+        if (!shareText) {
           toast({
             title: "No travel to share",
             description: "Add a flight or transport first.",
           });
           return;
         }
-
-        const schoolLabel = scope === 'both'
-          ? 'Both schools'
-          : scope === 'benenden'
-            ? 'Benenden'
-            : 'Wycombe Abbey';
-
-        const lines = [
-          `Next travel (${schoolLabel}): ${entry.title} on ${entry.date.toDateString()} (${formatDistanceToNow(entry.date, { addSuffix: true })})`,
-        ];
-        if (entry.detail) lines.push(entry.detail);
-        lines.push(entry.status === 'booked' ? 'Booked' : entry.status === 'staying' ? 'Not travelling' : 'Needs booking');
-
-        const shareText = lines.join('\n');
 
         if (typeof navigator !== 'undefined' && navigator.share) {
           await navigator.share({
@@ -384,8 +397,55 @@ export default function Index() {
         });
       }
     },
-    [computeNextTravel, toast]
+    [buildShareText, toast]
   );
+
+  const shareViaChannel = useCallback((scope: 'both' | 'benenden' | 'wycombe', channel: 'sms' | 'whatsapp' | 'telegram' | 'copy') => {
+    const text = buildShareText(scope);
+    if (!text) {
+      toast({
+        title: "No travel to share",
+        description: "Add a flight or transport first.",
+      });
+      return;
+    }
+    const encoded = encodeURIComponent(text);
+    let url = '';
+    switch (channel) {
+      case 'sms':
+        url = `sms:&body=${encoded}`;
+        break;
+      case 'whatsapp':
+        url = `https://wa.me/?text=${encoded}`;
+        break;
+      case 'telegram':
+        url = `https://t.me/share/url?url=&text=${encoded}`;
+        break;
+      case 'copy':
+        break;
+    }
+
+    if (channel === 'copy') {
+      if (navigator?.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          toast({ title: "Copied", description: "Share text copied to clipboard." });
+        });
+      } else {
+        toast({ title: "Copy unavailable", description: "Clipboard not supported here.", variant: "destructive" });
+      }
+      return;
+    }
+
+    try {
+      const win = window.open(url, '_blank');
+      if (!win) {
+        window.location.href = url;
+      }
+    } catch (err) {
+      console.error('Share channel failed', err);
+      toast({ title: "Sharing failed", description: "Try copying the text instead.", variant: "destructive" });
+    }
+  }, [buildShareText, toast]);
 
 
 
@@ -565,7 +625,7 @@ export default function Index() {
 
       {nextTravel && (
         <div className="container mx-auto px-6 pt-4">
-          <div className="rounded-xl border border-border/60 bg-card/70 p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="rounded-xl border border-border/60 bg-card/70 p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between sticky top-[68px] z-30">
             <div className="space-y-1">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Next travel</div>
               <div className="text-lg font-semibold text-foreground">{nextTravel.title}</div>
@@ -604,6 +664,15 @@ export default function Index() {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8 pb-24 lg:pb-8">
+        {isMobile && (
+          <Button
+            className="fixed bottom-20 right-4 z-40 rounded-full shadow-lg h-12 px-4 gap-2"
+            onClick={() => setAddSheetOpen(true)}
+          >
+            <Plus className="h-5 w-5" />
+            <span className="text-sm">Add travel</span>
+          </Button>
+        )}
         {flights.length === 0 && transport.length === 0 && notTravelling.length === 0 && earliestTerm && (
           <div className="mb-6 rounded-xl border border-dashed border-muted-foreground/30 bg-card/60 p-4 md:p-6 flex flex-col gap-3 md:items-center md:text-center">
             <div className="text-sm md:text-base text-muted-foreground">
@@ -806,21 +875,13 @@ export default function Index() {
                 ))}
               </div>
               <div className="rounded-lg border bg-muted/40 p-3 text-sm whitespace-pre-line">
-                {(() => {
-                  const entry = computeNextTravel(shareScope);
-                  if (!entry) return 'No travel found to share yet.';
-                  const schoolLabel = shareScope === 'both'
-                    ? 'Both schools'
-                    : shareScope === 'benenden'
-                      ? 'Benenden'
-                      : 'Wycombe Abbey';
-                  const lines = [
-                    `Next travel (${schoolLabel}): ${entry.title} on ${entry.date.toDateString()} (${formatDistanceToNow(entry.date, { addSuffix: true })})`,
-                  ];
-                  if (entry.detail) lines.push(entry.detail);
-                  lines.push(entry.status === 'booked' ? 'Booked' : entry.status === 'staying' ? 'Not travelling' : 'Needs booking');
-                  return lines.join('\n');
-                })()}
+                {buildShareText(shareScope) || 'No travel found to share yet.'}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={() => shareViaChannel(shareScope, 'sms')}>Messages</Button>
+                <Button variant="outline" onClick={() => shareViaChannel(shareScope, 'whatsapp')}>WhatsApp</Button>
+                <Button variant="outline" onClick={() => shareViaChannel(shareScope, 'telegram')}>Telegram</Button>
+                <Button variant="outline" onClick={() => shareViaChannel(shareScope, 'copy')}>Copy</Button>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="ghost" onClick={() => setShareDialogOpen(false)}>
@@ -870,6 +931,58 @@ export default function Index() {
             </Button>
           </div>
         </div>
+
+        <Sheet open={addSheetOpen} onOpenChange={setAddSheetOpen}>
+          <SheetContent side="bottom" className="h-auto pb-6">
+            <SheetHeader>
+              <SheetTitle>Quick add</SheetTitle>
+              <SheetDescription>Use the nearest upcoming term for fast actions.</SheetDescription>
+            </SheetHeader>
+            <div className="mt-4 space-y-2">
+              <Button
+                className="w-full h-12"
+                onClick={() => {
+                  if (!earliestTerm) {
+                    toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
+                    return;
+                  }
+                  handleAddFlight(earliestTerm.id);
+                  setAddSheetOpen(false);
+                }}
+              >
+                Add flight ({earliestTerm ? earliestTerm.name : 'no term'})
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full h-12"
+                onClick={() => {
+                  if (!earliestTerm) {
+                    toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
+                    return;
+                  }
+                  handleAddTransport(earliestTerm.id);
+                  setAddSheetOpen(false);
+                }}
+              >
+                Add transport
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full h-12"
+                onClick={() => {
+                  if (!earliestTerm) {
+                    toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
+                    return;
+                  }
+                  handleShowTerm(earliestTerm.id);
+                  setAddSheetOpen(false);
+                }}
+              >
+                View term details
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </main>
     </div>
   );
