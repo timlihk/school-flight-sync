@@ -38,120 +38,79 @@ export function NextTravelHero({
   onShare,
 }: NextTravelHeroProps) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm relative">
+    <div className="relative overflow-hidden rounded-[28px] border border-border/30 bg-gradient-to-br from-card via-card to-muted/40 p-6 shadow-[0_30px_60px_rgba(15,23,42,0.15)]">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/0 pointer-events-none" />
       {!isOnline && (
-        <Badge className="absolute top-3 right-3" variant="secondary">
-          Cached
+        <Badge className="absolute top-4 right-4 bg-white/10 backdrop-blur text-[11px]" variant="secondary">
+          Offline cache
         </Badge>
       )}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-xs uppercase text-muted-foreground tracking-wide">
-          Next travel
+
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 relative z-10">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Next travel</p>
+          <h2 className="text-3xl font-semibold tracking-tight">{entry ? entry.title : "No travel booked"}</h2>
         </div>
-        <div className="flex rounded-full border border-border/60 bg-muted/40 p-0.5">
+        <div className="flex items-center gap-1 rounded-full border border-white/20 bg-white/5 p-1 backdrop-blur">
           {(["benenden", "wycombe"] as const).map(option => (
             <Button
               key={option}
               size="sm"
               variant={scope === option ? "default" : "ghost"}
-              className="h-10 px-3 text-xs"
+              className={`h-9 rounded-full px-4 text-sm ${scope === option ? "bg-white text-card-foreground" : "text-white/70 hover:text-white"}`}
               onClick={() => onScopeChange(option)}
             >
-              {option === "benenden" ? "Ben" : "WA"}
+              {option === "benenden" ? "Benenden" : "Wycombe"}
             </Button>
           ))}
         </div>
       </div>
 
       {entry ? (
-        <div className="space-y-4">
-          <div className="space-y-1 text-center sm:text-left">
-            <div className="text-xs uppercase text-muted-foreground tracking-wide">Departing next</div>
-            <div className="text-2xl font-semibold leading-tight truncate">{entry.title}</div>
-            <p className="text-sm text-muted-foreground truncate">{entry.detail}</p>
+        <div className="space-y-5 relative z-10">
+          <p className="text-lg text-muted-foreground">{entry.detail}</p>
+          <div className="grid gap-4 text-sm sm:grid-cols-3">
+            <InfoTile
+              label="Departure"
+              primary={format(entry.date, "EEE, MMM d")}
+              secondary={entry.meta?.timeLabel || format(entry.date, "h:mm a")}
+              footnote={`${formatDistanceToNow(entry.date, { addSuffix: true })} · ${entryDetail}`}
+              icon={<Clock className="h-4 w-4" />}
+            />
+            <InfoTile
+              label="Confirmation"
+              primary={entry.meta?.confirmation ?? "Not provided"}
+              secondary="Tap edit to update"
+              icon={<Hash className="h-4 w-4" />}
+            />
+            <InfoTile
+              label="Notes"
+              primary={entry.meta?.notes ?? "No notes yet"}
+              icon={<StickyNote className="h-4 w-4" />}
+            />
           </div>
-          <div className="grid gap-3 text-sm sm:grid-cols-3">
-            <div className={tileClass}>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-[11px] uppercase text-muted-foreground">Timing</p>
-                <p className="font-semibold">{format(entry.date, "EEE, MMM d")}</p>
-                <p className="text-muted-foreground">
-                  {entry.meta?.timeLabel || format(entry.date, "h:mm a")}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {formatDistanceToNow(entry.date, { addSuffix: true })} · {entryDetail}
-                </p>
-              </div>
-            </div>
-            <div className={tileClass}>
-              <Hash className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-[11px] uppercase text-muted-foreground">Confirmation</p>
-                <p className="font-semibold">
-                  {entry.meta?.confirmation ?? "Not provided"}
-                </p>
-                <p className="text-muted-foreground text-xs">Tap edit to update</p>
-              </div>
-            </div>
-            <div className={tileClass}>
-              <StickyNote className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-[11px] uppercase text-muted-foreground">Notes</p>
-                <p className="font-semibold text-muted-foreground line-clamp-2">
-                  {entry.meta?.notes ?? "No notes yet"}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-            <Badge
-              variant={entry.status === "booked" ? "default" : entry.status === "staying" ? "secondary" : "outline"}
-              className={
-                entry.school === "benenden"
-                  ? "bg-blue-500 hover:bg-blue-600"
-                  : "bg-green-500 hover:bg-green-600"
-              }
-            >
-              {entry.status === "booked"
-                ? "Booked"
-                : entry.status === "staying"
-                  ? "Not travelling"
-                  : "Needs booking"}
-            </Badge>
+          <div className="flex flex-wrap items-center gap-3">
+            <StatusPill status={entry.status} school={entry.school} />
             {entry.termId && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 px-3 text-xs"
-                onClick={() => onViewTrip(entry.termId!)}
-              >
-                View trip
-              </Button>
+              <SubtleButton label="View trip" onClick={() => onViewTrip(entry.termId!)} />
             )}
             <Button
               size="sm"
               variant={entry.status === "booked" ? "outline" : "default"}
-              className="h-8 px-3 text-xs"
+              className="rounded-full px-5"
               onClick={() => onManageBooking(entry)}
             >
               {entry.status === "booked" ? "Edit booking" : "Add booking"}
             </Button>
-            <Button size="sm" variant="ghost" className="h-8 px-3 text-xs" onClick={onShare}>
-              <Share2 className="h-3 w-3 mr-1" /> Share
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 px-3 text-xs gap-1"
+            <SubtleButton label="Share" icon={<Share2 className="h-3.5 w-3.5" />} onClick={onShare} />
+            <SubtleButton
+              label={isExpanded ? "Hide details" : "More details"}
+              icon={isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
               onClick={onToggleExpanded}
-            >
-              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              {isExpanded ? "Hide details" : "More details"}
-            </Button>
+            />
           </div>
           {isExpanded && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <DetailTile label="Departure">
                 <p className="text-sm font-semibold">{format(entry.date, "EEE, MMM d")}</p>
                 <p className="text-xs text-muted-foreground">
@@ -176,24 +135,73 @@ export function NextTravelHero({
           )}
         </div>
       ) : (
-        <EmptyState
-          variant="trips"
-          compact
-          actions={
-            earliestTerm
-              ? [
-                  { label: "Add Flight", onClick: () => onAddFlight(earliestTerm.id) },
-                  { label: "Add Transport", onClick: () => onAddTransport(earliestTerm.id), variant: "outline" as const },
-                ]
-              : undefined
-          }
-        />
+        <div className="relative z-10">
+          <EmptyState
+            variant="trips"
+            compact
+            actions={
+              earliestTerm
+                ? [
+                    { label: "Add Flight", onClick: () => onAddFlight(earliestTerm.id) },
+                    { label: "Add Transport", onClick: () => onAddTransport(earliestTerm.id), variant: "outline" as const },
+                  ]
+                : undefined
+            }
+          />
+        </div>
       )}
     </div>
   );
 }
 
-const tileClass = "flex items-start gap-2 rounded-xl bg-muted/30 p-3";
+const InfoTile = ({
+  label,
+  primary,
+  secondary,
+  footnote,
+  icon,
+}: {
+  label: string;
+  primary: React.ReactNode;
+  secondary?: React.ReactNode;
+  footnote?: React.ReactNode;
+  icon?: React.ReactNode;
+}) => (
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/60">
+      {icon}
+      {label}
+    </div>
+    <p className="mt-2 text-base font-semibold text-white">{primary}</p>
+    {secondary && <p className="text-sm text-white/70">{secondary}</p>}
+    {footnote && <p className="text-xs text-white/60 mt-1">{footnote}</p>}
+  </div>
+);
+
+const StatusPill = ({ status, school }: { status: NextTravelEntry["status"]; school: "benenden" | "wycombe" }) => {
+  const colors =
+    school === "benenden"
+      ? "bg-purple-500/30 text-purple-50"
+      : "bg-emerald-500/30 text-emerald-50";
+  const label =
+    status === "booked" ? "Booked" : status === "staying" ? "Not travelling" : "Needs booking";
+  return (
+    <span className={`rounded-full px-4 py-1 text-xs font-medium ${colors}`}>
+      {label}
+    </span>
+  );
+};
+
+const SubtleButton = ({ label, icon, onClick }: { label: string; icon?: React.ReactNode; onClick: () => void }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-white/80 transition hover:border-white/40 hover:text-white"
+  >
+    {icon}
+    {label}
+  </button>
+);
 
 function DetailTile({ label, children }: { label: string; children: React.ReactNode }) {
   return (

@@ -31,77 +31,89 @@ export function PlanFastCard({
   contextLabel,
 }: PlanFastCardProps) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm space-y-3">
-      <div className="flex items-center justify-between">
+    <div className="rounded-[28px] border border-border/30 bg-card/95 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.08)] space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase text-muted-foreground">Actions</p>
-          <h3 className="text-xl font-semibold">Plan fast</h3>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Plan fast</p>
+          <h3 className="text-2xl font-semibold tracking-tight">What’s next?</h3>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
+        <Button variant="ghost" size="sm" className="gap-2 rounded-full border border-border/40 px-4" onClick={onRefresh} disabled={isRefreshing}>
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </div>
-      <div className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <Input
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search flights, transport, events"
-            className="h-11 w-full"
-          />
-          <Select value={statusFilter} onValueChange={(value: PlanFastCardProps["statusFilter"]) => onStatusChange(value)}>
-            <SelectTrigger className="h-11 w-full">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="booked">Booked</SelectItem>
-              <SelectItem value="needs">Needs booking</SelectItem>
-              <SelectItem value="staying">Staying</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <Button
-            variant="secondary"
-            className="h-12 w-full justify-start gap-3"
-            disabled={isBusy}
-            onClick={onAddFlight}
-          >
-            <Plane className="h-4 w-4" />
-            {contextLabel ? `Add flight (${contextLabel})` : "Add flight"}
-          </Button>
-          <Button
-            variant="outline"
-            className="h-12 w-full justify-start gap-3"
-            disabled={isBusy}
-            onClick={onAddTransport}
-          >
-            <BusFront className="h-4 w-4" />
-            {contextLabel ? `Add transport (${contextLabel})` : "Add transport"}
-          </Button>
-          <Button
-            variant="ghost"
-            className="h-12 w-full justify-start gap-3"
-            onClick={onShare}
-          >
-            <Share2 className="h-4 w-4" />
-            Share schedule
-          </Button>
-        </div>
-        {contextLabel && (
-          <p className="text-xs text-muted-foreground">
-            Actions default to {contextLabel}. Switch schools or highlight a term to change context.
-          </p>
-        )}
+      <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Input
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search flights, transport, events"
+          className="h-12 rounded-full bg-muted/40 border-0 px-5 text-base"
+        />
+        <Select value={statusFilter} onValueChange={(value: PlanFastCardProps["statusFilter"]) => onStatusChange(value)}>
+          <SelectTrigger className="h-12 rounded-full bg-muted/40 border-0 px-5">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="booked">Booked</SelectItem>
+            <SelectItem value="needs">Needs booking</SelectItem>
+            <SelectItem value="staying">Staying</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ActionButton
+          label={contextLabel ? `Add flight (${contextLabel})` : "Add flight"}
+          icon={<Plane className="h-4 w-4" />}
+          onClick={onAddFlight}
+          disabled={isBusy}
+        />
+        <ActionButton
+          label={contextLabel ? `Add transport (${contextLabel})` : "Add transport"}
+          icon={<BusFront className="h-4 w-4" />}
+          onClick={onAddTransport}
+          disabled={isBusy}
+          variant="ghost"
+        />
+        <ActionButton
+          label="Share schedule"
+          icon={<Share2 className="h-4 w-4" />}
+          onClick={onShare}
+          variant="ghost"
+        />
+      </div>
+      {contextLabel && (
+        <p className="text-xs text-muted-foreground">
+          Actions default to {contextLabel}. Switch schools or highlight a term to change context.
+        </p>
+      )}
     </div>
   );
 }
+
+const ActionButton = ({
+  label,
+  icon,
+  onClick,
+  disabled,
+  variant = "secondary",
+}: {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  variant?: "secondary" | "ghost";
+}) => (
+  <Button
+    variant={variant}
+    className={`h-12 w-full justify-between rounded-[18px] px-5 text-sm font-medium ${variant === "ghost" ? "border border-border/40 bg-transparent text-foreground" : ""}`}
+    disabled={disabled}
+    onClick={onClick}
+  >
+    <span className="flex items-center gap-3">
+      {icon}
+      {label}
+    </span>
+    <span className="text-muted-foreground">→</span>
+  </Button>
+);
