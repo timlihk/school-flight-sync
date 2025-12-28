@@ -800,20 +800,10 @@ export default function Index() {
 
               {nextTravel ? (
                 <div className="space-y-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div className="flex-1 space-y-1 text-center sm:text-left">
-                      <div className="text-xs uppercase text-muted-foreground tracking-wide">Departing next</div>
-                      <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
-                      <p className="text-sm text-muted-foreground truncate">{nextTravel.detail}</p>
-                    </div>
-                    <div className="rounded-2xl border border-border/60 bg-muted/40 p-3 text-center sm:text-right min-w-[200px]">
-                      <p className="text-[11px] uppercase text-muted-foreground">Leaves</p>
-                      <p className="text-base font-semibold">{format(nextTravel.date, 'EEE, MMM d')}</p>
-                      <p className="text-sm text-muted-foreground">{nextTravel.meta?.timeLabel || format(nextTravel.date, 'h:mm a')}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(nextTravel.date, { addSuffix: true })} &middot; {nextTravelDetail}
-                      </p>
-                    </div>
+                  <div className="space-y-1 text-center sm:text-left">
+                    <div className="text-xs uppercase text-muted-foreground tracking-wide">Departing next</div>
+                    <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
+                    <p className="text-sm text-muted-foreground truncate">{nextTravel.detail}</p>
                   </div>
                   <div className="grid gap-3 text-sm sm:grid-cols-3">
                     <div className="flex items-start gap-2 rounded-xl bg-muted/30 p-3">
