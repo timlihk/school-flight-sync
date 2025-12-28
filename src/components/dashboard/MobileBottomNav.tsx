@@ -32,13 +32,13 @@ export function MobileBottomNav({ activeTab, onSelect }: MobileBottomNavProps) {
                 data-nav-touch="true"
                 onClick={() => onSelect(item.key)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 rounded-2xl py-3 text-[11px] font-medium tracking-tight transition",
+                  "flex flex-col items-center justify-center gap-1 rounded-2xl py-3 text-[11px] font-medium tracking-tight transition backdrop-blur",
                   active
-                    ? "bg-white text-card-foreground shadow-[0_12px_30px_rgba(15,23,42,0.15)]"
-                    : "text-white/70 hover:text-white"
+                    ? "bg-white/15 border border-white/30 text-white shadow-[0_12px_30px_rgba(15,23,42,0.25)]"
+                    : "text-white/70 hover:text-white/90 border border-transparent"
                 )}
               >
-                <Icon className={cn("h-5 w-5", active ? "text-card-foreground" : "text-white/80")} />
+                <Icon className={cn("h-5 w-5", active ? "text-white" : "text-white/80")} />
                 {item.label}
               </button>
             );
