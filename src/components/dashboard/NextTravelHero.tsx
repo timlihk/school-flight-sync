@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Share2, Clock, Hash, StickyNote, ChevronDown, ChevronUp } from "lucide-react";
 import { Term } from "@/types/school";
 import { NextTravelEntry } from "@/types/next-travel";
+import { cn } from "@/lib/utils";
 
 interface NextTravelHeroProps {
   isOnline: boolean;
@@ -46,48 +47,57 @@ export function NextTravelHero({
         </Badge>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 relative z-10">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-5 relative z-10">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Next travel</p>
-          <h2 className="text-3xl font-semibold tracking-tight">{entry ? entry.title : "No travel booked"}</h2>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/60">Next travel</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-white">{entry ? entry.title : "No travel booked"}</h2>
         </div>
-        <div className="flex items-center gap-1 rounded-full border border-white/20 bg-white/5 p-1 backdrop-blur">
+        <div className="flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-1 py-0.5 backdrop-blur">
           {(["benenden", "wycombe"] as const).map(option => (
-            <Button
+            <button
               key={option}
-              size="sm"
-              variant={scope === option ? "default" : "ghost"}
-              className={`h-9 rounded-full px-4 text-sm ${scope === option ? "bg-white text-card-foreground" : "text-white/70 hover:text-white"}`}
+              type="button"
               onClick={() => onScopeChange(option)}
+              className={cn(
+                "rounded-full px-3 py-1 text-[11px] font-medium tracking-tight transition",
+                scope === option
+                  ? "bg-white/25 text-white shadow-[0_8px_20px_rgba(15,23,42,0.25)]"
+                  : "text-white/60 hover:text-white/90"
+              )}
             >
               {option === "benenden" ? "Benenden" : "Wycombe"}
-            </Button>
+            </button>
           ))}
         </div>
       </div>
 
       {entry ? (
-        <div className="space-y-5 relative z-10">
-          <p className="text-lg text-muted-foreground">{entry.detail}</p>
-          <div className="grid gap-4 text-sm sm:grid-cols-3">
-            <InfoTile
+        <div className="space-y-4 relative z-10">
+          <p className="text-base text-white/75">{entry.detail}</p>
+          <div className="flex flex-wrap gap-2">
+            <KeyChip
               label="Departure"
-              primary={format(entry.date, "EEE, MMM d")}
-              secondary={entry.meta?.timeLabel || format(entry.date, "h:mm a")}
-              footnote={`${formatDistanceToNow(entry.date, { addSuffix: true })} · ${entryDetail}`}
-              icon={<Clock className="h-4 w-4" />}
+              value={`${format(entry.date, "EEE, MMM d")} · ${entry.meta?.timeLabel || format(entry.date, "h:mm a")}`}
+              icon={<Clock className="h-3.5 w-3.5" />}
             />
-            <InfoTile
-              label="Confirmation"
-              primary={entry.meta?.confirmation ?? "Not provided"}
-              secondary="Tap edit to update"
-              icon={<Hash className="h-4 w-4" />}
+            <KeyChip
+              label="Time"
+              value={`${formatDistanceToNow(entry.date, { addSuffix: true })} · ${entryDetail}`}
             />
-            <InfoTile
-              label="Notes"
-              primary={entry.meta?.notes ?? "No notes yet"}
-              icon={<StickyNote className="h-4 w-4" />}
-            />
+            {entry.meta?.confirmation && (
+              <KeyChip
+                label="Confirmation"
+                value={entry.meta?.confirmation}
+                icon={<Hash className="h-3.5 w-3.5" />}
+              />
+            )}
+            {entry.meta?.notes && (
+              <KeyChip
+                label="Notes"
+                value={entry.meta?.notes}
+                icon={<StickyNote className="h-3.5 w-3.5" />}
+              />
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <StatusPill status={entry.status} school={entry.school} />
@@ -154,27 +164,19 @@ export function NextTravelHero({
   );
 }
 
-const InfoTile = ({
+const KeyChip = ({
   label,
-  primary,
-  secondary,
-  footnote,
+  value,
   icon,
 }: {
   label: string;
-  primary: React.ReactNode;
-  secondary?: React.ReactNode;
-  footnote?: React.ReactNode;
+  value: React.ReactNode;
   icon?: React.ReactNode;
 }) => (
-  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/60">
-      {icon}
-      {label}
-    </div>
-    <p className="mt-2 text-base font-semibold text-white">{primary}</p>
-    {secondary && <p className="text-sm text-white/70">{secondary}</p>}
-    {footnote && <p className="text-xs text-white/60 mt-1">{footnote}</p>}
+  <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs text-white/80 backdrop-blur">
+    {icon}
+    <span className="uppercase tracking-[0.2em] text-[9px] text-white/60">{label}</span>
+    <span className="text-sm font-medium text-white/90">{value}</span>
   </div>
 );
 
