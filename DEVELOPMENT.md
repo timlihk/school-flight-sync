@@ -7,7 +7,7 @@
 
 ## 📋 **Executive Summary**
 
-UK Flight Sync is a well-architected React + TypeScript application for managing UK boarding school term dates and travel arrangements. The app serves as a family coordination tool for parents with children at multiple schools (Benenden School and Wycombe Abbey School).
+UK Flight Sync is a well-architected React + TypeScript application for managing UK boarding school term dates and travel arrangements. The app serves as a family coordination tool for parents with children at multiple schools (Benenden School and Wycombe School).
 
 **Current Status:** Production-ready with excellent technical foundations (React Query, TypeScript, PWA support).
 
@@ -57,7 +57,7 @@ UK Flight Sync is a well-architected React + TypeScript application for managing
 ### ✅ **Currently Implemented**
 
 1. **Term Management**
-   - Track term dates for Benenden and Wycombe Abbey schools
+   - Track term dates for Benenden and Wycombe schools
    - Filter by academic year and school
    - View detailed term schedules with arrival/departure times
 
@@ -391,4 +391,4 @@ For architectural decisions or implementation questions:
 
 **Remember:** The core value proposition is making school travel coordination easier for families. Every enhancement should serve this goal directly or indirectly.
 
-*Document generated from codebase analysis on December 14, 2025*
+*Document generated from codebase analysis on December 28, 2025*
