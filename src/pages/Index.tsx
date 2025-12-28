@@ -752,19 +752,21 @@ export default function Index() {
               </div>
 
               {nextTravel ? (
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                   {/* Countdown Ring */}
-                  <CountdownRing
-                    targetDate={nextTravel.date}
-                    size="lg"
-                    school={nextTravel.school}
-                  />
+                  <div className="flex justify-center sm:block">
+                    <CountdownRing
+                      targetDate={nextTravel.date}
+                      size="lg"
+                      school={nextTravel.school}
+                    />
+                  </div>
 
                   {/* Trip details */}
-                  <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex-1 min-w-0 space-y-1 text-center sm:text-left">
                     <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
                     <div className="text-base text-muted-foreground truncate">{nextTravel.detail}</div>
-                    <div className="text-[13px] text-muted-foreground flex items-center gap-2">
+                    <div className="text-[13px] text-muted-foreground flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                       <span>{format(nextTravel.date, 'EEE, MMM d')}</span>
                       <Badge variant="secondary" className="text-[11px]">
                         {nextTravelDetail}
@@ -773,14 +775,14 @@ export default function Index() {
                         {formatDistanceToNow(nextTravel.date, { addSuffix: true })}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1 sm:justify-start">
                       <Badge
                         variant={nextTravel.status === 'booked' ? 'default' : nextTravel.status === 'staying' ? 'secondary' : 'outline'}
                         className={nextTravel.school === 'benenden' ? 'bg-blue-500 hover:bg-blue-600' : nextTravel.school === 'wycombe' ? 'bg-green-500 hover:bg-green-600' : ''}
                       >
                         {nextTravel.status === 'booked' ? 'Booked' : nextTravel.status === 'staying' ? 'Not travelling' : 'Needs booking'}
                       </Badge>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                         {nextTravel.termId && (
                           <Button
                             size="sm"
@@ -1505,36 +1507,37 @@ export default function Index() {
         </SheetContent>
       </Sheet>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border/60 shadow-inner pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-4 divide-x divide-border">
-          {([
-            { key: 'today', label: 'Today', icon: Home },
-            { key: 'trips', label: 'Trips', icon: Plane },
-            { key: 'calendar', label: 'Calendar', icon: CalendarDays },
-            { key: 'settings', label: 'Settings', icon: Settings },
-          ] as const).map(item => {
-            const active = activeTab === item.key;
-            const Icon = item.icon;
-            return (
-              <Button
-                key={item.key}
-                variant={active ? 'default' : 'ghost'}
-                className={cn(
-                  "flex flex-col items-center gap-1 py-3 transition-all",
+      <div className="lg:hidden fixed inset-x-3 bottom-3 z-40">
+        <div className="bg-card/95 backdrop-blur rounded-3xl border border-border/60 shadow-xl pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 px-2">
+          <div className="grid grid-cols-4 divide-x divide-border rounded-2xl overflow-hidden">
+            {([
+              { key: 'today', label: 'Today', icon: Home },
+              { key: 'trips', label: 'Trips', icon: Plane },
+              { key: 'calendar', label: 'Calendar', icon: CalendarDays },
+              { key: 'settings', label: 'Settings', icon: Settings },
+            ] as const).map(item => {
+              const active = activeTab === item.key;
+              const Icon = item.icon;
+              return (
+                <Button
+                  key={item.key}
+                  variant={active ? 'default' : 'ghost'}
+                  className={cn(
+                  "flex flex-col items-center gap-1 py-3.5 px-1 text-sm transition-all",
                   active ? "scale-[1.02]" : "opacity-90"
                 )}
-                onClick={() => {
-                  triggerHaptic('select');
-                  setActiveTab(item.key);
-                }}
-              >
-                <Icon className={cn("h-5 w-5", active && "fill-foreground")} />
-                <span className="text-xs">{item.label}</span>
-              </Button>
-            );
-          })}
+                  onClick={() => {
+                    triggerHaptic('select');
+                    setActiveTab(item.key);
+                  }}
+                >
+                  <Icon className={cn("h-5 w-5", active && "fill-foreground")} />
+                  <span className="text-xs">{item.label}</span>
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
   );
 }
