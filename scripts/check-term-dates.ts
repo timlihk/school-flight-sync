@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { load } from 'cheerio';
 import { mockTerms } from '@/data/mock-terms';
+import type { Term } from '@/types/school';
 
 type SchoolId = 'benenden' | 'wycombe';
 
@@ -21,11 +22,19 @@ interface RemoteTermRecord {
 
 interface TermOverrideRecord {
   school: SchoolId;
+  id?: string;
   name: string;
   academicYear: string;
   startDate: string;
   endDate: string;
+  type?: Term['type'];
   notes?: string;
+  isNew?: boolean;
+}
+
+interface OverridesFile {
+  updatedAt: string | null;
+  overrides: TermOverrideRecord[];
 }
 
 const SCHOOLS: SchoolConfig[] = [
@@ -47,13 +56,51 @@ const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36';
 const OVERRIDES_PATH = path.resolve(process.cwd(), 'src/data/term-overrides.json');
 
+const normalizeName = (value: string) =>
+  value.replace(/\s+/g, ' ').replace(/\u00a0/g, ' ').trim().toLowerCase();
+
+const deriveAcademicYear = (startISO: string, provided?: string): string => {
+  if (provided && provided.includes('-')) return provided;
+  const date = new Date(startISO);
+  const startYear = date.getMonth() >= 7 ? date.getFullYear() : date.getFullYear() - 1;
+  return `${startYear}-${startYear + 1}`;
+};
+
+const inferTermType = (name: string): Term['type'] => {
+  const lower = name.toLowerCase();
+  if (lower.includes('half')) return 'half-term';
+  if (lower.includes('exeat')) return 'exeat';
+  if (lower.includes('holiday')) return 'holiday';
+  if (lower.includes('short leave')) return 'short-leave';
+  if (lower.includes('long leave')) return 'long-leave';
+  return 'term';
+};
+
+const generateTermId = (school: SchoolId, termName: string, academicYear: string): string => {
+  const slug = normalizeName(termName).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const yearFragment = academicYear.replace(/[^0-9]+/g, '');
+  return `${school}-${slug}-${yearFragment}`.toLowerCase();
+};
+
+const overrideKey = (record: TermOverrideRecord) =>
+  record.id ?? `${record.school}|${normalizeName(record.name)}|${record.academicYear}`;
+
 if (!API_KEY) {
   console.error('Missing DEEPSEEK_API_KEY environment variable. Set it before running this script.');
   process.exit(1);
 }
 
-const normalizeName = (value: string) =>
-  value.replace(/\s+/g, ' ').replace(/\u00a0/g, ' ').trim().toLowerCase();
+async function readExistingOverrides(): Promise<OverridesFile> {
+  try {
+    const content = await fs.readFile(OVERRIDES_PATH, 'utf-8');
+    return JSON.parse(content) as OverridesFile;
+  } catch (error: any) {
+    if (error.code === 'ENOENT') {
+      return { updatedAt: null, overrides: [] };
+    }
+    throw error;
+  }
+}
 
 const existingTerms = mockTerms.map((term) => ({
   school: term.school as SchoolId,
@@ -142,8 +189,14 @@ function buildPrompt(school: SchoolConfig, text: string): string {
   ].join('\n\n');
 }
 
-function inferOverrides(school: SchoolConfig, remoteTerms: RemoteTermRecord[]): TermOverrideRecord[] {
+function inferOverrides(school: SchoolConfig, remoteTerms: RemoteTermRecord[]): {
+  overrides: TermOverrideRecord[];
+  matchedCount: number;
+  newCount: number;
+} {
   const overrides: TermOverrideRecord[] = [];
+  let matchedCount = 0;
+  let newCount = 0;
 
   for (const remote of remoteTerms) {
     const normalizedName = normalizeName(remote.termName);
@@ -165,27 +218,51 @@ function inferOverrides(school: SchoolConfig, remoteTerms: RemoteTermRecord[]): 
     }
 
     if (!match) {
+      const academicYear = deriveAcademicYear(remote.startDateISO, remote.academicYear);
+      const generatedId = generateTermId(school.id, remote.termName, academicYear);
+      overrides.push({
+        school: school.id,
+        id: generatedId,
+        name: remote.termName.trim(),
+        academicYear,
+        startDate: remote.startDateISO,
+        endDate: remote.endDateISO,
+        type: inferTermType(remote.termName),
+        notes: remote.notes,
+        isNew: true,
+      });
+      newCount += 1;
       console.warn(
-        `No matching term found for ${school.name} entry "${remote.termName}" (${remote.academicYear}). Skipping.`,
+        `  • Added new entry for ${school.name}: "${remote.termName}" (${academicYear}) ${remote.startDateISO} → ${remote.endDateISO}`,
       );
       continue;
     }
 
     overrides.push({
       school: school.id,
+      id: match.id,
       name: match.name,
       academicYear: match.academicYear,
       startDate: remote.startDateISO,
       endDate: remote.endDateISO,
+      type: match.type,
       notes: remote.notes,
     });
+    matchedCount += 1;
   }
 
-  return overrides;
+  return { overrides, matchedCount, newCount };
 }
 
 async function main() {
-  const aggregatedOverrides: TermOverrideRecord[] = [];
+  const { overrides: existingOverrides } = await readExistingOverrides();
+  const overrideMap = new Map<string, TermOverrideRecord>();
+  existingOverrides.forEach((record) => {
+    overrideMap.set(overrideKey(record), record);
+  });
+
+  let totalMatched = 0;
+  let totalNew = 0;
 
   for (const school of SCHOOLS) {
     console.log(`Fetching ${school.name} term dates...`);
@@ -195,18 +272,36 @@ async function main() {
     const remoteTerms = await askDeepseek(prompt);
     console.log(`  Received ${remoteTerms.length} entries from Deepseek for ${school.name}.`);
 
-    const overrides = inferOverrides(school, remoteTerms);
-    console.log(`  Matched ${overrides.length} entries to existing mock data.`);
-    aggregatedOverrides.push(...overrides);
+    const { overrides, matchedCount, newCount } = inferOverrides(school, remoteTerms);
+    totalMatched += matchedCount;
+    totalNew += newCount;
+
+    for (const record of overrides) {
+      overrideMap.set(overrideKey(record), record);
+    }
+
+    console.log(`  Matched ${matchedCount} entries and recorded ${newCount} new entries.`);
   }
+
+  const finalOverrides = Array.from(overrideMap.values()).sort((a, b) => {
+    if (a.school !== b.school) return a.school.localeCompare(b.school);
+    const dateA = new Date(a.startDate).getTime();
+    const dateB = new Date(b.startDate).getTime();
+    return dateA - dateB;
+  });
 
   const payload = {
     updatedAt: new Date().toISOString(),
-    overrides: aggregatedOverrides,
+    overrides: finalOverrides,
   };
 
   await fs.writeFile(OVERRIDES_PATH, JSON.stringify(payload, null, 2));
-  console.log(`Saved ${aggregatedOverrides.length} overrides to ${path.relative(process.cwd(), OVERRIDES_PATH)}.`);
+  console.log(
+    `Saved ${finalOverrides.length} overrides (${totalMatched} updated, ${totalNew} new) to ${path.relative(
+      process.cwd(),
+      OVERRIDES_PATH,
+    )}.`,
+  );
 }
 
 main().catch((error) => {

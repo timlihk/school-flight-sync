@@ -882,18 +882,51 @@ type TermOverrideRecord = {
   endDate: string;
 };
 
-const overrideRecords = (termOverrides.overrides ?? []) as TermOverrideRecord[];
-const overrideMap = new Map<string, TermOverrideRecord>(
-  overrideRecords.map((record) => {
-    const key = `${record.school}|${record.name.toLowerCase()}|${record.academicYear}`;
-    return [key, record];
-  }),
-);
+type OverrideRecord = {
+  school: 'benenden' | 'wycombe';
+  id?: string;
+  name: string;
+  academicYear: string;
+  startDate: string;
+  endDate: string;
+  type?: Term['type'];
+  notes?: string;
+  isNew?: boolean;
+};
+
+const normalizeName = (value: string) => value.replace(/\s+/g, ' ').trim().toLowerCase();
+
+const overrides = (termOverrides.overrides ?? []) as OverrideRecord[];
+const overrideById = new Map<string, OverrideRecord>();
+const overrideByKey = new Map<string, OverrideRecord>();
+const newTerms: Term[] = [];
+
+for (const record of overrides) {
+  const key = `${record.school}|${normalizeName(record.name)}|${record.academicYear}`;
+  overrideByKey.set(key, record);
+  if (record.id) {
+    overrideById.set(record.id, record);
+  }
+
+  if (record.isNew && record.id) {
+    newTerms.push({
+      id: record.id,
+      school: record.school,
+      name: record.name,
+      type: record.type ?? 'term',
+      startDate: new Date(record.startDate),
+      endDate: new Date(record.endDate),
+      academicYear: record.academicYear,
+      description: record.notes,
+      scheduleDetails: [],
+    });
+  }
+}
 
 const applyOverrides = (terms: Term[]): Term[] =>
   terms.map((term) => {
-    const key = `${term.school}|${term.name.toLowerCase()}|${term.academicYear}`;
-    const override = overrideMap.get(key);
+    const key = `${term.school}|${normalizeName(term.name)}|${term.academicYear}`;
+    const override = overrideById.get(term.id) ?? overrideByKey.get(key);
     if (!override) {
       return term;
     }
@@ -901,10 +934,15 @@ const applyOverrides = (terms: Term[]): Term[] =>
       ...term,
       startDate: new Date(override.startDate),
       endDate: new Date(override.endDate),
+      description: override.notes ?? term.description,
     };
   });
 
-export const mockTerms: Term[] = applyOverrides(baseMockTerms);
+const mergedTerms = [...applyOverrides(baseMockTerms), ...newTerms].sort(
+  (a, b) => a.startDate.getTime() - b.startDate.getTime(),
+);
+
+export const mockTerms: Term[] = mergedTerms;
 
 // Helper function to get unique academic years
 export const getAcademicYears = (): string[] => {
