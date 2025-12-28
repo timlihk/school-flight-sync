@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
 import { Plane, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CountdownRing } from "@/components/ui/countdown-ring";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -774,67 +773,60 @@ export default function Index() {
               </div>
 
               {nextTravel ? (
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  {/* Countdown Ring */}
-                  <div className="flex justify-center sm:block">
-                    <CountdownRing
-                      targetDate={nextTravel.date}
-                      size="lg"
-                      school={nextTravel.school}
-                    />
-                  </div>
-
-                  {/* Trip details */}
-                  <div className="flex-1 min-w-0 space-y-1 text-center sm:text-left">
+                <div className="space-y-4">
+                  <div className="space-y-1 text-center sm:text-left">
                     <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
-                    <div className="text-base text-muted-foreground truncate">{nextTravel.detail}</div>
-                    <div className="text-[13px] text-muted-foreground flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                      <span>{format(nextTravel.date, 'EEE, MMM d')}</span>
-                      <Badge variant="secondary" className="text-[11px]">
-                        {nextTravelDetail}
-                      </Badge>
-                      <span className="text-[11px] text-muted-foreground">
-                        {formatDistanceToNow(nextTravel.date, { addSuffix: true })}
-                      </span>
+                    <p className="text-base text-muted-foreground truncate">{nextTravel.detail}</p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-center sm:text-left">
+                      <p className="text-xs uppercase text-muted-foreground">Travel date</p>
+                      <p className="text-sm font-medium">{format(nextTravel.date, 'EEE, MMM d')}</p>
                     </div>
-                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1 sm:justify-start">
-                      <Badge
-                        variant={nextTravel.status === 'booked' ? 'default' : nextTravel.status === 'staying' ? 'secondary' : 'outline'}
-                        className={nextTravel.school === 'benenden' ? 'bg-blue-500 hover:bg-blue-600' : nextTravel.school === 'wycombe' ? 'bg-green-500 hover:bg-green-600' : ''}
+                    <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-center sm:text-left">
+                      <p className="text-xs uppercase text-muted-foreground">Time left</p>
+                      <p className="text-sm font-medium">{formatDistanceToNow(nextTravel.date, { addSuffix: true })}</p>
+                    </div>
+                    <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-center sm:text-left">
+                      <p className="text-xs uppercase text-muted-foreground">Details</p>
+                      <p className="text-sm font-medium">{nextTravelDetail}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                    <Badge
+                      variant={nextTravel.status === 'booked' ? 'default' : nextTravel.status === 'staying' ? 'secondary' : 'outline'}
+                      className={nextTravel.school === 'benenden' ? 'bg-blue-500 hover:bg-blue-600' : nextTravel.school === 'wycombe' ? 'bg-green-500 hover:bg-green-600' : ''}
+                    >
+                      {nextTravel.status === 'booked' ? 'Booked' : nextTravel.status === 'staying' ? 'Not travelling' : 'Needs booking'}
+                    </Badge>
+                    {nextTravel.termId && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-3 text-xs"
+                        onClick={() => handleHighlightTerms([nextTravel.termId!])}
                       >
-                        {nextTravel.status === 'booked' ? 'Booked' : nextTravel.status === 'staying' ? 'Not travelling' : 'Needs booking'}
-                      </Badge>
-                      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                        {nextTravel.termId && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-xs"
-                            onClick={() => handleHighlightTerms([nextTravel.termId!])}
-                          >
-                            View trip
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant={nextTravel.status === 'booked' ? 'outline' : 'default'}
-                          className="h-7 px-2 text-xs"
-                          onClick={() => {
-                            if (!nextTravel.termId) return;
-                            handleHighlightTerms([nextTravel.termId]);
-                            if (nextTravel.status !== 'booked') {
-                              setSelectedTerm(termLookup.get(nextTravel.termId) || null);
-                              setShowFlightDialog(true);
-                            }
-                          }}
-                        >
-                          {nextTravel.status === 'booked' ? 'Edit booking' : 'Add booking'}
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setShareScope(heroScope); setShareDialogOpen(true); }}>
-                          <Share2 className="h-3 w-3 mr-1" /> Share
-                        </Button>
-                      </div>
-                    </div>
+                        View trip
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant={nextTravel.status === 'booked' ? 'outline' : 'default'}
+                      className="h-8 px-3 text-xs"
+                      onClick={() => {
+                        if (!nextTravel.termId) return;
+                        handleHighlightTerms([nextTravel.termId]);
+                        if (nextTravel.status !== 'booked') {
+                          setSelectedTerm(termLookup.get(nextTravel.termId) || null);
+                          setShowFlightDialog(true);
+                        }
+                      }}
+                    >
+                      {nextTravel.status === 'booked' ? 'Edit booking' : 'Add booking'}
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-8 px-3 text-xs" onClick={() => { setShareScope(heroScope); setShareDialogOpen(true); }}>
+                      <Share2 className="h-3 w-3 mr-1" /> Share
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -866,86 +858,85 @@ export default function Index() {
                   Refresh
                 </Button>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="w-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Input
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search flights, transport, events"
-                      className="h-11"
-                    />
-                    <Select value={statusFilter} onValueChange={(v: 'all' | 'booked' | 'needs' | 'staying') => setStatusFilter(v)}>
-                      <SelectTrigger className="h-11 w-32">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="booked">Booked</SelectItem>
-                        <SelectItem value="needs">Needs booking</SelectItem>
-                        <SelectItem value="staying">Staying</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <Button
-                      className="h-12"
-                      disabled={isBusy}
-                      onClick={() => {
-                        if (isBusy) return;
-                        triggerHaptic();
-                        if (earliestTerm) {
-                          handleAddFlight(earliestTerm.id);
-                        } else {
-                          toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
-                        }
-                      }}
-                    >
-                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                      Add flight
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-12"
-                      disabled={isBusy}
-                      onClick={() => {
-                        if (isBusy) return;
-                        triggerHaptic();
-                        if (earliestTerm) {
-                          handleAddTransport(earliestTerm.id);
-                        } else {
-                          toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
-                        }
-                      }}
-                    >
-                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                      Add transport
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      className="h-12"
-                      disabled={isBusy}
-                      onClick={() => {
-                        triggerHaptic();
-                        setAddSheetOpen(true);
-                      }}
-                    >
-                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                      Quick add sheet
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-12"
-                      disabled={isBusy}
-                      onClick={() => {
-                        triggerHaptic();
-                        setActiveTab('calendar');
-                      }}
-                    >
-                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                      Open calendar
-                    </Button>
-                  </div>
+              <div className="space-y-4">
+                <div className="flex flex-col gap-3 md:flex-row">
+                  <Input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search flights, transport, events"
+                    className="h-11 flex-1"
+                  />
+                  <Select value={statusFilter} onValueChange={(v: 'all' | 'booked' | 'needs' | 'staying') => setStatusFilter(v)}>
+                    <SelectTrigger className="h-11 md:w-48">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="booked">Booked</SelectItem>
+                      <SelectItem value="needs">Needs booking</SelectItem>
+                      <SelectItem value="staying">Staying</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <Button
+                    className="h-12 w-full"
+                    disabled={isBusy}
+                    onClick={() => {
+                      if (isBusy) return;
+                      triggerHaptic();
+                      if (earliestTerm) {
+                        handleAddFlight(earliestTerm.id);
+                      } else {
+                        toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                      }
+                    }}
+                  >
+                    {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                    Add flight
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-12 w-full"
+                    disabled={isBusy}
+                    onClick={() => {
+                      if (isBusy) return;
+                      triggerHaptic();
+                      if (earliestTerm) {
+                        handleAddTransport(earliestTerm.id);
+                      } else {
+                        toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                      }
+                    }}
+                  >
+                    {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                    Add transport
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="h-12 w-full"
+                    disabled={isBusy}
+                    onClick={() => {
+                      triggerHaptic();
+                      setAddSheetOpen(true);
+                    }}
+                  >
+                    {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                    Quick add sheet
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-12 w-full"
+                    disabled={isBusy}
+                    onClick={() => {
+                      triggerHaptic();
+                      setActiveTab('calendar');
+                      scrollToTop();
+                    }}
+                  >
+                    {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                    Open calendar
+                  </Button>
                 </div>
               </div>
             </div>
