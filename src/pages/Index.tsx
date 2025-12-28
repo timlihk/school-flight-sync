@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
-import { Plane, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid, LogOut } from "lucide-react";
+import { Plane, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid, LogOut, Clock, ChevronDown, ChevronUp, Hash, StickyNote, BusFront } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +51,7 @@ export default function Index() {
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [heroScope, setHeroScope] = useState<'benenden' | 'wycombe'>('benenden');
+  const [heroExpanded, setHeroExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'today' | 'trips' | 'calendar' | 'settings'>('today');
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -87,10 +88,18 @@ export default function Index() {
     triggerHaptic();
     switch (activeTab) {
       case 'today':
-        if (earliestTerm) handleAddFlight(earliestTerm.id);
+        if (nextAvailableTerm) {
+          handleAddFlight(nextAvailableTerm.id);
+        } else {
+          toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
+        }
         break;
       case 'trips':
-        if (earliestTerm) handleAddTransport(earliestTerm.id);
+        if (nextAvailableTerm) {
+          handleAddTransport(nextAvailableTerm.id);
+        } else {
+          toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
+        }
         break;
       case 'calendar':
         setAddSheetOpen(true);
@@ -725,6 +734,10 @@ export default function Index() {
   const earliestTerm = useMemo(() => {
     return filteredTerms.slice().sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0] || null;
   }, [filteredTerms]);
+  const nextAvailableTerm = useMemo(() => {
+    const now = new Date();
+    return filteredTerms.find(term => term.startDate.getTime() >= now.getTime()) ?? earliestTerm ?? null;
+  }, [filteredTerms, earliestTerm]);
 
   const handleSchoolSelect = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
     triggerHaptic();
@@ -747,10 +760,6 @@ export default function Index() {
           variant={selectedSchool === scope ? 'default' : 'outline'}
           className="rounded-full px-4"
           onClick={() => handleSchoolSelect(scope)}
-          onTouchEnd={(e) => {
-            e.stopPropagation();
-            handleSchoolSelect(scope);
-          }}
         >
           {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
         </Button>
@@ -791,32 +800,46 @@ export default function Index() {
 
               {nextTravel ? (
                 <div className="space-y-4">
-                  <div className="space-y-1 text-center sm:text-left">
-                    <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
-                    <p className="text-base text-muted-foreground truncate">{nextTravel.detail}</p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex-1 space-y-1 text-center sm:text-left">
+                      <div className="text-xs uppercase text-muted-foreground tracking-wide">Departing next</div>
+                      <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
+                      <p className="text-sm text-muted-foreground truncate">{nextTravel.detail}</p>
+                    </div>
+                    <div className="rounded-2xl border border-border/60 bg-muted/40 p-3 text-center sm:text-right min-w-[200px]">
+                      <p className="text-[11px] uppercase text-muted-foreground">Leaves</p>
+                      <p className="text-base font-semibold">{format(nextTravel.date, 'EEE, MMM d')}</p>
+                      <p className="text-sm text-muted-foreground">{nextTravel.meta?.timeLabel || format(nextTravel.date, 'h:mm a')}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(nextTravel.date, { addSuffix: true })} &middot; {nextTravelDetail}
+                      </p>
+                    </div>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-center sm:text-left">
-                      <p className="text-xs uppercase text-muted-foreground">Departure</p>
-                      <p className="text-sm font-semibold">{format(nextTravel.date, 'EEE, MMM d')}</p>
-                      <p className="text-xs text-muted-foreground">{nextTravel.meta?.timeLabel || format(nextTravel.date, 'h:mm a')}</p>
+                  <div className="grid gap-3 text-sm sm:grid-cols-3">
+                    <div className="flex items-start gap-2 rounded-xl bg-muted/30 p-3">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-[11px] uppercase text-muted-foreground">Timing</p>
+                        <p className="font-semibold">{format(nextTravel.date, 'EEE, MMM d')}</p>
+                        <p className="text-muted-foreground">{nextTravel.meta?.timeLabel || format(nextTravel.date, 'h:mm a')}</p>
+                      </div>
                     </div>
-                    <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-center sm:text-left">
-                      <p className="text-xs uppercase text-muted-foreground">Time remaining</p>
-                      <p className="text-sm font-semibold">{formatDistanceToNow(nextTravel.date, { addSuffix: true })}</p>
-                      <p className="text-xs text-muted-foreground">{nextTravelDetail}</p>
+                    <div className="flex items-start gap-2 rounded-xl bg-muted/30 p-3">
+                      <Hash className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-[11px] uppercase text-muted-foreground">Confirmation</p>
+                        <p className="font-semibold">{nextTravel.meta?.confirmation ?? 'Not provided'}</p>
+                        <p className="text-muted-foreground text-xs">Tap edit to update</p>
+                      </div>
                     </div>
-                    <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-center sm:text-left">
-                      <p className="text-xs uppercase text-muted-foreground">Confirmation</p>
-                      <p className="text-sm font-semibold">
-                        {nextTravel.meta?.confirmation ?? 'Not provided'}
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-left">
-                      <p className="text-xs uppercase text-muted-foreground">Notes</p>
-                      <p className="text-sm font-medium text-muted-foreground line-clamp-2">
-                        {nextTravel.meta?.notes ?? 'No notes yet'}
-                      </p>
+                    <div className="flex items-start gap-2 rounded-xl bg-muted/30 p-3">
+                      <StickyNote className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-[11px] uppercase text-muted-foreground">Notes</p>
+                        <p className="font-semibold text-muted-foreground line-clamp-2">
+                          {nextTravel.meta?.notes ?? 'No notes yet'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
@@ -854,7 +877,42 @@ export default function Index() {
                     <Button size="sm" variant="ghost" className="h-8 px-3 text-xs" onClick={() => { setShareScope(heroScope); setShareDialogOpen(true); }}>
                       <Share2 className="h-3 w-3 mr-1" /> Share
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-3 text-xs gap-1"
+                      onClick={() => setHeroExpanded(prev => !prev)}
+                    >
+                      {heroExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                      {heroExpanded ? 'Hide details' : 'More details'}
+                    </Button>
                   </div>
+                  {heroExpanded && (
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-left">
+                        <p className="text-xs uppercase text-muted-foreground">Departure</p>
+                        <p className="text-sm font-semibold">{format(nextTravel.date, 'EEE, MMM d')}</p>
+                        <p className="text-xs text-muted-foreground">{nextTravel.meta?.timeLabel || format(nextTravel.date, 'h:mm a')}</p>
+                      </div>
+                      <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-left">
+                        <p className="text-xs uppercase text-muted-foreground">Time remaining</p>
+                        <p className="text-sm font-semibold">{formatDistanceToNow(nextTravel.date, { addSuffix: true })}</p>
+                        <p className="text-xs text-muted-foreground">{nextTravelDetail}</p>
+                      </div>
+                      <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-left">
+                        <p className="text-xs uppercase text-muted-foreground">Confirmation</p>
+                        <p className="text-sm font-semibold">
+                          {nextTravel.meta?.confirmation ?? 'Not provided'}
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-left">
+                        <p className="text-xs uppercase text-muted-foreground">Notes</p>
+                        <p className="text-sm font-medium text-muted-foreground line-clamp-2">
+                          {nextTravel.meta?.notes ?? 'No notes yet'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <EmptyState
@@ -886,15 +944,15 @@ export default function Index() {
                 </Button>
               </div>
               <div className="space-y-4">
-                <div className="flex flex-col gap-3 md:flex-row">
+                <div className="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                   <Input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search flights, transport, events"
-                    className="h-11 flex-1"
+                    className="h-11 w-full"
                   />
                   <Select value={statusFilter} onValueChange={(v: 'all' | 'booked' | 'needs' | 'staying') => setStatusFilter(v)}>
-                    <SelectTrigger className="h-11 md:w-48">
+                    <SelectTrigger className="h-11 w-full">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -905,38 +963,57 @@ export default function Index() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   <Button
                     variant="secondary"
-                    className="h-12 w-full"
+                    className="h-12 w-full justify-start gap-3"
                     disabled={isBusy}
                     onClick={() => {
                       triggerHaptic();
-                      setAddSheetOpen(true);
+                      if (!nextAvailableTerm) {
+                        toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
+                        return;
+                      }
+                      handleAddFlight(nextAvailableTerm.id);
                     }}
                   >
-                    {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                    Quick add sheet
+                    <Plane className="h-4 w-4" />
+                    {nextAvailableTerm ? `Add flight (${nextAvailableTerm.name})` : 'Add flight'}
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-12 w-full"
-                    onClick={() => handleNavSelect('calendar')}
+                    className="h-12 w-full justify-start gap-3"
+                    disabled={isBusy}
+                    onClick={() => {
+                      triggerHaptic();
+                      if (!nextAvailableTerm) {
+                        toast({ title: "No upcoming term", description: "Add a term before adding transport.", variant: "destructive" });
+                        return;
+                      }
+                      handleAddTransport(nextAvailableTerm.id);
+                    }}
                   >
-                    Open calendar
+                    <BusFront className="h-4 w-4" />
+                    {nextAvailableTerm ? `Add transport (${nextAvailableTerm.name})` : 'Add transport'}
                   </Button>
                   <Button
                     variant="ghost"
-                    className="h-12 w-full"
+                    className="h-12 w-full justify-start gap-3"
                     onClick={() => {
                       triggerHaptic();
                       setShareScope(selectedSchool as 'both' | 'benenden' | 'wycombe');
                       setShareDialogOpen(true);
                     }}
                   >
+                    <Share2 className="h-4 w-4" />
                     Share schedule
                   </Button>
                 </div>
+                {nextAvailableTerm && (
+                  <p className="text-xs text-muted-foreground">
+                    Actions default to {nextAvailableTerm.name}. Switch schools or highlight a term to change context.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -1462,66 +1539,85 @@ export default function Index() {
         <SheetContent side="bottom" className="h-auto pb-6">
           <SheetHeader>
             <SheetTitle>Quick add</SheetTitle>
-            <SheetDescription>Use the nearest upcoming term for fast actions.</SheetDescription>
+            <SheetDescription>
+              {nextAvailableTerm
+                ? `Fast actions for ${nextAvailableTerm.name}.`
+                : 'No upcoming terms available yet.'}
+            </SheetDescription>
           </SheetHeader>
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-3">
             <Button
-              className="w-full h-12"
-              disabled={isBusy}
+              className="w-full h-12 justify-start gap-3"
+              disabled={isBusy || !nextAvailableTerm}
               onClick={() => {
                 if (isBusy) return;
                 triggerHaptic();
-                if (!earliestTerm) {
+                if (!nextAvailableTerm) {
                   toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
                   return;
                 }
-                handleAddFlight(earliestTerm.id);
+                handleAddFlight(nextAvailableTerm.id);
                 setAddSheetOpen(false);
               }}
             >
-              Add flight ({earliestTerm ? earliestTerm.name : 'no term'})
+              <Plane className="h-4 w-4" />
+              Add flight {nextAvailableTerm ? `(${nextAvailableTerm.name})` : ''}
             </Button>
             <Button
               variant="outline"
-              className="w-full h-12"
-              disabled={isBusy}
+              className="w-full h-12 justify-start gap-3"
+              disabled={isBusy || !nextAvailableTerm}
               onClick={() => {
                 if (isBusy) return;
                 triggerHaptic();
-                if (!earliestTerm) {
+                if (!nextAvailableTerm) {
                   toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
                   return;
                 }
-                handleAddTransport(earliestTerm.id);
+                handleAddTransport(nextAvailableTerm.id);
                 setAddSheetOpen(false);
               }}
             >
+              <BusFront className="h-4 w-4" />
               Add transport
             </Button>
             <Button
               variant="outline"
-              className="w-full h-12"
-              disabled={isBusy}
+              className="w-full h-12 justify-start gap-3"
+              disabled={isBusy || !nextAvailableTerm}
               onClick={() => {
                 if (isBusy) return;
                 triggerHaptic();
-                if (!earliestTerm) {
+                if (!nextAvailableTerm) {
                   toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
                   return;
                 }
-                handleShowTerm(earliestTerm.id);
+                handleShowTerm(nextAvailableTerm.id);
                 setAddSheetOpen(false);
               }}
             >
               View term details
             </Button>
+            <Button
+              variant="ghost"
+              className="w-full h-12 justify-start gap-3"
+              onClick={() => {
+                triggerHaptic();
+                setShareScope(selectedSchool as 'both' | 'benenden' | 'wycombe');
+                setShareDialogOpen(true);
+                setAddSheetOpen(false);
+              }}
+            >
+              <Share2 className="h-4 w-4" />
+              Share upcoming travel
+            </Button>
           </div>
         </SheetContent>
       </Sheet>
 
-      <div className="lg:hidden fixed inset-x-3 bottom-3 z-40">
-        <div className="bg-card/95 backdrop-blur rounded-3xl border border-border/60 shadow-xl pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 px-2">
-          <div className="grid grid-cols-4 divide-x divide-border rounded-2xl overflow-hidden">
+      <div className="lg:hidden fixed inset-x-4 bottom-4 z-40">
+        <div className="bg-card/95 backdrop-blur rounded-3xl border border-border/60 shadow-xl pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2 px-2">
+          <div className="flex gap-2">
             {([
               { key: 'today', label: 'Today', icon: Home },
               { key: 'trips', label: 'Trips', icon: Plane },
@@ -1533,16 +1629,14 @@ export default function Index() {
               return (
                 <Button
                   key={item.key}
+                  type="button"
+                  aria-pressed={active}
                   variant={active ? 'default' : 'ghost'}
                   className={cn(
-                  "flex flex-col items-center gap-1 py-3.5 px-1 text-sm transition-all",
-                  active ? "scale-[1.02]" : "opacity-90"
-                )}
+                    "flex-1 flex flex-col items-center justify-center gap-1 h-14 rounded-2xl text-xs touch-manipulation transition-all",
+                    active ? "shadow-lg" : "opacity-90"
+                  )}
                   onClick={() => handleNavSelect(item.key)}
-                  onTouchEnd={(e) => {
-                    e.stopPropagation();
-                    handleNavSelect(item.key);
-                  }}
                 >
                   <Icon className={cn("h-5 w-5", active && "fill-foreground")} />
                   <span className="text-xs">{item.label}</span>

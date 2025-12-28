@@ -13,7 +13,7 @@ import {
   isValid,
   startOfDay
 } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -472,34 +472,6 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
             >
               <ChevronRight className="w-3 h-3" />
             </Button>
-            {isMobile && (
-              <div className="flex items-center gap-1 ml-2">
-                <Button
-                  size="sm"
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  className="h-7 text-xs"
-                  onClick={() => setViewModeManual('grid')}
-                  onTouchEnd={(e) => {
-                    e.stopPropagation();
-                    setViewModeManual('grid');
-                  }}
-                >
-                  Grid
-                </Button>
-                <Button
-                  size="sm"
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  className="h-7 text-xs"
-                  onClick={() => setViewModeManual('list')}
-                  onTouchEnd={(e) => {
-                    e.stopPropagation();
-                    setViewModeManual('list');
-                  }}
-                >
-                  List
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       </CardHeader>
@@ -523,6 +495,26 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
               <span>Not Travelling</span>
             </div>
           </div>
+          {isMobile && (
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                className="h-11 gap-2"
+                onClick={() => setViewModeManual('grid')}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Grid view
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                className="h-11 gap-2"
+                onClick={() => setViewModeManual('list')}
+              >
+                <List className="h-4 w-4" />
+                List view
+              </Button>
+            </div>
+          )}
 
           {viewMode === 'grid' && (
             <>
