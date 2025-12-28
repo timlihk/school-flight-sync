@@ -55,6 +55,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState<'today' | 'trips' | 'calendar' | 'settings'>('today');
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const touchOnNavRef = useRef(false);
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -635,6 +636,10 @@ export default function Index() {
 
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (!isMobile) return;
+    const target = e.target as HTMLElement;
+    touchOnNavRef.current = !!target.closest('[data-nav-touch="true"]');
+    if (touchOnNavRef.current) return;
+
     const touch = e.touches[0];
     touchStartX.current = touch.clientX;
     touchStartY.current = touch.clientY;
@@ -642,7 +647,7 @@ export default function Index() {
   }, [isMobile]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isMobile || !isPulling) return;
+    if (!isMobile || !isPulling || touchOnNavRef.current) return;
     const touch = e.touches[0];
     if (window.scrollY > 2) return;
     const deltaY = touch.clientY - (touchStartY.current ?? touch.clientY);
@@ -654,6 +659,14 @@ export default function Index() {
   const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (!isMobile) return;
     const touch = e.changedTouches[0];
+    if (touchOnNavRef.current) {
+      touchOnNavRef.current = false;
+      touchStartX.current = null;
+      touchStartY.current = null;
+      setIsPulling(false);
+      setPullDistance(0);
+      return;
+    }
     const deltaX = touchStartX.current !== null ? touch.clientX - touchStartX.current : 0;
     const deltaY = touchStartY.current !== null ? touch.clientY - touchStartY.current : 0;
 
@@ -1621,6 +1634,7 @@ export default function Index() {
                   key={item.key}
                   type="button"
                   aria-pressed={active}
+                  data-nav-touch="true"
                   variant={active ? 'default' : 'ghost'}
                   className={cn(
                     "flex-1 flex flex-col items-center justify-center gap-1 h-14 rounded-2xl text-xs touch-manipulation transition-all",
