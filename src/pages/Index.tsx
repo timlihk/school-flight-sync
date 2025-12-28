@@ -617,6 +617,13 @@ export default function Index() {
     }
   }, [isRefreshing, refetchFlights, refetchTransport, refetchNotTravelling, toast, triggerHaptic]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleRefresh();
+    }, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [handleRefresh]);
+
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (!isMobile) return;
     const touch = e.touches[0];
