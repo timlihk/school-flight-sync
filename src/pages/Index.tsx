@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
-import { Plane, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid } from "lucide-react";
+import { Plane, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid, LogOut } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,8 +61,6 @@ export default function Index() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'booked' | 'needs' | 'staying'>('all');
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const hasScrolledOnTab = useRef(false);
-  const hasScrolledOnSchool = useRef(false);
 
   const { logout } = useFamilyAuth();
   const navigate = useNavigate();
@@ -136,22 +134,6 @@ export default function Index() {
       setHeroScope(selectedSchool);
     }
   }, [selectedSchool]);
-
-  useEffect(() => {
-    if (hasScrolledOnTab.current) {
-      scrollToTop();
-    } else {
-      hasScrolledOnTab.current = true;
-    }
-  }, [activeTab, scrollToTop]);
-
-  useEffect(() => {
-    if (hasScrolledOnSchool.current) {
-      scrollToTop();
-    } else {
-      hasScrolledOnSchool.current = true;
-    }
-  }, [selectedSchool, scrollToTop]);
 
 
   // Filter to only upcoming terms for the selected school(s)
@@ -363,17 +345,24 @@ export default function Index() {
     }
   }, [extractTermIdFromEvent, termLookup, handleHighlightTerms, showTermCardPopup]);
 
+  type NextTravelEntry = {
+    date: Date;
+    title: string;
+    detail: string;
+    status: 'booked' | 'unplanned' | 'staying';
+    termId?: string;
+    school?: 'benenden' | 'wycombe';
+    meta?: {
+      timeLabel?: string;
+      confirmation?: string;
+      notes?: string;
+    };
+  };
+
   const computeNextTravel = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
     const now = new Date();
     const matches = (school: 'benenden' | 'wycombe') => scope === 'both' || scope === school;
-    const entries: {
-      date: Date;
-      title: string;
-      detail: string;
-      status: 'booked' | 'unplanned' | 'staying';
-      termId?: string;
-      school?: 'benenden' | 'wycombe';
-    }[] = [];
+    const entries: NextTravelEntry[] = [];
 
     flights.forEach(flight => {
       if (!isAfter(flight.departure.date, now)) return;
@@ -385,7 +374,12 @@ export default function Index() {
         detail: `${flight.departure.airport} → ${flight.arrival.airport}`,
         status: 'booked',
         termId: term?.id,
-        school: term?.school
+        school: term?.school,
+        meta: {
+          timeLabel: flight.departure.time || format(flight.departure.date, 'p'),
+          confirmation: flight.confirmationCode,
+          notes: flight.notes,
+        }
       });
     });
 
@@ -400,7 +394,11 @@ export default function Index() {
         detail: `${item.direction === 'return' ? 'To School' : 'From School'}`,
         status: 'booked',
         termId: term?.id,
-        school: term?.school
+        school: term?.school,
+        meta: {
+          timeLabel: format(eventDate, 'p'),
+          notes: item.notes,
+        }
       });
     });
 
@@ -721,6 +719,18 @@ export default function Index() {
     return filteredTerms.slice().sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0] || null;
   }, [filteredTerms]);
 
+  const handleSchoolSelect = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
+    triggerHaptic();
+    setSelectedSchool(scope);
+    scrollToTop();
+  }, [triggerHaptic, scrollToTop]);
+
+  const handleNavSelect = useCallback((tab: typeof activeTab) => {
+    triggerHaptic('select');
+    setActiveTab(tab);
+    scrollToTop();
+  }, [triggerHaptic, scrollToTop]);
+
   const SchoolPills = () => (
     <div className="flex flex-wrap gap-2">
       {(['both', 'benenden', 'wycombe'] as const).map(scope => (
@@ -729,10 +739,10 @@ export default function Index() {
           size="sm"
           variant={selectedSchool === scope ? 'default' : 'outline'}
           className="rounded-full px-4"
-          onClick={() => {
-            triggerHaptic();
-            setSelectedSchool(scope);
-            scrollToTop();
+          onClick={() => handleSchoolSelect(scope)}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            handleSchoolSelect(scope);
           }}
         >
           {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
@@ -778,18 +788,28 @@ export default function Index() {
                     <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
                     <p className="text-base text-muted-foreground truncate">{nextTravel.detail}</p>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-center sm:text-left">
-                      <p className="text-xs uppercase text-muted-foreground">Travel date</p>
-                      <p className="text-sm font-medium">{format(nextTravel.date, 'EEE, MMM d')}</p>
+                      <p className="text-xs uppercase text-muted-foreground">Departure</p>
+                      <p className="text-sm font-semibold">{format(nextTravel.date, 'EEE, MMM d')}</p>
+                      <p className="text-xs text-muted-foreground">{nextTravel.meta?.timeLabel || format(nextTravel.date, 'h:mm a')}</p>
                     </div>
                     <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-center sm:text-left">
-                      <p className="text-xs uppercase text-muted-foreground">Time left</p>
-                      <p className="text-sm font-medium">{formatDistanceToNow(nextTravel.date, { addSuffix: true })}</p>
+                      <p className="text-xs uppercase text-muted-foreground">Time remaining</p>
+                      <p className="text-sm font-semibold">{formatDistanceToNow(nextTravel.date, { addSuffix: true })}</p>
+                      <p className="text-xs text-muted-foreground">{nextTravelDetail}</p>
                     </div>
                     <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-center sm:text-left">
-                      <p className="text-xs uppercase text-muted-foreground">Details</p>
-                      <p className="text-sm font-medium">{nextTravelDetail}</p>
+                      <p className="text-xs uppercase text-muted-foreground">Confirmation</p>
+                      <p className="text-sm font-semibold">
+                        {nextTravel.meta?.confirmation ?? 'Not provided'}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-left">
+                      <p className="text-xs uppercase text-muted-foreground">Notes</p>
+                      <p className="text-sm font-medium text-muted-foreground line-clamp-2">
+                        {nextTravel.meta?.notes ?? 'No notes yet'}
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
@@ -924,16 +944,12 @@ export default function Index() {
                     {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
                     Quick add sheet
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="h-12 w-full"
-                    disabled={isBusy}
-                    onClick={() => {
-                      triggerHaptic();
-                      setActiveTab('calendar');
-                      scrollToTop();
-                    }}
-                  >
+                    <Button
+                      variant="outline"
+                      className="h-12 w-full"
+                      disabled={isBusy}
+                      onClick={() => handleNavSelect('calendar')}
+                    >
                     {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
                     Open calendar
                   </Button>
@@ -947,7 +963,7 @@ export default function Index() {
                   <p className="text-xs uppercase text-muted-foreground tracking-wide">This week</p>
                   <h3 className="text-lg font-semibold">Upcoming</h3>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setActiveTab('calendar')}>
+                <Button variant="ghost" size="sm" onClick={() => handleNavSelect('calendar')}>
                   <CalendarDays className="h-4 w-4 mr-2" />
                   Calendar
                 </Button>
@@ -1161,7 +1177,7 @@ export default function Index() {
                 <p className="text-xs uppercase text-muted-foreground">Calendar</p>
                 <h2 className="text-xl font-semibold">Tap a date to manage</h2>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setActiveTab('today')}>
+              <Button variant="outline" size="sm" onClick={() => handleNavSelect('today')}>
                 Today
               </Button>
             </div>
@@ -1539,10 +1555,10 @@ export default function Index() {
                   "flex flex-col items-center gap-1 py-3.5 px-1 text-sm transition-all",
                   active ? "scale-[1.02]" : "opacity-90"
                 )}
-                  onClick={() => {
-                    triggerHaptic('select');
-                    setActiveTab(item.key);
-                    scrollToTop();
+                  onClick={() => handleNavSelect(item.key)}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    handleNavSelect(item.key);
                   }}
                 >
                   <Icon className={cn("h-5 w-5", active && "fill-foreground")} />
