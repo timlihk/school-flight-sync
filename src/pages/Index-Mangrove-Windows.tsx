@@ -337,7 +337,7 @@ export default function Index() {
             <SelectContent>
               <SelectItem value="both">Both Schools</SelectItem>
               <SelectItem value="benenden">Benenden School</SelectItem>
-              <SelectItem value="wycombe">Wycombe Abbey School</SelectItem>
+              <SelectItem value="wycombe">Wycombe School</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -425,11 +425,11 @@ export default function Index() {
             </div>
           )}
 
-          {/* Wycombe Abbey School */}
+          {/* Wycombe School */}
           {shouldShowWycombe && (
             <div className="space-y-6">
               <SchoolHeader 
-                schoolName="Wycombe Abbey School"
+                schoolName="Wycombe School"
                 termCount={wycombeTerms.length}
                 variant="wycombe"
                 academicYear={selectedAcademicYear === 'all' ? '2025-2026' : selectedAcademicYear}

@@ -212,7 +212,7 @@ const TermCard = memo(function TermCard({
       <Card className="border border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1">
               <div className={cn(
                 "p-2 rounded-full",
                 isStart ? "bg-red-100 dark:bg-red-900" : "bg-green-100 dark:bg-green-900"
@@ -222,7 +222,7 @@ const TermCard = memo(function TermCard({
                   isStart ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
                 )} />
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <h4 className="font-medium text-sm">{title}</h4>
                 <p className="text-xs text-muted-foreground">
                   {format(date, 'EEE, MMM dd yyyy')}

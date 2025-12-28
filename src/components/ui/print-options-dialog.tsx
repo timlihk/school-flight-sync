@@ -123,7 +123,7 @@ export function PrintOptionsDialog({
                   htmlFor="wycombe"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Wycombe Abbey School
+                  Wycombe School
                 </Label>
               </div>
             </div>

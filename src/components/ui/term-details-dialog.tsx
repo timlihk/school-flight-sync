@@ -42,7 +42,7 @@ export function TermDetailsDialog({ term, open, onOpenChange }: TermDetailsDialo
       <div>
         <div className="font-semibold text-foreground">{term.name}</div>
         <div className="text-sm text-muted-foreground font-normal">
-          {term.school === 'benenden' ? 'Benenden School' : 'Wycombe Abbey School'}
+          {term.school === 'benenden' ? 'Benenden School' : 'Wycombe School'}
         </div>
       </div>
     </div>

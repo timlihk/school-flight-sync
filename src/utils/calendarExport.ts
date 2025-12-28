@@ -89,7 +89,7 @@ export function exportTransportToCalendar(transport: TransportDetails, term: Ter
                  `Phone: ${transport.phoneNumber}\\n` +
                  `License: ${transport.licenseNumber}\\n` +
                  (transport.notes ? `Notes: ${transport.notes}` : ''),
-    location: term.school === 'benenden' ? 'Benenden School' : 'Wycombe Abbey School',
+    location: term.school === 'benenden' ? 'Benenden School' : 'Wycombe School',
     startDate,
     endDate
   };
@@ -117,9 +117,9 @@ export function exportTermToCalendar(term: Term, _flights: FlightDetails[], _tra
   termStartEnd.setHours(10, 0, 0);
 
   events.push({
-    summary: `${term.termName} Start - ${term.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}`,
+    summary: `${term.termName} Start - ${term.school === 'benenden' ? 'Benenden' : 'Wycombe'}`,
     description: `Term start at ${format(term.startDate, 'PPP')}`,
-    location: term.school === 'benenden' ? 'Benenden School' : 'Wycombe Abbey School',
+    location: term.school === 'benenden' ? 'Benenden School' : 'Wycombe School',
     startDate: termStart,
     endDate: termStartEnd
   });
@@ -131,9 +131,9 @@ export function exportTermToCalendar(term: Term, _flights: FlightDetails[], _tra
   termEndEnd.setHours(16, 0, 0);
 
   events.push({
-    summary: `${term.termName} End - ${term.school === 'benenden' ? 'Benenden' : 'Wycombe Abbey'}`,
+    summary: `${term.termName} End - ${term.school === 'benenden' ? 'Benenden' : 'Wycombe'}`,
     description: `Term end at ${format(term.endDate, 'PPP')}`,
-    location: term.school === 'benenden' ? 'Benenden School' : 'Wycombe Abbey School',
+    location: term.school === 'benenden' ? 'Benenden School' : 'Wycombe School',
     startDate: termEnd,
     endDate: termEndEnd
   });

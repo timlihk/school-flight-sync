@@ -54,7 +54,7 @@ export function PrintView({ flights, transport, notTravelling, terms, printOptio
   }, [flights, transport, notTravelling, terms, printOptions]);
 
   const getSchoolDisplayName = (school: string) => {
-    return school === 'benenden' ? 'Benenden School' : 'Wycombe Abbey School';
+    return school === 'benenden' ? 'Benenden School' : 'Wycombe School';
   };
 
   const formatDateRange = (startDate: Date, endDate: Date) => {
@@ -64,7 +64,7 @@ export function PrintView({ flights, transport, notTravelling, terms, printOptio
   const getSelectedSchoolsText = (options: PrintOptions) => {
     const schools = [];
     if (options.schools.benenden) schools.push('Benenden School');
-    if (options.schools.wycombe) schools.push('Wycombe Abbey School');
+    if (options.schools.wycombe) schools.push('Wycombe School');
     return schools.join(' and ');
   };
 

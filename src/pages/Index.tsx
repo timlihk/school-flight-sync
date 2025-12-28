@@ -1087,11 +1087,11 @@ export default function Index() {
                 </div>
               )}
 
-              {/* Wycombe Abbey School */}
+              {/* Wycombe School */}
               {shouldShowWycombe && (
                 <div className="space-y-3">
                   <SchoolHeader 
-                    schoolName="Wycombe Abbey School"
+                    schoolName="Wycombe School"
                     variant="wycombe"
                     onAcademicYearClick={() => handleShowScheduleForSchool('wycombe')}
                   />
@@ -1099,7 +1099,7 @@ export default function Index() {
                   <div className="space-y-4">
                     {wycombeTerms.length === 0 && (
                       <div className="rounded-lg border border-dashed border-border/50 bg-muted/30 p-3 text-sm text-muted-foreground">
-                        No future terms left for Wycombe Abbey.
+                        No future terms left for Wycombe.
                       </div>
                     )}
                     {wycombeTerms.map((term) => {
