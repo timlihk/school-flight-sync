@@ -637,7 +637,7 @@ export default function Index() {
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (!isMobile) return;
     const target = e.target as HTMLElement;
-    touchOnNavRef.current = !!target.closest('[data-nav-touch="true"]');
+    touchOnNavRef.current = !!target.closest('[data-nav-touch="true"],button,[role="button"],input,select,textarea,a');
     if (touchOnNavRef.current) return;
 
     const touch = e.touches[0];
