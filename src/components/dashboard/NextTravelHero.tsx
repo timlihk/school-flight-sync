@@ -6,6 +6,7 @@ import { Share2, Clock, Hash, StickyNote, ChevronDown, ChevronUp } from "lucide-
 import { Term } from "@/types/school";
 import { NextTravelEntry } from "@/types/next-travel";
 import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface NextTravelHeroProps {
   isOnline: boolean;
@@ -57,6 +58,7 @@ export function NextTravelHero({
             <button
               key={option}
               type="button"
+              aria-pressed={scope === option}
               onClick={() => onScopeChange(option)}
               className={cn(
                 "rounded-full px-3 py-1 text-[11px] font-medium tracking-tight transition",
@@ -84,20 +86,16 @@ export function NextTravelHero({
               label="Time"
               value={`${formatDistanceToNow(entry.date, { addSuffix: true })} · ${entryDetail}`}
             />
-            {entry.meta?.confirmation && (
-              <KeyChip
-                label="Confirmation"
-                value={entry.meta?.confirmation}
-                icon={<Hash className="h-3.5 w-3.5" />}
-              />
-            )}
-            {entry.meta?.notes && (
-              <KeyChip
-                label="Notes"
-                value={entry.meta?.notes}
-                icon={<StickyNote className="h-3.5 w-3.5" />}
-              />
-            )}
+            <KeyChip
+              label="Confirmation"
+              value={entry.meta?.confirmation ?? "Not provided"}
+              icon={<Hash className="h-3.5 w-3.5" />}
+            />
+            <KeyChip
+              label="Notes"
+              value={entry.meta?.notes ?? "No notes yet"}
+              icon={<StickyNote className="h-3.5 w-3.5" />}
+            />
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <StatusPill status={entry.status} school={entry.school} />

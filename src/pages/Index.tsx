@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
-import { Plane, Calendar, CalendarDays, Share2, Plus, List, LayoutGrid, LogOut, BusFront } from "lucide-react";
+import { Plane, Calendar, Share2, Plus, List, LayoutGrid, LogOut, BusFront } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AccountChip } from "@/components/ui/account-chip";
 import { NetworkStatusBanner } from "@/components/ui/network-status-banner";
@@ -33,9 +32,8 @@ import { CalendarEvent, useCalendarEvents } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
-import { NextTravelHero } from "@/components/dashboard/NextTravelHero";
-import { PlanFastCard } from "@/components/dashboard/PlanFastCard";
 import { MobileBottomNav, MainNavTab } from "@/components/dashboard/MobileBottomNav";
+import { TodayTab } from "@/components/dashboard/tabs/TodayTab";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { NextTravelEntry } from "@/types/next-travel";
 
@@ -763,93 +761,35 @@ export default function Index() {
     switch (activeTab) {
       case 'today':
         return (
-          <div className="space-y-5 px-4 py-5 md:px-6">
-            <NextTravelHero
-              isOnline={isOnline}
-              scope={heroScope}
-              onScopeChange={setHeroScope}
-              entry={nextTravel}
-              entryDetail={nextTravelDetail}
-              isExpanded={heroExpanded}
-              onToggleExpanded={() => setHeroExpanded(prev => !prev)}
-              earliestTerm={earliestTerm}
-              onAddFlight={handleAddFlight}
-              onAddTransport={handleAddTransport}
-              onViewTrip={(termId) => handleHighlightTerms([termId])}
-              onManageBooking={handleHeroManageBooking}
-              onShare={handleHeroShare}
-            />
-
-            <PlanFastCard
-              searchTerm={searchTerm}
-              statusFilter={statusFilter}
-              onSearchChange={setSearchTerm}
-              onStatusChange={setStatusFilter}
-              onAddFlight={handleQuickAddFlight}
-              onAddTransport={handleQuickAddTransport}
-              onShare={handlePlanShare}
-              onRefresh={handleRefresh}
-              isRefreshing={isRefreshing}
-              isBusy={isBusy}
-              contextLabel={nextAvailableTerm?.name}
-            />
-
-            <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase text-muted-foreground tracking-wide">This week</p>
-                  <h3 className="text-lg font-semibold">Upcoming</h3>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => handleNavSelect('calendar')}>
-                  <CalendarDays className="h-4 w-4 mr-2" />
-                  Calendar
-                </Button>
-              </div>
-              {filteredThisWeek.length === 0 && (
-                <EmptyState
-                  variant="week"
-                  compact
-                  actions={earliestTerm ? [
-                    { label: "Add Flight", onClick: () => handleAddFlight(earliestTerm.id) },
-                    { label: "Add Transport", onClick: () => handleAddTransport(earliestTerm.id), variant: 'outline' }
-                  ] : undefined}
-                />
-              )}
-              <div className="overflow-x-auto -mx-2 px-2">
-                <div className="flex gap-3 snap-x snap-mandatory">
-                  {filteredThisWeek.map(event => (
-                    <button
-                      key={event.id}
-                      className="snap-start min-w-[260px] rounded-xl border border-border/60 bg-muted/40 p-3 text-left hover:bg-accent transition-colors"
-                      onClick={() => handleCalendarEventClick(event)}
-                    >
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <Badge variant="outline" className="text-[10px] whitespace-nowrap">
-                          {event.type === 'flight'
-                            ? ((event.details as { type?: 'outbound' | 'return' })?.type === 'outbound' ? 'From School' : 'To School')
-                            : event.type === 'transport'
-                              ? 'Transport'
-                              : event.type === 'term'
-                                ? 'School date'
-                                : 'Not travelling'}
-                        </Badge>
-                        <span className="text-[11px] text-muted-foreground">{format(event.date, 'EEE, MMM d')}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold truncate">{event.title}</div>
-                        <div className="text-xs text-muted-foreground truncate">{event.school === 'benenden' ? 'Benenden' : 'Wycombe'}</div>
-                      </div>
-                      {event.description && (
-                        <div className="mt-2 text-xs text-muted-foreground line-clamp-2">
-                          {event.description}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <TodayTab
+            heroEntry={nextTravel}
+            heroEntryDetail={nextTravelDetail}
+            heroScope={heroScope}
+            onHeroScopeChange={setHeroScope}
+            heroExpanded={heroExpanded}
+            onToggleHeroExpanded={() => setHeroExpanded(prev => !prev)}
+            isOnline={isOnline}
+            earliestTerm={earliestTerm}
+            onAddFlight={handleAddFlight}
+            onAddTransport={handleAddTransport}
+            onViewTrip={(termId) => handleHighlightTerms([termId])}
+            onManageBooking={handleHeroManageBooking}
+            onShareHero={handleHeroShare}
+            searchTerm={searchTerm}
+            statusFilter={statusFilter}
+            onSearchChange={setSearchTerm}
+            onStatusChange={setStatusFilter}
+            onQuickAddFlight={handleQuickAddFlight}
+            onQuickAddTransport={handleQuickAddTransport}
+            onSharePlanFast={handlePlanShare}
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
+            isBusy={isBusy}
+            schoolPills={<SchoolPills />}
+            filteredThisWeek={filteredThisWeek}
+            onCalendarEventClick={handleCalendarEventClick}
+            onNavigateToCalendar={() => handleNavSelect('calendar')}
+          />
         );
       case 'trips':
         return (
