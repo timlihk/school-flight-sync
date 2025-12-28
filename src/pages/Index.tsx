@@ -18,6 +18,7 @@ import { TermCard } from "@/components/ui/term-card";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { SchoolHeader } from "@/components/school-header";
 import { CompactCalendar } from "@/components/CompactCalendar";
+import TripTimeline from "@/components/ui/trip-timeline";
 
 const FlightDialog = lazy(() => import("@/components/ui/flight-dialog"));
 const TransportDialog = lazy(() => import("@/components/ui/transport-dialog"));
@@ -50,7 +51,7 @@ export default function Index() {
   const [shareScope, setShareScope] = useState<'both' | 'benenden' | 'wycombe'>('both');
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [heroScope, setHeroScope] = useState<'both' | 'benenden' | 'wycombe'>('both');
+  const [heroScope, setHeroScope] = useState<'benenden' | 'wycombe'>('benenden');
   const [activeTab, setActiveTab] = useState<'today' | 'trips' | 'calendar' | 'settings'>('today');
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -125,7 +126,9 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
-    setHeroScope(selectedSchool as 'both' | 'benenden' | 'wycombe');
+    if (selectedSchool === 'benenden' || selectedSchool === 'wycombe') {
+      setHeroScope(selectedSchool);
+    }
   }, [selectedSchool]);
 
 
@@ -728,26 +731,21 @@ export default function Index() {
               )}
               {/* School scope toggle */}
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground tracking-wide">
-                  <span>Next travel</span>
-                  {combinedUpdatedAt && (
-                    <span className="text-[10px] text-muted-foreground">
-                      Updated {formatDistanceToNow(combinedUpdatedAt, { addSuffix: true })}
-                    </span>
-                  )}
+                <div className="text-xs uppercase text-muted-foreground tracking-wide">
+                  Next travel
                 </div>
                 <div className="flex rounded-full border border-border/60 bg-muted/40 p-0.5">
-                  {(['both','benenden','wycombe'] as const).map(scope => (
+                  {(['benenden','wycombe'] as const).map(scope => (
                     <Button
                       key={scope}
                     size="sm"
-                    variant={heroScope === scope ? 'default' : 'ghost'}
-                    className="h-10 px-3 text-xs"
-                    onClick={() => setHeroScope(scope)}
-                  >
-                    {scope === 'both' ? 'Both' : scope === 'benenden' ? 'Ben' : 'WA'}
-                  </Button>
-                ))}
+                      variant={heroScope === scope ? 'default' : 'ghost'}
+                      className="h-10 px-3 text-xs"
+                      onClick={() => setHeroScope(scope)}
+                    >
+                    {scope === 'benenden' ? 'Ben' : 'WA'}
+                    </Button>
+                  ))}
                 </div>
               </div>
 
