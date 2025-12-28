@@ -1,6 +1,7 @@
 import { Term } from '@/types/school';
+import termOverrides from './term-overrides.json';
 
-export const mockTerms: Term[] = [
+const baseMockTerms: Term[] = [
   // BENENDEN SCHOOL TERMS 2025-2027
   // Autumn Term 2025
   {
@@ -872,6 +873,38 @@ export const mockTerms: Term[] = [
     ]
   },
 ];
+
+type TermOverrideRecord = {
+  school: 'benenden' | 'wycombe';
+  name: string;
+  academicYear: string;
+  startDate: string;
+  endDate: string;
+};
+
+const overrideRecords = (termOverrides.overrides ?? []) as TermOverrideRecord[];
+const overrideMap = new Map<string, TermOverrideRecord>(
+  overrideRecords.map((record) => {
+    const key = `${record.school}|${record.name.toLowerCase()}|${record.academicYear}`;
+    return [key, record];
+  }),
+);
+
+const applyOverrides = (terms: Term[]): Term[] =>
+  terms.map((term) => {
+    const key = `${term.school}|${term.name.toLowerCase()}|${term.academicYear}`;
+    const override = overrideMap.get(key);
+    if (!override) {
+      return term;
+    }
+    return {
+      ...term,
+      startDate: new Date(override.startDate),
+      endDate: new Date(override.endDate),
+    };
+  });
+
+export const mockTerms: Term[] = applyOverrides(baseMockTerms);
 
 // Helper function to get unique academic years
 export const getAcademicYears = (): string[] => {
