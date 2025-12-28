@@ -2,7 +2,7 @@
 
 A comprehensive web application for managing UK boarding school term dates and travel arrangements for multiple students across different schools.
 
-> **Latest Version:** v2.6.2 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
+> **Latest Version:** v2.9.16 | **Status:** Production Ready ✅ | **PWA:** Enabled 📱 | **Tests:** 9/9 Passing | **Build:** Successful
 
 ## Overview
 
@@ -74,6 +74,13 @@ School Flight Sync is designed to help parents efficiently manage and track:
 - **School Filtering**: Dropdown to view specific schools or both
 - **School Branding**: Color-coded interface for each school (Benenden purple, Wycombe blue)
 - **Clean Layout**: Side-by-side school comparison view
+
+### 📱 Mobile Dashboard & Gestures
+- **Compact “Next Travel” hero**: Shows destination, timing, confirmation code, notes, and expandable detail tiles in one concise card.
+- **Plan Fast actions**: Search/filter row plus one-tap CTAs wired to the next available term (add flight, add transport, share schedule).
+- **Bottom navigation**: Today/Trips/Calendar/Settings buttons are large tap targets with haptic feedback and instant activation.
+- **Calendar toggles**: Grid/List buttons live beneath the legend as full-width controls for reliable single-tap switches.
+- **Pull-to-refresh hook**: Dragging from the top refreshes all travel data, while touches that start on buttons bypass the gesture so actions never require repeated taps.
 
 ## Tech Stack
 
@@ -163,6 +170,15 @@ The application will be available at `http://localhost:5173`
 - `npm run test:run` - Run tests once
 - `npm run test:ui` - Run tests with UI
 - `npm run check` - Run both typecheck and lint
+
+## Term Sync Automation
+
+Daily term validation ensures Benenden and Wycombe calendars stay aligned with their official sites.
+
+1. **Set the DeepSeek key** – define `DEEPSEEK_API_KEY` in both Railway (backend environment variables) and GitHub (Repository secrets) so local scripts, Railway tasks, and GitHub Actions share the same credential.
+2. **Run the script** – execute `DEEPSEEK_API_KEY=... npm run check:terms` or `npm run check:terms` with the variable exported in your shell. The script updates `src/data/term-overrides.json` whenever it detects new or modified term dates.
+3. **Deploy updates** – commit the refreshed overrides file and trigger a deploy; the React app automatically merges overrides on the next build/run.
+4. **Automate daily** – schedule a cron (e.g., GitHub Actions workflow or Railway job) that runs the script once per day, commits changes, and redeploys. This ensures “Term data may be outdated” warnings never linger and the dashboard always reflects the latest published calendars.
 
 ## Database Schema
 

@@ -50,6 +50,13 @@ UK Flight Sync is a well-architected React + TypeScript application for managing
 - **PWA:** Service workers, offline support, install prompt
 - **Calendar:** Utilities exist for .ics export (not yet integrated into UI)
 
+### **Mobile Dashboard Modules**
+- **NextTravelHero (`src/components/dashboard/NextTravelHero.tsx`)**: Self-contained card that renders the Benenden/Wycombe toggle, hero summary, expandable detail tiles, and CTA row (view trip, manage booking, share).
+- **PlanFastCard (`src/components/dashboard/PlanFastCard.tsx`)**: Houses the search/filter inputs plus the “Add Flight / Add Transport / Share” actions, keeping logic for the quick-add experience out of `Index.tsx`.
+- **MobileBottomNav (`src/components/dashboard/MobileBottomNav.tsx`)**: Renders Today/Trips/Calendar/Settings as high-touch buttons with built-in haptics.
+- **usePullToRefresh (`src/hooks/usePullToRefresh.ts`)**: Centralizes pull-to-refresh and horizontal swipe gestures while ignoring touches that originate on interactive elements. `Index.tsx` simply spreads the returned handlers.
+- **NextTravel types (`src/types/next-travel.ts`)**: Shared between the hero component and the data computation logic to keep display + calculation in sync.
+
 ---
 
 ## 🎯 **Core Features Assessment**
@@ -362,6 +369,16 @@ Each new feature should include:
 - Reduction in missed flights/transport
 - Improved communication between family members
 - Better preparation for travel days
+
+---
+
+## 🔁 Term Sync Operations
+
+1. **Where it lives** – `scripts/check-term-dates.ts` scrapes Benenden + Wycombe term pages, compares the result to `src/data/term-overrides.json`, and writes any delta back to the overrides file.
+2. **How to run it** – execute `DEEPSEEK_API_KEY=... npm run check:terms` (or export the variable before running). The CLI output summarizes new/changed terms so you can craft meaningful commit messages.
+3. **Secrets management** – keep the same `DEEPSEEK_API_KEY` defined in Railway environment variables *and* as a GitHub Action secret so both manual runs and scheduled workflows share credentials.
+4. **Automation path** – schedule a daily GitHub Action/Railway cron that installs dependencies, runs the script, commits `src/data/term-overrides.json` if it changed, and triggers a deploy. Pair it with alerts on workflow failure so scraping issues are discovered quickly.
+5. **Runtime effect** – builds read from `mock-terms`, which now merges overrides. Once the updated JSON is deployed, the hero card, Plan Fast context, and CompactCalendar immediately reflect the new dates. Users can always pull to refresh or wait for the automatic hourly refresh to pull the latest server data between deploys.
 
 ---
 
