@@ -62,6 +62,8 @@ export default function Index() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'booked' | 'needs' | 'staying'>('all');
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const hasScrolledOnTab = useRef(false);
+  const hasScrolledOnSchool = useRef(false);
 
   const { logout } = useFamilyAuth();
   const navigate = useNavigate();
@@ -103,10 +105,15 @@ export default function Index() {
     }
   };
 
+  const scrollToTop = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const triggerHaptic = useCallback((type: 'select' | 'success' | 'warning' = 'select') => {
     if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return;
     const patterns: Record<typeof type, number | number[]> = {
-      select: 15,
+      select: 10,
       success: [10, 30, 10],
       warning: [40, 30, 40],
     };
@@ -130,6 +137,22 @@ export default function Index() {
       setHeroScope(selectedSchool);
     }
   }, [selectedSchool]);
+
+  useEffect(() => {
+    if (hasScrolledOnTab.current) {
+      scrollToTop();
+    } else {
+      hasScrolledOnTab.current = true;
+    }
+  }, [activeTab, scrollToTop]);
+
+  useEffect(() => {
+    if (hasScrolledOnSchool.current) {
+      scrollToTop();
+    } else {
+      hasScrolledOnSchool.current = true;
+    }
+  }, [selectedSchool, scrollToTop]);
 
 
   // Filter to only upcoming terms for the selected school(s)
@@ -710,6 +733,7 @@ export default function Index() {
           onClick={() => {
             triggerHaptic();
             setSelectedSchool(scope);
+            scrollToTop();
           }}
         >
           {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
@@ -1527,6 +1551,7 @@ export default function Index() {
                   onClick={() => {
                     triggerHaptic('select');
                     setActiveTab(item.key);
+                    scrollToTop();
                   }}
                 >
                   <Icon className={cn("h-5 w-5", active && "fill-foreground")} />
