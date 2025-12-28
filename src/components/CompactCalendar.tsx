@@ -51,6 +51,12 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
   const autoSetRef = useRef(false);
   const openedAtRef = useRef<number | null>(null);
   const touchHandledRef = useRef(false);
+  const hasManualViewSelection = useRef(false);
+
+  const setViewModeManual = useCallback((mode: 'grid' | 'list') => {
+    hasManualViewSelection.current = true;
+    setViewMode(mode);
+  }, []);
 
   const filteredEvents = useMemo(() => {
     return (events || []).filter(ev => !eventFilter || eventFilter(ev));
@@ -112,29 +118,24 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
     return sorted;
   }, [currentDate, monthsToShow, getFilteredEventsForDate, events]);
 
+  const updateResponsiveState = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const width = window.innerWidth;
+    const mobile = width < 768;
+    setIsMobile(mobile);
+    const months = width >= 1536 ? 3 : width >= 1024 ? 2 : 1;
+    setMonthsToShow(months);
+    if (!hasManualViewSelection.current) {
+      setViewMode(mobile ? 'list' : 'grid');
+    }
+  }, []);
+
   // Calculate how many months to show based on screen width; update on resize
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const calculateMonths = () => {
-      const width = window.innerWidth;
-      const mobile = width < 768;
-      setIsMobile(mobile);
-      setViewMode(prev => {
-        if (mobile) return 'list';
-        return prev === 'list' ? 'grid' : prev;
-      });
-      if (width >= 1536) return 3; // 2xl
-      if (width >= 1024) return 2; // lg
-      return 1;
-    };
-
-    const update = () => setMonthsToShow(calculateMonths());
-    update();
-
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
+    updateResponsiveState();
+    window.addEventListener('resize', updateResponsiveState);
+    return () => window.removeEventListener('resize', updateResponsiveState);
+  }, [updateResponsiveState]);
 
   useEffect(() => {
     autoSetRef.current = false;
@@ -477,7 +478,11 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                   size="sm"
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
                   className="h-7 text-xs"
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => setViewModeManual('grid')}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    setViewModeManual('grid');
+                  }}
                 >
                   Grid
                 </Button>
@@ -485,7 +490,11 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                   size="sm"
                   variant={viewMode === 'list' ? 'default' : 'outline'}
                   className="h-7 text-xs"
-                  onClick={() => setViewMode('list')}
+                  onClick={() => setViewModeManual('list')}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    setViewModeManual('list');
+                  }}
                 >
                   List
                 </Button>

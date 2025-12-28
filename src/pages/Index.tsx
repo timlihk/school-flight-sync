@@ -898,40 +898,7 @@ export default function Index() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <Button
-                    className="h-12 w-full"
-                    disabled={isBusy}
-                    onClick={() => {
-                      if (isBusy) return;
-                      triggerHaptic();
-                      if (earliestTerm) {
-                        handleAddFlight(earliestTerm.id);
-                      } else {
-                        toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
-                      }
-                    }}
-                  >
-                    {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                    Add flight
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-12 w-full"
-                    disabled={isBusy}
-                    onClick={() => {
-                      if (isBusy) return;
-                      triggerHaptic();
-                      if (earliestTerm) {
-                        handleAddTransport(earliestTerm.id);
-                      } else {
-                        toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
-                      }
-                    }}
-                  >
-                    {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                    Add transport
-                  </Button>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <Button
                     variant="secondary"
                     className="h-12 w-full"
@@ -944,14 +911,23 @@ export default function Index() {
                     {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
                     Quick add sheet
                   </Button>
-                    <Button
-                      variant="outline"
-                      className="h-12 w-full"
-                      disabled={isBusy}
-                      onClick={() => handleNavSelect('calendar')}
-                    >
-                    {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                  <Button
+                    variant="outline"
+                    className="h-12 w-full"
+                    onClick={() => handleNavSelect('calendar')}
+                  >
                     Open calendar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="h-12 w-full"
+                    onClick={() => {
+                      triggerHaptic();
+                      setShareScope(selectedSchool as 'both' | 'benenden' | 'wycombe');
+                      setShareDialogOpen(true);
+                    }}
+                  >
+                    Share schedule
                   </Button>
                 </div>
               </div>
