@@ -253,7 +253,7 @@ export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTerm
                 </div>
                 {event.type === 'flight' && (
                   <div className="text-xs text-muted-foreground mt-0.5">
-                    <div>{event.details.departure.airport} → {event.details.arrival.airport}</div>
+                    <div>{event.details.departure.airport} to {event.details.arrival.airport}</div>
                   </div>
                 )}
                 {event.type === 'transport' && event.details.driverName && (

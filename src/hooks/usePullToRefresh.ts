@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 
 const INTERACTIVE_SELECTOR = '[data-nav-touch="true"],button,[role="button"],input,select,textarea,a';
+const EDGE_THRESHOLD = 80;
 
 interface PullToRefreshOptions {
   isEnabled: boolean;
@@ -18,10 +19,15 @@ export function usePullToRefresh({ isEnabled, onRefresh, onSwipe }: PullToRefres
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (!isEnabled) return;
     const target = e.target as HTMLElement;
-    skipGesture.current = !!target.closest(INTERACTIVE_SELECTOR);
-    if (skipGesture.current) return;
+    const interactive = !!target.closest(INTERACTIVE_SELECTOR);
+    skipGesture.current = interactive;
+    if (interactive) return;
 
     const touch = e.touches[0];
+    if (touch.clientY > EDGE_THRESHOLD || window.scrollY > 0) {
+      skipGesture.current = true;
+      return;
+    }
     touchStartX.current = touch.clientX;
     touchStartY.current = touch.clientY;
     setIsPulling(window.scrollY <= 0);

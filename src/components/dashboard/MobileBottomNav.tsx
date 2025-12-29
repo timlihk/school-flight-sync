@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { CalendarDays, Home, Plane, Settings } from "lucide-react";
+import { Calendar, Home, Plane, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type MainNavTab = "today" | "trips" | "calendar" | "settings";
@@ -12,14 +11,14 @@ interface MobileBottomNavProps {
 const navItems: Array<{ key: MainNavTab; label: string; icon: typeof Home }> = [
   { key: "today", label: "Today", icon: Home },
   { key: "trips", label: "Trips", icon: Plane },
-  { key: "calendar", label: "Calendar", icon: CalendarDays },
+  { key: "calendar", label: "Calendar", icon: Calendar },
   { key: "settings", label: "Settings", icon: Settings },
 ];
 
 export function MobileBottomNav({ activeTab, onSelect }: MobileBottomNavProps) {
   return (
     <div className="lg:hidden fixed inset-x-4 bottom-4 z-40" data-nav-touch="true">
-      <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-card via-card to-muted/30 px-3 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-3 backdrop-blur">
+      <div className="rounded-[28px] border border-white/15 bg-white/5 px-3 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-3 backdrop-blur-xl shadow-[0_25px_60px_rgba(2,6,23,0.35)]">
         <div className="grid grid-cols-4 gap-2">
           {navItems.map(item => {
             const Icon = item.icon;
@@ -32,13 +31,13 @@ export function MobileBottomNav({ activeTab, onSelect }: MobileBottomNavProps) {
                 data-nav-touch="true"
                 onClick={() => onSelect(item.key)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 rounded-2xl py-3 text-[11px] font-medium tracking-tight transition backdrop-blur",
+                  "flex flex-col items-center justify-center gap-1 rounded-2xl py-3 text-[11px] font-medium tracking-tight transition border",
                   active
-                    ? "bg-white/15 border border-white/30 text-white shadow-[0_12px_30px_rgba(15,23,42,0.25)]"
-                    : "text-white/70 hover:text-white/90 border border-transparent"
+                    ? "bg-white/25 text-slate-900 border-white/40 shadow-[0_12px_30px_rgba(15,23,42,0.35)]"
+                    : "bg-white/10 text-white/80 border-white/20 hover:text-white"
                 )}
               >
-                <Icon className={cn("h-5 w-5", active ? "text-white" : "text-white/80")} />
+                <Icon className={cn("h-5 w-5", active ? "text-slate-900" : "text-white")} />
                 {item.label}
               </button>
             );

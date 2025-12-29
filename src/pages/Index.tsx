@@ -27,7 +27,7 @@ import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term, TransportDetails } from "@/types/school";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format, differenceInHours } from "date-fns";
+import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format } from "date-fns";
 import { CalendarEvent, useCalendarEvents } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
@@ -364,7 +364,7 @@ export default function Index() {
       entries.push({
         date: flight.departure.date,
         title: `${flight.airline} ${flight.flightNumber}`,
-        detail: `${flight.departure.airport} → ${flight.arrival.airport}`,
+        detail: `${flight.departure.airport} to ${flight.arrival.airport}`,
         status: flight.status === 'booked' ? 'booked' : 'unplanned',
         termId: term.id,
         school: term.school,
@@ -383,8 +383,8 @@ export default function Index() {
       if (!eventDate || !isAfter(eventDate, now)) return;
       entries.push({
         date: eventDate,
-        title: `${item.type === 'school-coach' ? 'School Coach' : 'Taxi'} ${item.driverName ? `· ${item.driverName}` : ''}`,
-        detail: `${item.direction === 'return' ? 'To School' : 'From School'}`,
+        title: `${item.type === 'school-coach' ? 'School coach' : 'Taxi'}${item.driverName ? ` with ${item.driverName}` : ''}`,
+        detail: item.direction === 'return' ? 'To school' : 'From school',
         status: 'booked',
         termId: term.id,
         school: term.school,
@@ -412,11 +412,31 @@ export default function Index() {
     if (!entries.length) {
       const upcomingTerm = filteredTerms.find(term => isAfter(term.startDate, now) && matches(term.school));
       if (upcomingTerm) {
+        const futureFlights = flights.filter(f => f.termId === upcomingTerm.id && isAfter(f.departure.date, now));
+        const futureTransport = transport.filter(item => {
+          if (item.termId !== upcomingTerm.id) return false;
+          const date = resolveTransportDate(item, upcomingTerm);
+          return !!date && isAfter(date, now);
+        });
+
+        let status: NextTravelEntry["status"] = 'unplanned';
+        let detail = 'No travel booked yet';
+        if (futureFlights.length && !futureTransport.length) {
+          status = 'needs-transport';
+          detail = 'Flight booked, transport pending';
+        } else if (!futureFlights.length && futureTransport.length) {
+          status = 'needs-flight';
+          detail = 'Transport ready, flight pending';
+        } else if (futureFlights.length && futureTransport.length) {
+          status = 'booked';
+          detail = 'Travel ready';
+        }
+
         entries.push({
           date: upcomingTerm.startDate,
           title: `${upcomingTerm.name}`,
-          detail: 'No travel booked yet',
-          status: 'unplanned',
+          detail,
+          status,
           termId: upcomingTerm.id,
           school: upcomingTerm.school
         });
@@ -430,14 +450,6 @@ export default function Index() {
     () => computeNextTravel(heroScope),
     [computeNextTravel, heroScope]
   );
-  const nextTravelDetail = useMemo(() => {
-    if (!nextTravel) return '';
-    const hours = differenceInHours(nextTravel.date, new Date());
-    const days = Math.floor(hours / 24);
-    const remHours = hours % 24;
-    return `${days}d ${remHours}h`;
-  }, [nextTravel]);
-
   const buildShareText = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
     const entry = computeNextTravel(scope);
     if (!entry) return '';
@@ -450,7 +462,16 @@ export default function Index() {
       `Next travel (${schoolLabel}): ${entry.title} on ${entry.date.toDateString()} (${formatDistanceToNow(entry.date, { addSuffix: true })})`,
     ];
     if (entry.detail) lines.push(entry.detail);
-    lines.push(entry.status === 'booked' ? 'Booked' : entry.status === 'staying' ? 'Not travelling' : 'Needs booking');
+    const statusLabel = entry.status === 'booked'
+      ? 'Booked'
+      : entry.status === 'staying'
+        ? 'Not travelling'
+        : entry.status === 'needs-transport'
+          ? 'Needs transport'
+          : entry.status === 'needs-flight'
+            ? 'Needs flight'
+            : 'Needs booking';
+    lines.push(statusLabel);
     return lines.join('\n');
   }, [computeNextTravel]);
 
@@ -753,7 +774,6 @@ export default function Index() {
         return (
           <TodayTab
             heroEntry={nextTravel}
-            heroEntryDetail={nextTravelDetail}
             heroScope={heroScope}
             onHeroScopeChange={setHeroScope}
             isOnline={isOnline}
@@ -973,7 +993,7 @@ export default function Index() {
                 >
                   Share next travel
                 </Button>
-                <Suspense fallback={<div className="text-sm text-muted-foreground">Loading export…</div>}>
+                <Suspense fallback={<div className="text-sm text-muted-foreground">Loading export...</div>}>
                   <ExportDialog
                     flights={flights}
                     transport={transport}
@@ -1111,7 +1131,7 @@ export default function Index() {
               </div>
             </div>
           }>
-            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading flight details…</div>}>
+            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading flight details...</div>}>
               <FlightDialog
                 term={selectedTerm}
                 flights={flights.filter(f => f.termId === selectedTerm.id)}
@@ -1133,7 +1153,7 @@ export default function Index() {
               </div>
             </div>
           }>
-            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading transport…</div>}>
+            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading transport...</div>}>
               <TransportDialog
                 term={selectedTerm}
                 transport={getTransportForTerm(selectedTerm.id)}

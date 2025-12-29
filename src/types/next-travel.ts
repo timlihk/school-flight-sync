@@ -1,6 +1,6 @@
 import { School } from "@/hooks/use-calendar-events";
 
-export type NextTravelStatus = "booked" | "staying" | "unplanned";
+export type NextTravelStatus = "booked" | "staying" | "unplanned" | "needs-transport" | "needs-flight";
 
 export interface NextTravelEntry {
   date: Date;

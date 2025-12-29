@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CalendarDays } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { NextTravelHero } from "@/components/dashboard/NextTravelHero";
 import { PlanFastCard } from "@/components/dashboard/PlanFastCard";
 import { NextTravelEntry } from "@/types/next-travel";
@@ -10,7 +10,6 @@ import { CalendarEvent } from "@/hooks/use-calendar-events";
 
 interface TodayTabProps {
   heroEntry: NextTravelEntry | null;
-  heroEntryDetail: string;
   heroScope: "benenden" | "wycombe";
   onHeroScopeChange: (scope: "benenden" | "wycombe") => void;
   isOnline: boolean;
@@ -36,7 +35,6 @@ interface TodayTabProps {
 
 export function TodayTab({
   heroEntry,
-  heroEntryDetail,
   heroScope,
   onHeroScopeChange,
   isOnline,
@@ -66,7 +64,6 @@ export function TodayTab({
         scope={heroScope}
         onScopeChange={onHeroScopeChange}
         entry={heroEntry}
-        entryDetail={heroEntryDetail}
         earliestTerm={earliestTerm}
         onAddFlight={onAddFlight}
         onAddTransport={onAddTransport}
@@ -94,7 +91,7 @@ export function TodayTab({
             <h3 className="text-lg font-semibold">Upcoming</h3>
           </div>
           <Button variant="ghost" size="sm" onClick={onNavigateToCalendar}>
-            <CalendarDays className="h-4 w-4 mr-2" />
+            <Calendar className="h-4 w-4 mr-2" />
             Calendar
           </Button>
         </div>

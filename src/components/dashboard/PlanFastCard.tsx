@@ -35,28 +35,28 @@ export function PlanFastCard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Plan fast</p>
-          <h3 className="text-2xl font-semibold tracking-tight">What’s next?</h3>
+          <h3 className="text-2xl font-semibold tracking-tight">What's next?</h3>
         </div>
         <Button variant="ghost" size="sm" className="gap-2 rounded-full border border-border/40 px-4" onClick={onRefresh} disabled={isRefreshing}>
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </div>
-      <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,3fr)_minmax(0,1.3fr)]">
         <Input
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search flights, transport, events"
-          className="h-12 rounded-full bg-muted/40 border-0 px-5 text-base"
+          className="h-12 rounded-2xl border border-border/40 bg-muted/30 px-5 text-base"
         />
         <Select value={statusFilter} onValueChange={(value: PlanFastCardProps["statusFilter"]) => onStatusChange(value)}>
-          <SelectTrigger className="h-12 rounded-full bg-muted/40 border-0 px-5">
+          <SelectTrigger className="h-12 rounded-2xl border border-border/40 bg-muted/30 px-5">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="booked">Booked</SelectItem>
-            <SelectItem value="needs">Needs booking</SelectItem>
+            <SelectItem value="needs">Needs attention</SelectItem>
             <SelectItem value="staying">Staying</SelectItem>
           </SelectContent>
         </Select>
@@ -114,6 +114,6 @@ const ActionButton = ({
       {icon}
       {label}
     </span>
-    <span className="text-muted-foreground">→</span>
+    <span className="text-muted-foreground">{">"}</span>
   </Button>
 );

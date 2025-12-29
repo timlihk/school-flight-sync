@@ -94,7 +94,7 @@ export const TripTimeline = memo(function TripTimeline({
         date: flight.departure.date,
         title: `${flight.airline} ${flight.flightNumber}`,
         subtitle: flight.type === 'outbound' ? 'From School' : 'To School',
-        detail: `${flight.departure.airport} → ${flight.arrival.airport}`,
+        detail: `${flight.departure.airport} to ${flight.arrival.airport}`,
         school: term.school,
         termId: term.id,
         termName: term.name,
