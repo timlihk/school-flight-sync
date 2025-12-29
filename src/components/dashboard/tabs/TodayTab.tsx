@@ -13,14 +13,10 @@ interface TodayTabProps {
   heroEntryDetail: string;
   heroScope: "benenden" | "wycombe";
   onHeroScopeChange: (scope: "benenden" | "wycombe") => void;
-  heroExpanded: boolean;
-  onToggleHeroExpanded: () => void;
   isOnline: boolean;
   earliestTerm: Term | null;
   onAddFlight: (termId: string) => void;
   onAddTransport: (termId: string) => void;
-  onViewTrip: (termId: string) => void;
-  onManageBooking: (entry: NextTravelEntry) => void;
   onShareHero: () => void;
   searchTerm: string;
   statusFilter: "all" | "booked" | "needs" | "staying";
@@ -43,14 +39,10 @@ export function TodayTab({
   heroEntryDetail,
   heroScope,
   onHeroScopeChange,
-  heroExpanded,
-  onToggleHeroExpanded,
   isOnline,
   earliestTerm,
   onAddFlight,
   onAddTransport,
-  onViewTrip,
-  onManageBooking,
   onShareHero,
   searchTerm,
   statusFilter,
@@ -75,13 +67,9 @@ export function TodayTab({
         onScopeChange={onHeroScopeChange}
         entry={heroEntry}
         entryDetail={heroEntryDetail}
-        isExpanded={heroExpanded}
-        onToggleExpanded={onToggleHeroExpanded}
         earliestTerm={earliestTerm}
         onAddFlight={onAddFlight}
         onAddTransport={onAddTransport}
-        onViewTrip={onViewTrip}
-        onManageBooking={onManageBooking}
         onShare={onShareHero}
       />
 

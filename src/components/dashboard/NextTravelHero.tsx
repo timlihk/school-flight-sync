@@ -1,8 +1,7 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Share2, Clock, Hash, StickyNote, ChevronDown, ChevronUp } from "lucide-react";
+import { Share2, Clock, Hash, StickyNote } from "lucide-react";
 import { Term } from "@/types/school";
 import { NextTravelEntry } from "@/types/next-travel";
 import { cn } from "@/lib/utils";
@@ -14,13 +13,9 @@ interface NextTravelHeroProps {
   onScopeChange: (scope: "benenden" | "wycombe") => void;
   entry: NextTravelEntry | null;
   entryDetail: string;
-  isExpanded: boolean;
-  onToggleExpanded: () => void;
   earliestTerm: Term | null;
   onAddFlight: (termId: string) => void;
   onAddTransport: (termId: string) => void;
-  onViewTrip: (termId: string) => void;
-  onManageBooking: (entry: NextTravelEntry) => void;
   onShare: () => void;
 }
 
@@ -30,13 +25,9 @@ export function NextTravelHero({
   onScopeChange,
   entry,
   entryDetail,
-  isExpanded,
-  onToggleExpanded,
   earliestTerm,
   onAddFlight,
   onAddTransport,
-  onViewTrip,
-  onManageBooking,
   onShare,
 }: NextTravelHeroProps) {
   return (
@@ -97,52 +88,12 @@ export function NextTravelHero({
               icon={<StickyNote className="h-3.5 w-3.5" />}
             />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <StatusPill status={entry.status} school={entry.school} />
-            {entry.termId && (
-              <SubtleButton label="View trip" onClick={() => onViewTrip(entry.termId!)} />
-            )}
-            <Button
-              size="sm"
-              variant={entry.status === "booked" ? "outline" : "default"}
-              className="rounded-full px-5"
-              onClick={() => onManageBooking(entry)}
-            >
-              {entry.status === "booked" ? "Edit booking" : "Add booking"}
-            </Button>
-            <SubtleButton label="Share" icon={<Share2 className="h-3.5 w-3.5" />} onClick={onShare} />
-            <SubtleButton
-              label={isExpanded ? "Hide details" : "More details"}
-              icon={isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-              onClick={onToggleExpanded}
-            />
-          </div>
-          {isExpanded && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <DetailTile label="Departure">
-                <p className="text-sm font-semibold">{format(entry.date, "EEE, MMM d")}</p>
-                <p className="text-xs text-muted-foreground">
-                  {entry.meta?.timeLabel || format(entry.date, "h:mm a")}
-                </p>
-              </DetailTile>
-              <DetailTile label="Time remaining">
-                <p className="text-sm font-semibold">
-                  {formatDistanceToNow(entry.date, { addSuffix: true })}
-                </p>
-                <p className="text-xs text-muted-foreground">{entryDetail}</p>
-              </DetailTile>
-              <DetailTile label="Confirmation">
-                <p className="text-sm font-semibold">{entry.meta?.confirmation ?? "Not provided"}</p>
-              </DetailTile>
-              <DetailTile label="Notes">
-                <p className="text-sm font-medium text-muted-foreground line-clamp-2">
-                  {entry.meta?.notes ?? "No notes yet"}
-                </p>
-              </DetailTile>
-            </div>
-          )}
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusPill status={entry.status} school={entry.school} />
+          <SubtleButton label="Share" icon={<Share2 className="h-3.5 w-3.5" />} onClick={onShare} />
         </div>
-      ) : (
+      </div>
+    ) : (
         <div className="relative z-10">
           <EmptyState
             variant="trips"
@@ -202,12 +153,3 @@ const SubtleButton = ({ label, icon, onClick }: { label: string; icon?: React.Re
     {label}
   </button>
 );
-
-function DetailTile({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl bg-muted/40 border border-border/60 p-3 text-left">
-      <p className="text-xs uppercase text-muted-foreground">{label}</p>
-      {children}
-    </div>
-  );
-}

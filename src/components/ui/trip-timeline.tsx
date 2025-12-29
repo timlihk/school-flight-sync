@@ -183,6 +183,35 @@ export const TripTimeline = memo(function TripTimeline({
     }
   };
 
+  const formatTimeValue = (value?: string) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return format(parsed, 'h:mm a');
+    }
+    const match = value.match(/^(\d{1,2}):(\d{2})/);
+    if (match) {
+      const hours = Number(match[1]);
+      const minutes = Number(match[2]);
+      const placeholder = new Date();
+      placeholder.setHours(hours, minutes, 0, 0);
+      return format(placeholder, 'h:mm a');
+    }
+    return value;
+  };
+
+  const getEventTimeLabel = (event: TimelineEvent) => {
+    if (event.type === 'flight') {
+      const flight = event.raw as FlightDetails;
+      return formatTimeValue(flight?.departure?.time) || format(event.date, 'h:mm a');
+    }
+    if (event.type === 'transport') {
+      const transport = event.raw as TransportDetails;
+      return formatTimeValue(transport?.pickupTime) || format(event.date, 'h:mm a');
+    }
+    return null;
+  };
+
   const handleEventClick = (event: TimelineEvent) => {
     switch (event.type) {
       case 'flight':
@@ -251,54 +280,59 @@ export const TripTimeline = memo(function TripTimeline({
 
               {/* Events for this date */}
               <div className="ml-14 space-y-2">
-                {group.events.map((event, eventIndex) => (
-                  <button
-                    key={event.id}
-                    onClick={() => handleEventClick(event)}
-                    className={cn(
-                      "w-full text-left rounded-xl border p-3 transition-all",
-                      "hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
-                      "bg-card hover:bg-accent/50"
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
-                        event.school === 'benenden' ? "bg-blue-100 text-blue-600" : "bg-green-100 text-green-600"
-                      )}>
-                        {getEventIcon(event.type)}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-semibold truncate">{event.title}</span>
-                          <Badge
-                            variant="secondary"
-                            className={cn(
-                              "text-[10px] px-1.5 py-0",
-                              event.school === 'benenden' ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
-                            )}
-                          >
-                            {event.school === 'benenden' ? 'Ben' : 'WA'}
-                          </Badge>
+                {group.events.map((event, eventIndex) => {
+                  const timeLabel = getEventTimeLabel(event);
+                  return (
+                    <button
+                      key={event.id}
+                      onClick={() => handleEventClick(event)}
+                      className={cn(
+                        "w-full text-left rounded-xl border p-3 transition-all",
+                        "hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
+                        "bg-card hover:bg-accent/50"
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                          event.school === 'benenden' ? "bg-blue-100 text-blue-600" : "bg-green-100 text-green-600"
+                        )}>
+                          {getEventIcon(event.type)}
                         </div>
-                        <div className="text-sm text-muted-foreground">{event.subtitle}</div>
-                        {event.detail && (
-                          <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            {event.detail}
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="font-semibold truncate">{event.title}</span>
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "text-[10px] px-1.5 py-0",
+                                event.school === 'benenden' ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
+                              )}
+                            >
+                              {event.school === 'benenden' ? 'Ben' : 'WA'}
+                            </Badge>
                           </div>
-                        )}
-                        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {format(event.date, 'h:mm a')}
+                          <div className="text-sm text-muted-foreground">{event.subtitle}</div>
+                          {event.detail && (
+                            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                              <MapPin className="h-3 w-3" />
+                              {event.detail}
+                            </div>
+                          )}
+                          {timeLabel && (
+                            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {timeLabel}
+                            </div>
+                          )}
                         </div>
-                      </div>
 
-                      <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    </div>
-                  </button>
-                ))}
+                        <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           );

@@ -54,7 +54,6 @@ export default function Index() {
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [heroScope, setHeroScope] = useState<'benenden' | 'wycombe'>('benenden');
-  const [heroExpanded, setHeroExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<MainNavTab>('today');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tripsView, setTripsView] = useState<'timeline' | 'cards'>('timeline');
@@ -703,15 +702,6 @@ export default function Index() {
     }
     handleAddTransport(nextAvailableTerm.id);
   }, [handleAddTransport, nextAvailableTerm, toast, triggerHaptic]);
-  const handleHeroManageBooking = useCallback((entry: NextTravelEntry) => {
-    if (!entry.termId) return;
-    handleHighlightTerms([entry.termId]);
-    const term = termLookup.get(entry.termId);
-    if (!term) return;
-    setSelectedTerm(term);
-    setShowFlightDialog(true);
-  }, [handleHighlightTerms, termLookup, setSelectedTerm]);
-
   const handleSchoolSelect = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
     triggerHaptic();
     setSelectedSchool(scope);
@@ -766,14 +756,10 @@ export default function Index() {
             heroEntryDetail={nextTravelDetail}
             heroScope={heroScope}
             onHeroScopeChange={setHeroScope}
-            heroExpanded={heroExpanded}
-            onToggleHeroExpanded={() => setHeroExpanded(prev => !prev)}
             isOnline={isOnline}
             earliestTerm={earliestTerm}
             onAddFlight={handleAddFlight}
             onAddTransport={handleAddTransport}
-            onViewTrip={(termId) => handleHighlightTerms([termId])}
-            onManageBooking={handleHeroManageBooking}
             onShareHero={handleHeroShare}
             searchTerm={searchTerm}
             statusFilter={statusFilter}

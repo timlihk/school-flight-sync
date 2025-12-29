@@ -51,8 +51,9 @@ UK Flight Sync is a well-architected React + TypeScript application for managing
 - **Calendar:** Utilities exist for .ics export (not yet integrated into UI)
 
 ### **Mobile Dashboard Modules**
-- **NextTravelHero (`src/components/dashboard/NextTravelHero.tsx`)**: Self-contained card that renders the Benenden/Wycombe toggle, hero summary, expandable detail tiles, and CTA row (view trip, manage booking, share).
-- **PlanFastCard (`src/components/dashboard/PlanFastCard.tsx`)**: Houses the search/filter inputs plus the “Add Flight / Add Transport / Share” actions, keeping logic for the quick-add experience out of `Index.tsx`.
+- **NextTravelHero (`src/components/dashboard/NextTravelHero.tsx`)**: Compact chip-style hero with the Benenden/Wycombe toggle, departure/countdown/confirmation/note highlights, and a single share action?no inline ?view trip? or ?add booking? clutter.
+- **PlanFastCard (`src/components/dashboard/PlanFastCard.tsx`)**: Houses the search/filter inputs plus the Add Flight / Add Transport / Share actions, keeping logic for the quick-add experience out of `Index.tsx`.
+- **TodayTab (`src/components/dashboard/tabs/TodayTab.tsx`)**: Composes the hero, Plan Fast card, school pills, and weekly preview into a dedicated component so `Index.tsx` no longer renders the entire Today view inline.
 - **MobileBottomNav (`src/components/dashboard/MobileBottomNav.tsx`)**: Renders Today/Trips/Calendar/Settings as high-touch buttons with built-in haptics.
 - **usePullToRefresh (`src/hooks/usePullToRefresh.ts`)**: Centralizes pull-to-refresh and horizontal swipe gestures while ignoring touches that originate on interactive elements. `Index.tsx` simply spreads the returned handlers.
 - **NextTravel types (`src/types/next-travel.ts`)**: Shared between the hero component and the data computation logic to keep display + calculation in sync.
