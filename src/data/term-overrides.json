@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-29T03:34:47.847Z",
+  "updatedAt": "2025-12-30T03:31:48.646Z",
   "overrides": [
     {
       "school": "benenden",
@@ -7,7 +7,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-01-05",
       "endDate": "2026-03-27",
-      "notes": "Term begins for boarders on 5 January 2026, day students return 6 January 2026"
+      "notes": "Term begins for boarders on January 5, day students return January 6"
     },
     {
       "school": "benenden",
@@ -26,7 +26,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-04-20",
       "endDate": "2026-07-04",
-      "notes": "Term begins for boarders on 20 April 2026, day students return 21 April 2026"
+      "notes": "Term begins for boarders on April 20, day students return April 21"
     },
     {
       "school": "benenden",
@@ -36,7 +36,7 @@
       "startDate": "2026-05-22",
       "endDate": "2026-05-31",
       "type": "half-term",
-      "notes": "Half Term begins 12.30pm May 22, ends 7.30pm May 31",
+      "notes": "Summer Term half term",
       "isNew": true
     },
     {
@@ -67,7 +67,7 @@
       "academicYear": "2026-2027",
       "startDate": "2026-09-02",
       "endDate": "2026-12-10",
-      "notes": "Term begins for boarders on 2 September 2026, day students return 3 September 2026"
+      "notes": "Term begins for boarders on September 2, day students return September 3"
     },
     {
       "school": "benenden",
@@ -94,7 +94,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-01-05",
       "endDate": "2027-03-24",
-      "notes": "Term begins for boarders on 5 January 2027, day students return 6 January 2027"
+      "notes": "Term begins for boarders on January 5, day students return January 6"
     },
     {
       "school": "benenden",
@@ -113,7 +113,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-04-19",
       "endDate": "2027-07-03",
-      "notes": "Term begins for boarders on 19 April 2027, day students return 20 April 2027"
+      "notes": "Term begins for boarders on April 19, day students return April 20"
     },
     {
       "school": "benenden",
@@ -123,7 +123,7 @@
       "startDate": "2027-05-28",
       "endDate": "2027-06-06",
       "type": "half-term",
-      "notes": "Half Term begins 12.30pm May 28, ends 7.30pm Jun 6",
+      "notes": "Summer Term half term",
       "isNew": true
     },
     {
@@ -169,6 +169,14 @@
     },
     {
       "school": "wycombe",
+      "name": "Autumn Term 2025",
+      "academicYear": "2025-2026",
+      "startDate": "2025-09-01",
+      "endDate": "2025-12-10",
+      "notes": "Term starts Monday 1 September for UVI, LVI, UIII, UV; Tuesday 2 September for UIV, LV, LIV"
+    },
+    {
+      "school": "wycombe",
       "name": "Spring Term",
       "academicYear": "2025-2026",
       "startDate": "2026-01-06",
@@ -185,6 +193,14 @@
       "type": "term",
       "notes": "Term starts Tuesday 6 January",
       "isNew": true
+    },
+    {
+      "school": "wycombe",
+      "name": "Spring Term 2026",
+      "academicYear": "2025-2026",
+      "startDate": "2026-01-06",
+      "endDate": "2026-03-26",
+      "notes": "Term starts Tuesday 6 January"
     },
     {
       "school": "wycombe",
@@ -207,6 +223,14 @@
     },
     {
       "school": "wycombe",
+      "name": "Summer Term 2026",
+      "academicYear": "2025-2026",
+      "startDate": "2026-04-21",
+      "endDate": "2026-06-26",
+      "notes": "Term starts Tuesday 21 April"
+    },
+    {
+      "school": "wycombe",
       "name": "Autumn Term",
       "academicYear": "2026-2027",
       "startDate": "2026-09-07",
@@ -223,6 +247,14 @@
       "type": "term",
       "notes": "Girls return Saturday 12 and Sunday 13 September; term ends Friday 11 December",
       "isNew": true
+    },
+    {
+      "school": "wycombe",
+      "name": "Autumn Term 2026",
+      "academicYear": "2026-2027",
+      "startDate": "2026-09-07",
+      "endDate": "2026-12-11",
+      "notes": "Girls return Saturday 12 and Sunday 13 September; Term ends Friday 11 December"
     },
     {
       "school": "wycombe",
@@ -245,6 +277,14 @@
     },
     {
       "school": "wycombe",
+      "name": "Spring Term 2027",
+      "academicYear": "2026-2027",
+      "startDate": "2027-01-05",
+      "endDate": "2027-03-24",
+      "notes": "Girls return Tuesday 5 January; Term ends Wednesday 24 March"
+    },
+    {
+      "school": "wycombe",
       "name": "Summer Term",
       "academicYear": "2026-2027",
       "startDate": "2027-04-20",
@@ -261,6 +301,14 @@
       "type": "term",
       "notes": "Girls return Tuesday 20 April; term ends Friday 2 July",
       "isNew": true
+    },
+    {
+      "school": "wycombe",
+      "name": "Summer Term 2027",
+      "academicYear": "2026-2027",
+      "startDate": "2027-04-20",
+      "endDate": "2027-07-02",
+      "notes": "Girls return Tuesday 20 April; Term ends Friday 2 July"
     }
   ]
 }
