@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-01-01T03:34:50.678Z",
+  "updatedAt": "2026-01-02T03:32:49.617Z",
   "overrides": [
     {
       "school": "benenden",
@@ -7,7 +7,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-01-05",
       "endDate": "2026-03-27",
-      "notes": "Term begins for boarders on January 5, day students return January 6"
+      "notes": "Term begins for boarders on Jan 5, day students return Jan 6"
     },
     {
       "school": "benenden",
@@ -34,7 +34,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-04-20",
       "endDate": "2026-07-04",
-      "notes": "Term begins for boarders on April 20, day students return April 21"
+      "notes": "Term begins for boarders on Apr 20, day students return Apr 21"
     },
     {
       "school": "benenden",
@@ -44,7 +44,7 @@
       "startDate": "2026-05-22",
       "endDate": "2026-05-31",
       "type": "half-term",
-      "notes": "Summer Term half term",
+      "notes": "Summer Term half term break",
       "isNew": true
     },
     {
@@ -83,7 +83,7 @@
       "academicYear": "2026-2027",
       "startDate": "2026-09-02",
       "endDate": "2026-12-10",
-      "notes": "Term begins for boarders on September 2, day students return September 3"
+      "notes": "Term begins for boarders on Sep 2, day students return Sep 3"
     },
     {
       "school": "benenden",
@@ -118,7 +118,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-01-05",
       "endDate": "2027-03-24",
-      "notes": "Term begins for boarders on January 5, day students return January 6"
+      "notes": "Term begins for boarders on Jan 5, day students return Jan 6"
     },
     {
       "school": "benenden",
@@ -145,7 +145,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-04-19",
       "endDate": "2027-07-03",
-      "notes": "Term begins for boarders on April 19, day students return April 20"
+      "notes": "Term begins for boarders on Apr 19, day students return Apr 20"
     },
     {
       "school": "benenden",
@@ -155,7 +155,7 @@
       "startDate": "2027-05-28",
       "endDate": "2027-06-06",
       "type": "half-term",
-      "notes": "Summer Term half term",
+      "notes": "Summer Term half term break",
       "isNew": true
     },
     {
