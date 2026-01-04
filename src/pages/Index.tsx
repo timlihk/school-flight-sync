@@ -178,17 +178,43 @@ export default function Index() {
     []
   );
 
+  const combineDateAndTime = useCallback((date: Date, time?: string) => {
+    if (!time) return new Date(date);
+
+    // Prefer ISO-style parsing so we don't lose the provided time
+    const datePart = format(date, 'yyyy-MM-dd');
+    const combined = new Date(`${datePart}T${time}`);
+    if (!Number.isNaN(combined.getTime())) return combined;
+
+    // Fallback for odd formats: apply hours/minutes directly
+    const [hoursStr, minutesStr] = time.split(':');
+    const hours = Number.parseInt(hoursStr, 10);
+    const minutes = Number.parseInt(minutesStr ?? '0', 10);
+    const fallback = new Date(date);
+    if (!Number.isNaN(hours)) {
+      fallback.setHours(hours, Number.isNaN(minutes) ? 0 : minutes, 0, 0);
+    }
+    return fallback;
+  }, []);
+
   const resolveTransportDate = useCallback((item: TransportDetails, term?: Term): Date | null => {
     if (!term) return null;
+    const baseDate = new Date(item.direction === 'return' ? term.endDate : term.startDate);
+
     if (item.pickupTime) {
       const directDate = new Date(item.pickupTime);
       if (!Number.isNaN(directDate.getTime())) {
         return directDate;
       }
+
+      const combined = combineDateAndTime(baseDate, item.pickupTime);
+      if (!Number.isNaN(combined.getTime())) {
+        return combined;
+      }
     }
-    const base = new Date(item.direction === 'return' ? term.endDate : term.startDate);
-    return Number.isNaN(base.getTime()) ? null : base;
-  }, []);
+
+    return Number.isNaN(baseDate.getTime()) ? null : baseDate;
+  }, [combineDateAndTime]);
 
   const handleAddFlight = useCallback((termId: string) => {
     const term = termLookup.get(termId);
@@ -358,18 +384,19 @@ export default function Index() {
     const entries: NextTravelEntry[] = [];
 
     flights.forEach(flight => {
-      if (!isAfter(flight.departure.date, now)) return;
+      const departureDateTime = combineDateAndTime(flight.departure.date, flight.departure.time);
+      if (!isAfter(departureDateTime, now)) return;
       const term = termLookup.get(flight.termId);
       if (!term || !matches(term.school)) return;
       entries.push({
-        date: flight.departure.date,
+        date: departureDateTime,
         title: `${flight.airline} ${flight.flightNumber}`,
         detail: `${flight.departure.airport} to ${flight.arrival.airport}`,
         status: flight.status === 'booked' ? 'booked' : 'unplanned',
         termId: term.id,
         school: term.school,
         meta: {
-          timeLabel: flight.departure.time || format(flight.departure.date, 'p'),
+          timeLabel: flight.departure.time || format(departureDateTime, 'p'),
           confirmation: flight.confirmationCode,
           notes: flight.notes,
         }
@@ -412,7 +439,11 @@ export default function Index() {
     if (!entries.length) {
       const upcomingTerm = filteredTerms.find(term => isAfter(term.startDate, now) && matches(term.school));
       if (upcomingTerm) {
-        const futureFlights = flights.filter(f => f.termId === upcomingTerm.id && isAfter(f.departure.date, now));
+        const futureFlights = flights.filter(f => {
+          if (f.termId !== upcomingTerm.id) return false;
+          const departureDateTime = combineDateAndTime(f.departure.date, f.departure.time);
+          return isAfter(departureDateTime, now);
+        });
         const futureTransport = transport.filter(item => {
           if (item.termId !== upcomingTerm.id) return false;
           const date = resolveTransportDate(item, upcomingTerm);
@@ -444,7 +475,7 @@ export default function Index() {
     }
 
     return entries.sort((a, b) => a.date.getTime() - b.date.getTime())[0] ?? null;
-  }, [flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate]);
+  }, [combineDateAndTime, flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate]);
 
   const nextTravel = useMemo(
     () => computeNextTravel(heroScope),
