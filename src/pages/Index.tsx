@@ -27,7 +27,7 @@ import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term, TransportDetails } from "@/types/school";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format } from "date-fns";
+import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format, isSameDay } from "date-fns";
 import { CalendarEvent, useCalendarEvents } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
@@ -383,16 +383,29 @@ export default function Index() {
     const matches = (school: 'benenden' | 'wycombe') => scope === 'both' || scope === school;
     const entries: NextTravelEntry[] = [];
 
+    const transportsByKey = new Map<string, TransportDetails[]>();
+    transport.forEach(item => {
+      const dir = item.direction || 'outbound';
+      const key = `${item.termId}-${dir}`;
+      const list = transportsByKey.get(key) || [];
+      list.push(item);
+      transportsByKey.set(key, list);
+    });
+    const matchedTransportIds = new Set<string>();
+
     flights.forEach(flight => {
-      const departureDateTime = combineDateAndTime(flight.departure.date, flight.departure.time);
-      if (!isAfter(departureDateTime, now)) return;
       const term = termLookup.get(flight.termId);
       if (!term || !matches(term.school)) return;
+
+      const departureDateTime = combineDateAndTime(flight.departure.date, flight.departure.time);
+      if (!isAfter(departureDateTime, now)) return;
+
+      // Always add the flight entry
       entries.push({
         date: departureDateTime,
         title: `${flight.airline} ${flight.flightNumber}`,
         detail: `${flight.departure.airport} to ${flight.arrival.airport}`,
-        status: flight.status === 'booked' ? 'booked' : 'unplanned',
+        status: 'booked',
         termId: term.id,
         school: term.school,
         meta: {
@@ -401,9 +414,50 @@ export default function Index() {
           notes: flight.notes,
         }
       });
+
+      // Add a transport entry on the same day (booked or unbooked)
+      const key = `${flight.termId}-${flight.type}`;
+      const candidates = transportsByKey.get(key) || [];
+      const matched = candidates
+        .map(item => {
+          const alignedDate = combineDateAndTime(departureDateTime, item.pickupTime);
+          return { item, alignedDate };
+        })
+        .sort((a, b) => a.alignedDate.getTime() - b.alignedDate.getTime())
+        .find(({ alignedDate }) => isAfter(alignedDate, now) || isSameDay(alignedDate, now));
+
+      if (matched) {
+        matchedTransportIds.add(matched.item.id);
+        entries.push({
+          date: matched.alignedDate,
+          title: `${matched.item.type === 'school-coach' ? 'School coach' : 'Taxi'}${matched.item.driverName ? ` with ${matched.item.driverName}` : ''}`,
+          detail: matched.item.direction === 'return' ? 'To school' : 'From school',
+          status: 'booked',
+          termId: term.id,
+          school: term.school,
+          meta: {
+            timeLabel: matched.item.pickupTime || format(matched.alignedDate, 'p'),
+            notes: matched.item.notes,
+          }
+        });
+      } else {
+        entries.push({
+          date: departureDateTime,
+          title: 'Transport not booked',
+          detail: flight.type === 'return' ? 'To school' : 'From school',
+          status: 'needs-transport',
+          termId: term.id,
+          school: term.school,
+          meta: {
+            timeLabel: flight.departure.time || format(departureDateTime, 'p'),
+            notes: 'Add taxi or coach details',
+          }
+        });
+      }
     });
 
     transport.forEach(item => {
+      if (matchedTransportIds.has(item.id)) return;
       const term = termLookup.get(item.termId);
       if (!term || !matches(term.school)) return;
       const eventDate = resolveTransportDate(item, term);
@@ -474,7 +528,13 @@ export default function Index() {
       }
     }
 
-    return entries.sort((a, b) => a.date.getTime() - b.date.getTime())[0] ?? null;
+    return entries.sort((a, b) => {
+      const diff = a.date.getTime() - b.date.getTime();
+      if (diff !== 0) return diff;
+      if (a.status === 'needs-transport' && b.status !== 'needs-transport') return -1;
+      if (b.status === 'needs-transport' && a.status !== 'needs-transport') return 1;
+      return 0;
+    })[0] ?? null;
   }, [combineDateAndTime, flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate]);
 
   const nextTravel = useMemo(

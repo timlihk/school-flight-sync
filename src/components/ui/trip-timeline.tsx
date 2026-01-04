@@ -31,6 +31,21 @@ interface TripTimelineProps {
   selectedSchool: 'both' | 'benenden' | 'wycombe';
 }
 
+const combineDateAndTime = (date: Date, time?: string) => {
+  if (!time) return new Date(date);
+  const datePart = format(date, 'yyyy-MM-dd');
+  const combined = new Date(`${datePart}T${time}`);
+  if (!Number.isNaN(combined.getTime())) return combined;
+  const [hoursStr, minutesStr] = time.split(':');
+  const hours = Number.parseInt(hoursStr, 10);
+  const minutes = Number.parseInt(minutesStr ?? '0', 10);
+  const fallback = new Date(date);
+  if (!Number.isNaN(hours)) {
+    fallback.setHours(hours, Number.isNaN(minutes) ? 0 : minutes, 0, 0);
+  }
+  return fallback;
+};
+
 export const TripTimeline = memo(function TripTimeline({
   terms,
   flights,
@@ -81,17 +96,28 @@ export const TripTimeline = memo(function TripTimeline({
       }
     });
 
-    // Add flight events
+    const transportsByKey = new Map<string, TransportDetails[]>();
+    transport.forEach(item => {
+      const dir = item.direction || 'outbound';
+      const key = `${item.termId}-${dir}`;
+      const list = transportsByKey.get(key) || [];
+      list.push(item);
+      transportsByKey.set(key, list);
+    });
+    const matchedTransportIds = new Set<string>();
+
+    // Add flight events (and pair transport entries on the same day)
     flights.forEach(flight => {
       const term = terms.find(t => t.id === flight.termId);
       if (!term) return;
       if (selectedSchool !== 'both' && term.school !== selectedSchool) return;
-      if (!isAfter(flight.departure.date, now) && !isSameDay(flight.departure.date, now)) return;
+      const departureDateTime = combineDateAndTime(flight.departure.date, flight.departure.time);
+      if (!isAfter(departureDateTime, now) && !isSameDay(departureDateTime, now)) return;
 
       allEvents.push({
         id: `flight-${flight.id}`,
         type: 'flight',
-        date: flight.departure.date,
+        date: departureDateTime,
         title: `${flight.airline} ${flight.flightNumber}`,
         subtitle: flight.type === 'outbound' ? 'From School' : 'To School',
         detail: `${flight.departure.airport} to ${flight.arrival.airport}`,
@@ -100,20 +126,67 @@ export const TripTimeline = memo(function TripTimeline({
         termName: term.name,
         raw: flight
       });
+
+      const key = `${flight.termId}-${flight.type}`;
+      const candidates = transportsByKey.get(key) || [];
+      const matched = candidates
+        .map(item => {
+          const alignedDate = combineDateAndTime(departureDateTime, item.pickupTime);
+          return { item, alignedDate };
+        })
+        .sort((a, b) => a.alignedDate.getTime() - b.alignedDate.getTime())
+        .find(({ alignedDate }) => isAfter(alignedDate, now) || isSameDay(alignedDate, now));
+
+      if (matched) {
+        matchedTransportIds.add(matched.item.id);
+        allEvents.push({
+          id: `transport-${matched.item.id}`,
+          type: 'transport',
+          date: matched.alignedDate,
+          title: matched.item.type === 'school-coach' ? 'School Coach' : 'Taxi',
+          subtitle: matched.item.direction === 'return' ? 'To School' : 'From School',
+          detail: matched.item.driverName ? `Driver: ${matched.item.driverName}` : 'Transport booked',
+          school: term.school,
+          termId: term.id,
+          termName: term.name,
+          raw: matched.item
+        });
+      } else {
+        const placeholder: TransportDetails = {
+          id: `transport-missing-${flight.id}`,
+          termId: flight.termId,
+          type: 'taxi',
+          direction: flight.type,
+          driverName: '',
+          phoneNumber: '',
+          licenseNumber: '',
+          pickupTime: flight.departure.time || '',
+          notes: 'Transport not booked'
+        };
+        allEvents.push({
+          id: `transport-missing-${flight.id}`,
+          type: 'transport',
+          date: departureDateTime,
+          title: 'Transport (not booked)',
+          subtitle: flight.type === 'return' ? 'To School' : 'From School',
+          detail: 'Add taxi or coach details',
+          school: term.school,
+          termId: term.id,
+          termName: term.name,
+          raw: placeholder
+        });
+      }
     });
 
-    // Add transport events
+    // Add remaining transport events not paired with flights
     transport.forEach(item => {
+      if (matchedTransportIds.has(item.id)) return;
       const term = terms.find(t => t.id === item.termId);
       if (!term) return;
       if (selectedSchool !== 'both' && term.school !== selectedSchool) return;
 
-      let eventDate: Date;
-      if (item.pickupTime) {
-        eventDate = new Date(item.pickupTime);
-      } else {
-        eventDate = item.direction === 'return' ? term.endDate : term.startDate;
-      }
+      const baseDate = item.direction === 'return' ? term.endDate : term.startDate;
+      const eventDate = combineDateAndTime(baseDate, item.pickupTime);
 
       if (!isAfter(eventDate, now) && !isSameDay(eventDate, now)) return;
 

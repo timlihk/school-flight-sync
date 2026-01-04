@@ -6,6 +6,21 @@ import { mockTerms } from '@/data/mock-terms';
 import { format, isValid } from 'date-fns';
 import type { Term, TransportDetails } from '@/types/school';
 
+const combineDateAndTime = (date: Date, time?: string) => {
+  if (!time) return new Date(date);
+  const datePart = format(date, 'yyyy-MM-dd');
+  const combined = new Date(`${datePart}T${time}`);
+  if (!Number.isNaN(combined.getTime())) return combined;
+  const [hoursStr, minutesStr] = time.split(':');
+  const hours = Number.parseInt(hoursStr, 10);
+  const minutes = Number.parseInt(minutesStr ?? '0', 10);
+  const fallback = new Date(date);
+  if (!Number.isNaN(hours)) {
+    fallback.setHours(hours, Number.isNaN(minutes) ? 0 : minutes, 0, 0);
+  }
+  return fallback;
+};
+
 const resolveTransportDate = (item: TransportDetails, term?: Term): Date | null => {
   if (!term) return null;
 
@@ -14,20 +29,10 @@ const resolveTransportDate = (item: TransportDetails, term?: Term): Date | null 
     if (!Number.isNaN(directDate.getTime())) {
       return directDate;
     }
-
-    const timeMatch = item.pickupTime.match(/^(\d{1,2}):(\d{2})/);
-    if (timeMatch) {
-      const [hours, minutes] = timeMatch.slice(1).map(Number);
-      const base = new Date(item.direction === 'return' ? term.endDate : term.startDate);
-      if (!Number.isNaN(base.getTime())) {
-        base.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-        return base;
-      }
-    }
   }
 
-  const fallback = new Date(item.direction === 'return' ? term.endDate : term.startDate);
-  return Number.isNaN(fallback.getTime()) ? null : fallback;
+  const base = new Date(item.direction === 'return' ? term.endDate : term.startDate);
+  return Number.isNaN(base.getTime()) ? null : combineDateAndTime(base, item.pickupTime);
 };
 
 const getFlightTypeLabel = (type: 'outbound' | 'return') =>
@@ -119,7 +124,17 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       }
     });
 
-    // Add flight events
+    const transportsByKey = new Map<string, TransportDetails[]>();
+    transport?.forEach(item => {
+      const dir = item.direction || 'outbound';
+      const key = `${item.termId}-${dir}`;
+      const list = transportsByKey.get(key) || [];
+      list.push(item);
+      transportsByKey.set(key, list);
+    });
+    const matchedTransportIds = new Set<string>();
+
+    // Add flight events (plus transport entries for the same day)
     flights?.forEach(flight => {
       const term = termLookup.get(flight.termId);
       if (!term) {
@@ -130,24 +145,53 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
         return;
       }
 
-      if (flight.departure?.date) {
-        const departureDate = new Date(flight.departure.date);
-        if (!Number.isNaN(departureDate.getTime())) {
-          addEvent(allEvents, {
-            id: `flight-${flight.id}`,
-            date: departureDate,
-            type: 'flight',
-            school: term.school,
-            title: `Flight ${flight.flightNumber}`,
-            description: `${flight.airline} - ${getFlightTypeLabel(flight.type)}`,
-            details: flight
-          });
-        }
+      const departureDate = combineDateAndTime(flight.departure.date, flight.departure.time);
+      addEvent(allEvents, {
+        id: `flight-${flight.id}`,
+        date: departureDate,
+        type: 'flight',
+        school: term.school,
+        title: `Flight ${flight.flightNumber}`,
+        description: `${flight.airline} - ${getFlightTypeLabel(flight.type)}`,
+        details: flight
+      });
+
+      const key = `${flight.termId}-${flight.type}`;
+      const candidates = transportsByKey.get(key) || [];
+      const matched = candidates
+        .map(item => {
+          const alignedDate = combineDateAndTime(departureDate, item.pickupTime);
+          return { item, alignedDate };
+        })
+        .sort((a, b) => a.alignedDate.getTime() - b.alignedDate.getTime())[0];
+
+      if (matched) {
+        matchedTransportIds.add(matched.item.id);
+        addEvent(allEvents, {
+          id: `transport-${matched.item.id}`,
+          date: matched.alignedDate,
+          type: 'transport',
+          school: term.school,
+          title: `Transport - ${matched.item.type}`,
+          description: `${matched.item.direction === 'return' ? 'Return' : 'Departure'}${matched.item.driverName ? ` with ${matched.item.driverName}` : ''}`,
+          details: matched.item
+        });
+      } else {
+        addEvent(allEvents, {
+          id: `transport-missing-${flight.id}`,
+          date: departureDate,
+          type: 'transport',
+          school: term.school,
+          title: 'Transport - Not booked',
+          description: flight.type === 'return' ? 'To school (needs transport)' : 'From school (needs transport)',
+          details: { term, flightId: flight.id, missingTransport: true }
+        });
       }
     });
 
-    // Add transport events
+    // Add remaining transport events
     transport?.forEach(item => {
+      if (matchedTransportIds.has(item.id)) return;
       const term = termLookup.get(item.termId);
       if (!term) {
         return;
@@ -168,7 +212,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
         type: 'transport',
         school: term.school,
         title: `Transport - ${item.type}`,
-        description: `${item.direction === 'return' ? 'Return' : 'Departure'}${item.driverName ? ` · ${item.driverName}` : ''}`,
+        description: `${item.direction === 'return' ? 'Return' : 'Departure'}${item.driverName ? ` with ${item.driverName}` : ''}`,
         details: item
       });
     });
