@@ -7,11 +7,20 @@ export interface NextTravelEntry {
   title: string;
   detail: string;
   status: NextTravelStatus;
+  kind?: "flight" | "transport" | "info";
   termId?: string;
   school: Exclude<School, "both">;
   meta?: {
     confirmation?: string;
     notes?: string;
     timeLabel?: string;
+    transport?: {
+      status: "booked" | "not-booked";
+      label: string;
+      timeLabel?: string;
+      driverName?: string;
+      phoneNumber?: string;
+      notes?: string;
+    };
   };
 }

@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Share2, Clock, Hash, StickyNote } from "lucide-react";
+import { Share2, Clock, Hash, StickyNote, BusFront } from "lucide-react";
 import { Term } from "@/types/school";
 import { NextTravelEntry } from "@/types/next-travel";
 import { cn } from "@/lib/utils";
@@ -70,6 +70,23 @@ export function NextTravelHero({
               value={`${format(entry.date, "EEE, MMM d")} at ${entry.meta?.timeLabel || format(entry.date, "h:mm a")}`}
               icon={<Clock className="h-3.5 w-3.5" />}
             />
+            {entry.meta?.transport && (
+              <KeyChip
+                label="Transport"
+                value={
+                  entry.meta.transport.status === "booked"
+                    ? [
+                        entry.meta.transport.label,
+                        entry.meta.transport.timeLabel ? `@ ${entry.meta.transport.timeLabel}` : null,
+                        entry.meta.transport.driverName ? `• ${entry.meta.transport.driverName}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")
+                    : `Not booked${entry.meta.transport.label ? ` (${entry.meta.transport.label})` : ""}`
+                }
+                icon={<BusFront className="h-3.5 w-3.5" />}
+              />
+            )}
             <KeyChip
               label="Confirmation"
               value={entry.meta?.confirmation ?? "Not provided"}

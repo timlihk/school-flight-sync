@@ -1,11 +1,15 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
-import { Plane, Calendar, Share2, Plus, List, LayoutGrid, LogOut, BusFront } from "lucide-react";
+import { Plane, Calendar, Home, CalendarDays, Share2, Plus, Settings, RefreshCw, List, LayoutGrid } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CountdownRing } from "@/components/ui/countdown-ring";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AccountChip } from "@/components/ui/account-chip";
 import { NetworkStatusBanner } from "@/components/ui/network-status-banner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNetworkStatus } from "@/hooks/use-network-status";
 import { FlightDetails } from "@/types/school";
 import { useFamilyAuth } from "@/contexts/FamilyAuthContext";
@@ -14,7 +18,6 @@ import { TermCard } from "@/components/ui/term-card";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { SchoolHeader } from "@/components/school-header";
 import { CompactCalendar } from "@/components/CompactCalendar";
-import TripTimeline from "@/components/ui/trip-timeline";
 
 const FlightDialog = lazy(() => import("@/components/ui/flight-dialog"));
 const TransportDialog = lazy(() => import("@/components/ui/transport-dialog"));
@@ -27,17 +30,11 @@ import { useTransport } from "@/hooks/use-transport";
 import { useNotTravelling } from "@/hooks/use-not-travelling";
 import { Term, TransportDetails } from "@/types/school";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { isAfter, isToday, formatDistanceToNow, startOfDay, format, isSameDay } from "date-fns";
-import type { CalendarEvent } from "@/hooks/use-calendar-events";
+import { isAfter, isToday, formatDistanceToNow, addDays, startOfDay, format, differenceInHours } from "date-fns";
+import { CalendarEvent, useCalendarEvents } from "@/hooks/use-calendar-events";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
-import { MobileBottomNav, MainNavTab } from "@/components/dashboard/MobileBottomNav";
-import { TodayTab } from "@/components/dashboard/tabs/TodayTab";
-import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { NextTravelEntry } from "@/types/next-travel";
-
-const NAV_TABS: MainNavTab[] = ['today', 'trips', 'calendar', 'settings'];
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -53,8 +50,12 @@ export default function Index() {
   const [shareScope, setShareScope] = useState<'both' | 'benenden' | 'wycombe'>('both');
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [heroScope, setHeroScope] = useState<'benenden' | 'wycombe'>('benenden');
-  const [activeTab, setActiveTab] = useState<MainNavTab>('today');
+  const [heroScope, setHeroScope] = useState<'both' | 'benenden' | 'wycombe'>('both');
+  const [activeTab, setActiveTab] = useState<'today' | 'trips' | 'calendar' | 'settings'>('today');
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tripsView, setTripsView] = useState<'timeline' | 'cards'>('timeline');
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,6 +69,7 @@ export default function Index() {
   const { transport, isLoading: isTransportLoading, addTransport, editTransport, removeTransport, getTransportForTerm, refetch: refetchTransport, dataUpdatedAt: transportUpdatedAt, isFetching: isTransportFetching } = useTransport();
   const { notTravelling, loading: notTravellingLoading, setNotTravellingStatus, clearNotTravellingStatus, refetch: refetchNotTravelling, dataUpdatedAt: notTravUpdatedAt, isFetching: isNotTravFetching } = useNotTravelling();
   const { toast } = useToast();
+  const { events: calendarEvents } = useCalendarEvents(selectedSchool as 'both' | 'benenden' | 'wycombe');
   const isBusy = isRefreshing;
   const dataTimestamps = [flightsUpdatedAt, transportUpdatedAt, notTravUpdatedAt].filter(Boolean) as number[];
   const combinedUpdatedAt = dataTimestamps.length ? Math.max(...dataTimestamps) : undefined;
@@ -85,18 +87,10 @@ export default function Index() {
     triggerHaptic();
     switch (activeTab) {
       case 'today':
-        if (nextAvailableTerm) {
-          handleAddFlight(nextAvailableTerm.id);
-        } else {
-          toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
-        }
+        if (earliestTerm) handleAddFlight(earliestTerm.id);
         break;
       case 'trips':
-        if (nextAvailableTerm) {
-          handleAddTransport(nextAvailableTerm.id);
-        } else {
-          toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
-        }
+        if (earliestTerm) handleAddTransport(earliestTerm.id);
         break;
       case 'calendar':
         setAddSheetOpen(true);
@@ -108,15 +102,10 @@ export default function Index() {
     }
   };
 
-  const scrollToTop = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
   const triggerHaptic = useCallback((type: 'select' | 'success' | 'warning' = 'select') => {
     if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return;
     const patterns: Record<typeof type, number | number[]> = {
-      select: 10,
+      select: 15,
       success: [10, 30, 10],
       warning: [40, 30, 40],
     };
@@ -136,9 +125,7 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
-    if (selectedSchool === 'benenden' || selectedSchool === 'wycombe') {
-      setHeroScope(selectedSchool);
-    }
+    setHeroScope(selectedSchool as 'both' | 'benenden' | 'wycombe');
   }, [selectedSchool]);
 
 
@@ -177,43 +164,17 @@ export default function Index() {
     []
   );
 
-  const combineDateAndTime = useCallback((date: Date, time?: string) => {
-    if (!time) return new Date(date);
-
-    // Prefer ISO-style parsing so we don't lose the provided time
-    const datePart = format(date, 'yyyy-MM-dd');
-    const combined = new Date(`${datePart}T${time}`);
-    if (!Number.isNaN(combined.getTime())) return combined;
-
-    // Fallback for odd formats: apply hours/minutes directly
-    const [hoursStr, minutesStr] = time.split(':');
-    const hours = Number.parseInt(hoursStr, 10);
-    const minutes = Number.parseInt(minutesStr ?? '0', 10);
-    const fallback = new Date(date);
-    if (!Number.isNaN(hours)) {
-      fallback.setHours(hours, Number.isNaN(minutes) ? 0 : minutes, 0, 0);
-    }
-    return fallback;
-  }, []);
-
   const resolveTransportDate = useCallback((item: TransportDetails, term?: Term): Date | null => {
     if (!term) return null;
-    const baseDate = new Date(item.direction === 'return' ? term.endDate : term.startDate);
-
     if (item.pickupTime) {
       const directDate = new Date(item.pickupTime);
       if (!Number.isNaN(directDate.getTime())) {
         return directDate;
       }
-
-      const combined = combineDateAndTime(baseDate, item.pickupTime);
-      if (!Number.isNaN(combined.getTime())) {
-        return combined;
-      }
     }
-
-    return Number.isNaN(baseDate.getTime()) ? null : baseDate;
-  }, [combineDateAndTime]);
+    const base = new Date(item.direction === 'return' ? term.endDate : term.startDate);
+    return Number.isNaN(base.getTime()) ? null : base;
+  }, []);
 
   const handleAddFlight = useCallback((termId: string) => {
     const term = termLookup.get(termId);
@@ -380,96 +341,41 @@ export default function Index() {
   const computeNextTravel = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
     const now = new Date();
     const matches = (school: 'benenden' | 'wycombe') => scope === 'both' || scope === school;
-    const entries: NextTravelEntry[] = [];
-
-    const transportsByKey = new Map<string, TransportDetails[]>();
-    transport.forEach(item => {
-      const dir = item.direction || 'outbound';
-      const key = `${item.termId}-${dir}`;
-      const list = transportsByKey.get(key) || [];
-      list.push(item);
-      transportsByKey.set(key, list);
-    });
-    const matchedTransportIds = new Set<string>();
+    const entries: {
+      date: Date;
+      title: string;
+      detail: string;
+      status: 'booked' | 'unplanned' | 'staying';
+      termId?: string;
+      school?: 'benenden' | 'wycombe';
+    }[] = [];
 
     flights.forEach(flight => {
+      if (!isAfter(flight.departure.date, now)) return;
       const term = termLookup.get(flight.termId);
-      if (!term || !matches(term.school)) return;
-
-      const departureDateTime = combineDateAndTime(flight.departure.date, flight.departure.time);
-      if (!isAfter(departureDateTime, now)) return;
-
-      const key = `${flight.termId}-${flight.type}`;
-      const candidates = transportsByKey.get(key) || [];
-      const matched = candidates
-        .map(item => {
-          const alignedDate = combineDateAndTime(departureDateTime, item.pickupTime);
-          return { item, alignedDate };
-        })
-        .sort((a, b) => a.alignedDate.getTime() - b.alignedDate.getTime())
-        .find(({ alignedDate }) => isAfter(alignedDate, now) || isSameDay(alignedDate, now));
-
-      const transportMeta = matched
-        ? {
-            status: 'booked' as const,
-            label: matched.item.type === 'school-coach' ? 'School coach' : 'Taxi',
-            timeLabel: matched.item.pickupTime || format(matched.alignedDate, 'p'),
-            driverName: matched.item.driverName,
-            phoneNumber: matched.item.phoneNumber,
-            notes: matched.item.notes,
-          }
-        : {
-            status: 'not-booked' as const,
-            label: flight.type === 'return' ? 'To school' : 'From school',
-          };
-
-      if (matched) {
-        matchedTransportIds.add(matched.item.id);
-      }
-
+      if (term && !matches(term.school)) return;
       entries.push({
-        kind: 'flight',
-        date: departureDateTime,
+        date: flight.departure.date,
         title: `${flight.airline} ${flight.flightNumber}`,
-        detail: `${flight.departure.airport} to ${flight.arrival.airport}`,
-        status: matched ? 'booked' : 'needs-transport',
-        termId: term.id,
-        school: term.school,
-        meta: {
-          timeLabel: flight.departure.time || format(departureDateTime, 'p'),
-          confirmation: flight.confirmationCode,
-          notes: flight.notes,
-          transport: transportMeta,
-        }
+        detail: `${flight.departure.airport} → ${flight.arrival.airport}`,
+        status: 'booked',
+        termId: term?.id,
+        school: term?.school
       });
     });
 
     transport.forEach(item => {
-      if (matchedTransportIds.has(item.id)) return;
       const term = termLookup.get(item.termId);
-      if (!term || !matches(term.school)) return;
+      if (term && !matches(term.school)) return;
       const eventDate = resolveTransportDate(item, term);
       if (!eventDate || !isAfter(eventDate, now)) return;
       entries.push({
-        kind: 'transport',
         date: eventDate,
-        title: `${item.type === 'school-coach' ? 'School coach' : 'Taxi'}${item.driverName ? ` with ${item.driverName}` : ''}`,
-        detail: item.direction === 'return' ? 'To school' : 'From school',
+        title: `${item.type === 'school-coach' ? 'School Coach' : 'Taxi'} ${item.driverName ? `· ${item.driverName}` : ''}`,
+        detail: `${item.direction === 'return' ? 'To School' : 'From School'}`,
         status: 'booked',
-        termId: term.id,
-        school: term.school,
-        meta: {
-          timeLabel: item.pickupTime || format(eventDate, 'p'),
-          notes: item.notes,
-          transport: {
-            status: 'booked',
-            label: item.type === 'school-coach' ? 'School coach' : 'Taxi',
-            timeLabel: item.pickupTime || format(eventDate, 'p'),
-            driverName: item.driverName,
-            phoneNumber: item.phoneNumber,
-            notes: item.notes,
-          }
-        }
+        termId: term?.id,
+        school: term?.school
       });
     });
 
@@ -478,7 +384,6 @@ export default function Index() {
       if (!term || !isAfter(term.startDate, now)) return;
       if (!matches(term.school)) return;
       entries.push({
-        kind: 'info',
         date: term.startDate,
         title: 'Staying at school',
         detail: `${term.name}`,
@@ -491,55 +396,33 @@ export default function Index() {
     if (!entries.length) {
       const upcomingTerm = filteredTerms.find(term => isAfter(term.startDate, now) && matches(term.school));
       if (upcomingTerm) {
-        const futureFlights = flights.filter(f => {
-          if (f.termId !== upcomingTerm.id) return false;
-          const departureDateTime = combineDateAndTime(f.departure.date, f.departure.time);
-          return isAfter(departureDateTime, now);
-        });
-        const futureTransport = transport.filter(item => {
-          if (item.termId !== upcomingTerm.id) return false;
-          const date = resolveTransportDate(item, upcomingTerm);
-          return !!date && isAfter(date, now);
-        });
-
-        let status: NextTravelEntry["status"] = 'unplanned';
-        let detail = 'No travel booked yet';
-        if (futureFlights.length && !futureTransport.length) {
-          status = 'needs-transport';
-          detail = 'Flight booked, transport pending';
-        } else if (!futureFlights.length && futureTransport.length) {
-          status = 'needs-flight';
-          detail = 'Transport ready, flight pending';
-        } else if (futureFlights.length && futureTransport.length) {
-          status = 'booked';
-          detail = 'Travel ready';
-        }
-
         entries.push({
-          kind: 'info',
           date: upcomingTerm.startDate,
           title: `${upcomingTerm.name}`,
-          detail,
-          status,
+          detail: 'No travel booked yet',
+          status: 'unplanned',
           termId: upcomingTerm.id,
           school: upcomingTerm.school
         });
       }
     }
 
-    return entries.sort((a, b) => {
-      const diff = a.date.getTime() - b.date.getTime();
-      if (diff !== 0) return diff;
-      if (a.status === 'needs-transport' && b.status !== 'needs-transport') return -1;
-      if (b.status === 'needs-transport' && a.status !== 'needs-transport') return 1;
-      return 0;
-    })[0] ?? null;
-  }, [combineDateAndTime, flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate]);
+    return entries.sort((a, b) => a.date.getTime() - b.date.getTime())[0] ?? null;
+  }, [flights, transport, notTravelling, termLookup, filteredTerms, resolveTransportDate]);
 
   const nextTravel = useMemo(
     () => computeNextTravel(heroScope),
     [computeNextTravel, heroScope]
   );
+  const nextTravelDetail = useMemo(() => {
+    if (!nextTravel) return '';
+    const hoursRaw = differenceInHours(nextTravel.date, new Date());
+    const hours = Math.max(0, hoursRaw);
+    const days = Math.floor(hours / 24);
+    const remHours = hours % 24;
+    return hoursRaw < 0 ? '' : `${days}d ${remHours}h`;
+  }, [nextTravel]);
+
   const buildShareText = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
     const entry = computeNextTravel(scope);
     if (!entry) return '';
@@ -552,19 +435,39 @@ export default function Index() {
       `Next travel (${schoolLabel}): ${entry.title} on ${entry.date.toDateString()} (${formatDistanceToNow(entry.date, { addSuffix: true })})`,
     ];
     if (entry.detail) lines.push(entry.detail);
-    const statusLabel = entry.status === 'booked'
-      ? 'Booked'
-      : entry.status === 'staying'
-        ? 'Not travelling'
-        : entry.status === 'needs-transport'
-          ? 'Needs transport'
-          : entry.status === 'needs-flight'
-            ? 'Needs flight'
-            : 'Needs booking';
-    lines.push(statusLabel);
+    lines.push(entry.status === 'booked' ? 'Booked' : entry.status === 'staying' ? 'Not travelling' : 'Needs booking');
     return lines.join('\n');
   }, [computeNextTravel]);
 
+  const thisWeekEvents = useMemo(() => {
+    const today = startOfDay(new Date());
+    const end = startOfDay(addDays(today, 7));
+    const weekEvents = (calendarEvents || [])
+      .filter(e => {
+        const d = startOfDay(e.date);
+        return (d >= today && d <= end);
+      })
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    if (weekEvents.length) return weekEvents;
+
+    const next = (calendarEvents || [])
+      .filter(e => startOfDay(e.date) >= today)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+
+    return next ? [next] : [];
+  }, [calendarEvents]);
+  const filteredThisWeek = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return thisWeekEvents.filter(e => {
+      const matchText = !term || e.title.toLowerCase().includes(term) || (e.description || '').toLowerCase().includes(term);
+      const matchStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'booked' && e.type !== 'not-travelling') ||
+        (statusFilter === 'needs' && e.type === 'term') ||
+        (statusFilter === 'staying' && e.type === 'not-travelling');
+      return matchText && matchStatus;
+    });
+  }, [thisWeekEvents, searchTerm, statusFilter]);
 
   const termMatchesFilters = useCallback((term: Term) => {
     const text = `${term.name} ${term.school}`.toLowerCase();
@@ -692,13 +595,51 @@ export default function Index() {
     }
   }, [isRefreshing, refetchFlights, refetchTransport, refetchNotTravelling, toast, triggerHaptic]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      handleRefresh();
-    }, 60 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [handleRefresh]);
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isMobile) return;
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    setIsPulling(window.scrollY <= 0);
+  }, [isMobile]);
 
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isMobile || !isPulling) return;
+    const touch = e.touches[0];
+    if (window.scrollY > 2) return;
+    const deltaY = touch.clientY - (touchStartY.current ?? touch.clientY);
+    if (deltaY > 0) {
+      setPullDistance(Math.min(deltaY, 90));
+    }
+  }, [isMobile, isPulling]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isMobile) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touchStartX.current !== null ? touch.clientX - touchStartX.current : 0;
+    const deltaY = touchStartY.current !== null ? touch.clientY - touchStartY.current : 0;
+
+    if (isPulling && pullDistance > 60) {
+      handleRefresh();
+    }
+
+    const tabOrder: Array<typeof activeTab> = ['today', 'trips', 'calendar', 'settings'];
+    if (Math.abs(deltaX) > 60 && Math.abs(deltaY) < 40) {
+      const currentIndex = tabOrder.indexOf(activeTab);
+      const nextIndex = deltaX < 0
+        ? Math.min(tabOrder.length - 1, currentIndex + 1)
+        : Math.max(0, currentIndex - 1);
+      if (tabOrder[nextIndex] !== activeTab) {
+        triggerHaptic();
+        setActiveTab(tabOrder[nextIndex]);
+      }
+    }
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+    setIsPulling(false);
+    setPullDistance(0);
+  }, [activeTab, handleRefresh, isMobile, isPulling, pullDistance, triggerHaptic]);
 
 
 
@@ -755,42 +696,6 @@ export default function Index() {
   const earliestTerm = useMemo(() => {
     return filteredTerms.slice().sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0] || null;
   }, [filteredTerms]);
-  const nextAvailableTerm = useMemo(() => {
-    const now = new Date();
-    return filteredTerms.find(term => term.startDate.getTime() >= now.getTime()) ?? earliestTerm ?? null;
-  }, [filteredTerms, earliestTerm]);
-  const handleHeroShare = useCallback(() => {
-    setShareScope(heroScope);
-    setShareDialogOpen(true);
-  }, [heroScope]);
-  const handleSchoolSelect = useCallback((scope: 'both' | 'benenden' | 'wycombe') => {
-    triggerHaptic();
-    setSelectedSchool(scope);
-    scrollToTop();
-  }, [triggerHaptic, scrollToTop]);
-
-  const handleNavSelect = useCallback((tab: typeof activeTab) => {
-    triggerHaptic('select');
-    setActiveTab(tab);
-    scrollToTop();
-  }, [triggerHaptic, scrollToTop]);
-  const handleSwipeTabs = useCallback((direction: 'next' | 'prev') => {
-    const currentIndex = NAV_TABS.indexOf(activeTab);
-    const nextIndex = direction === 'next'
-      ? Math.min(NAV_TABS.length - 1, currentIndex + 1)
-      : Math.max(0, currentIndex - 1);
-    if (NAV_TABS[nextIndex] !== activeTab) {
-      triggerHaptic();
-      setActiveTab(NAV_TABS[nextIndex]);
-      scrollToTop();
-    }
-  }, [activeTab, scrollToTop, triggerHaptic]);
-
-  const { bind: pullHandlers, isPulling, pullDistance } = usePullToRefresh({
-    isEnabled: isMobile,
-    onRefresh: handleRefresh,
-    onSwipe: handleSwipeTabs,
-  });
 
   const SchoolPills = () => (
     <div className="flex flex-wrap gap-2">
@@ -800,7 +705,10 @@ export default function Index() {
           size="sm"
           variant={selectedSchool === scope ? 'default' : 'outline'}
           className="rounded-full px-4"
-          onClick={() => handleSchoolSelect(scope)}
+          onClick={() => {
+            triggerHaptic();
+            setSelectedSchool(scope);
+          }}
         >
           {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
         </Button>
@@ -812,16 +720,271 @@ export default function Index() {
     switch (activeTab) {
       case 'today':
         return (
-          <TodayTab
-            heroEntry={nextTravel}
-            heroScope={heroScope}
-            onHeroScopeChange={setHeroScope}
-            isOnline={isOnline}
-            earliestTerm={earliestTerm}
-            onAddFlight={handleAddFlight}
-            onAddTransport={handleAddTransport}
-            onShareHero={handleHeroShare}
-          />
+          <div className="space-y-5 px-4 py-5 md:px-6">
+            <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm relative">
+              {!isOnline && (
+                <Badge className="absolute top-3 right-3" variant="secondary">
+                  Cached
+                </Badge>
+              )}
+              {/* School scope toggle */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground tracking-wide">
+                  <span>Next travel</span>
+                  {combinedUpdatedAt && (
+                    <span className="text-[10px] text-muted-foreground">
+                      Updated {formatDistanceToNow(combinedUpdatedAt, { addSuffix: true })}
+                    </span>
+                  )}
+                </div>
+                <div className="flex rounded-full border border-border/60 bg-muted/40 p-0.5">
+                  {(['both','benenden','wycombe'] as const).map(scope => (
+                    <Button
+                      key={scope}
+                    size="sm"
+                    variant={heroScope === scope ? 'default' : 'ghost'}
+                    className="h-10 px-3 text-xs"
+                    onClick={() => setHeroScope(scope)}
+                  >
+                    {scope === 'both' ? 'Both' : scope === 'benenden' ? 'Ben' : 'WA'}
+                  </Button>
+                ))}
+                </div>
+              </div>
+
+              {nextTravel ? (
+                <div className="flex items-center gap-4">
+                  {/* Countdown Ring */}
+                  <CountdownRing
+                    targetDate={nextTravel.date}
+                    size="lg"
+                    school={nextTravel.school}
+                  />
+
+                  {/* Trip details */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                  <div className="text-2xl font-semibold leading-tight truncate">{nextTravel.title}</div>
+                  <div className="text-base text-muted-foreground truncate">{nextTravel.detail}</div>
+                  <div className="text-[13px] text-muted-foreground flex items-center gap-2">
+                    <span>{format(nextTravel.date, 'EEE, MMM d')}</span>
+                    {nextTravelDetail && (
+                      <Badge variant="secondary" className="text-[11px]">
+                        {nextTravelDetail}
+                      </Badge>
+                    )}
+                    <span className="text-[11px] text-muted-foreground">
+                      {formatDistanceToNow(nextTravel.date, { addSuffix: true })}
+                    </span>
+                  </div>
+                    <div className="flex items-center gap-2 pt-1 flex-wrap">
+                      <Badge
+                        variant={nextTravel.status === 'booked' ? 'default' : nextTravel.status === 'staying' ? 'secondary' : 'outline'}
+                        className={nextTravel.school === 'benenden' ? 'bg-blue-500 hover:bg-blue-600' : nextTravel.school === 'wycombe' ? 'bg-green-500 hover:bg-green-600' : ''}
+                      >
+                        {nextTravel.status === 'booked' ? 'Booked' : nextTravel.status === 'staying' ? 'Not travelling' : 'Needs booking'}
+                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {nextTravel.termId && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleHighlightTerms([nextTravel.termId!])}
+                          >
+                            View trip
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant={nextTravel.status === 'booked' ? 'outline' : 'default'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => {
+                            if (!nextTravel.termId) return;
+                            handleHighlightTerms([nextTravel.termId]);
+                            if (nextTravel.status !== 'booked') {
+                              setSelectedTerm(termLookup.get(nextTravel.termId) || null);
+                              setShowFlightDialog(true);
+                            }
+                          }}
+                        >
+                          {nextTravel.status === 'booked' ? 'Edit booking' : 'Add booking'}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setShareScope(heroScope); setShareDialogOpen(true); }}>
+                          <Share2 className="h-3 w-3 mr-1" /> Share
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  variant="trips"
+                  compact
+                  actions={earliestTerm ? [
+                    { label: "Add Flight", onClick: () => handleAddFlight(earliestTerm.id) },
+                    { label: "Add Transport", onClick: () => handleAddTransport(earliestTerm.id), variant: 'outline' }
+                  ] : undefined}
+                />
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground">Actions</p>
+                  <h3 className="text-xl font-semibold">Plan fast</h3>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="w-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search flights, transport, events"
+                      className="h-11"
+                    />
+                    <Select value={statusFilter} onValueChange={(v: 'all' | 'booked' | 'needs' | 'staying') => setStatusFilter(v)}>
+                      <SelectTrigger className="h-11 w-32">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="booked">Booked</SelectItem>
+                        <SelectItem value="needs">Needs booking</SelectItem>
+                        <SelectItem value="staying">Staying</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button
+                      className="h-12"
+                      disabled={isBusy}
+                      onClick={() => {
+                        if (isBusy) return;
+                        triggerHaptic();
+                        if (earliestTerm) {
+                          handleAddFlight(earliestTerm.id);
+                        } else {
+                          toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                        }
+                      }}
+                    >
+                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                      Add flight
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-12"
+                      disabled={isBusy}
+                      onClick={() => {
+                        if (isBusy) return;
+                        triggerHaptic('select');
+                        if (earliestTerm) {
+                          handleAddTransport(earliestTerm.id);
+                        } else {
+                          toast({ title: 'No terms', description: 'Add a term first.', variant: 'destructive' });
+                        }
+                      }}
+                    >
+                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                      Add transport
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="h-12"
+                      disabled={isBusy}
+                      onClick={() => {
+                        triggerHaptic('select');
+                        setAddSheetOpen(true);
+                      }}
+                    >
+                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                      Quick add sheet
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-12"
+                      disabled={isBusy}
+                      onClick={() => {
+                        triggerHaptic('select');
+                        setActiveTab('calendar');
+                      }}
+                    >
+                      {isBusy && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
+                      Open calendar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground tracking-wide">This week</p>
+                  <h3 className="text-lg font-semibold">Upcoming</h3>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setActiveTab('calendar')}>
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  Calendar
+                </Button>
+              </div>
+              {filteredThisWeek.length === 0 && (
+                <EmptyState
+                  variant="week"
+                  compact
+                  actions={earliestTerm ? [
+                    { label: "Add Flight", onClick: () => handleAddFlight(earliestTerm.id) },
+                    { label: "Add Transport", onClick: () => handleAddTransport(earliestTerm.id), variant: 'outline' }
+                  ] : undefined}
+                />
+              )}
+              <div className="overflow-x-auto -mx-2 px-2">
+                <div className="flex gap-3 snap-x snap-mandatory">
+                  {filteredThisWeek.map(event => (
+                    <button
+                      key={event.id}
+                      className="snap-start min-w-[260px] rounded-xl border border-border/60 bg-muted/40 p-3 text-left hover:bg-accent transition-colors"
+                      onClick={() => handleCalendarEventClick(event)}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <Badge variant="outline" className="text-[10px] whitespace-nowrap">
+                          {event.type === 'flight'
+                            ? ((event.details as { type?: 'outbound' | 'return' })?.type === 'outbound' ? 'From School' : 'To School')
+                            : event.type === 'transport'
+                              ? 'Transport'
+                              : event.type === 'term'
+                                ? 'School date'
+                                : 'Not travelling'}
+                        </Badge>
+                        <span className="text-[11px] text-muted-foreground">{format(event.date, 'EEE, MMM d')}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold truncate">{event.title}</div>
+                        <div className="text-xs text-muted-foreground truncate">{event.school === 'benenden' ? 'Benenden' : 'Wycombe'}</div>
+                      </div>
+                      {event.description && (
+                        <div className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                          {event.description}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         );
       case 'trips':
         return (
@@ -927,11 +1090,11 @@ export default function Index() {
                 </div>
               )}
 
-              {/* Wycombe School */}
+              {/* Wycombe Abbey School */}
               {shouldShowWycombe && (
                 <div className="space-y-3">
                   <SchoolHeader 
-                    schoolName="Wycombe School"
+                    schoolName="Wycombe Abbey School"
                     variant="wycombe"
                     onAcademicYearClick={() => handleShowScheduleForSchool('wycombe')}
                   />
@@ -939,7 +1102,7 @@ export default function Index() {
                   <div className="space-y-4">
                     {wycombeTerms.length === 0 && (
                       <div className="rounded-lg border border-dashed border-border/50 bg-muted/30 p-3 text-sm text-muted-foreground">
-                        No future terms left for Wycombe.
+                        No future terms left for Wycombe Abbey.
                       </div>
                     )}
                     {wycombeTerms.map((term) => {
@@ -986,7 +1149,7 @@ export default function Index() {
                 <p className="text-xs uppercase text-muted-foreground">Calendar</p>
                 <h2 className="text-xl font-semibold">Tap a date to manage</h2>
               </div>
-              <Button variant="outline" size="sm" onClick={() => handleNavSelect('today')}>
+              <Button variant="outline" size="sm" onClick={() => setActiveTab('today')}>
                 Today
               </Button>
             </div>
@@ -1019,7 +1182,7 @@ export default function Index() {
                 >
                   Share next travel
                 </Button>
-                <Suspense fallback={<div className="text-sm text-muted-foreground">Loading export...</div>}>
+                <Suspense fallback={<div className="text-sm text-muted-foreground">Loading export…</div>}>
                   <ExportDialog
                     flights={flights}
                     transport={transport}
@@ -1079,7 +1242,9 @@ export default function Index() {
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20"
-      {...pullHandlers}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <div className="fixed top-16 left-0 right-0 z-50 flex justify-center pointer-events-none">
         <div
@@ -1157,7 +1322,7 @@ export default function Index() {
               </div>
             </div>
           }>
-            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading flight details...</div>}>
+            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading flight details…</div>}>
               <FlightDialog
                 term={selectedTerm}
                 flights={flights.filter(f => f.termId === selectedTerm.id)}
@@ -1179,7 +1344,7 @@ export default function Index() {
               </div>
             </div>
           }>
-            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading transport...</div>}>
+            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading transport…</div>}>
               <TransportDialog
                 term={selectedTerm}
                 transport={getTransportForTerm(selectedTerm.id)}
@@ -1286,85 +1451,93 @@ export default function Index() {
         <SheetContent side="bottom" className="h-auto pb-6">
           <SheetHeader>
             <SheetTitle>Quick add</SheetTitle>
-            <SheetDescription>
-              {nextAvailableTerm
-                ? `Fast actions for ${nextAvailableTerm.name}.`
-                : 'No upcoming terms available yet.'}
-            </SheetDescription>
+            <SheetDescription>Use the nearest upcoming term for fast actions.</SheetDescription>
           </SheetHeader>
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-2">
             <Button
-              className="w-full h-12 justify-start gap-3"
-              disabled={isBusy || !nextAvailableTerm}
+              className="w-full h-12"
+              disabled={isBusy}
               onClick={() => {
                 if (isBusy) return;
                 triggerHaptic();
-                if (!nextAvailableTerm) {
+                if (!earliestTerm) {
                   toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
                   return;
                 }
-                handleAddFlight(nextAvailableTerm.id);
+                handleAddFlight(earliestTerm.id);
                 setAddSheetOpen(false);
               }}
             >
-              <Plane className="h-4 w-4" />
-              Add flight {nextAvailableTerm ? `(${nextAvailableTerm.name})` : ''}
+              Add flight ({earliestTerm ? earliestTerm.name : 'no term'})
             </Button>
             <Button
               variant="outline"
-              className="w-full h-12 justify-start gap-3"
-              disabled={isBusy || !nextAvailableTerm}
+              className="w-full h-12"
+              disabled={isBusy}
               onClick={() => {
                 if (isBusy) return;
                 triggerHaptic();
-                if (!nextAvailableTerm) {
+                if (!earliestTerm) {
                   toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
                   return;
                 }
-                handleAddTransport(nextAvailableTerm.id);
+                handleAddTransport(earliestTerm.id);
                 setAddSheetOpen(false);
               }}
             >
-              <BusFront className="h-4 w-4" />
               Add transport
             </Button>
             <Button
               variant="outline"
-              className="w-full h-12 justify-start gap-3"
-              disabled={isBusy || !nextAvailableTerm}
+              className="w-full h-12"
+              disabled={isBusy}
               onClick={() => {
                 if (isBusy) return;
                 triggerHaptic();
-                if (!nextAvailableTerm) {
+                if (!earliestTerm) {
                   toast({ title: "No terms available", description: "Add a term before adding travel.", variant: "destructive" });
                   return;
                 }
-                handleShowTerm(nextAvailableTerm.id);
+                handleShowTerm(earliestTerm.id);
                 setAddSheetOpen(false);
               }}
             >
               View term details
             </Button>
-            <Button
-              variant="ghost"
-              className="w-full h-12 justify-start gap-3"
-              onClick={() => {
-                triggerHaptic();
-                setShareScope(selectedSchool as 'both' | 'benenden' | 'wycombe');
-                setShareDialogOpen(true);
-                setAddSheetOpen(false);
-              }}
-            >
-              <Share2 className="h-4 w-4" />
-              Share upcoming travel
-            </Button>
           </div>
         </SheetContent>
       </Sheet>
 
-      {isMobile && (
-        <MobileBottomNav activeTab={activeTab} onSelect={handleNavSelect} />
-      )}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border/60 shadow-inner pb-[env(safe-area-inset-bottom)]">
+        <div className="grid grid-cols-4 divide-x divide-border">
+          {([
+            { key: 'today', label: 'Today', icon: Home },
+            { key: 'trips', label: 'Trips', icon: Plane },
+            { key: 'calendar', label: 'Calendar', icon: CalendarDays },
+            { key: 'settings', label: 'Settings', icon: Settings },
+          ] as const).map(item => {
+            const active = activeTab === item.key;
+            const Icon = item.icon;
+            return (
+              <Button
+                key={item.key}
+                variant={active ? 'default' : 'ghost'}
+                className={cn(
+                  "flex flex-col items-center gap-1 py-3 transition-all",
+                  active ? "scale-[1.02] text-primary" : "opacity-90"
+                )}
+                onClick={() => {
+                  triggerHaptic('select');
+                  setActiveTab(item.key);
+                }}
+              >
+                <Icon className={cn("h-5 w-5", active ? "text-primary" : "")} />
+                <span className="text-xs">{item.label}</span>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
