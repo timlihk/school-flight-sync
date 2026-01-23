@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-01-22T03:35:31.871Z",
+  "updatedAt": "2026-01-23T03:34:00.515Z",
   "overrides": [
     {
       "school": "benenden",
@@ -7,7 +7,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-01-05",
       "endDate": "2026-03-27",
-      "notes": "Term begins for boarders on January 5, day students return January 6"
+      "notes": "Term begins for boarders on 5 January 2026 at 4.00pm; day students return 6 January 2026"
     },
     {
       "school": "benenden",
@@ -26,7 +26,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-02-13",
       "endDate": "2026-02-22",
-      "notes": "Half Term break"
+      "notes": "Half Term begins 12.30pm 13 February, ends 7.30pm 22 February"
     },
     {
       "school": "benenden",
@@ -34,7 +34,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-04-20",
       "endDate": "2026-07-04",
-      "notes": "Term begins for boarders on April 20, day students return April 21"
+      "notes": "Term begins for boarders on 20 April 2026 at 4.00pm; day students return 21 April 2026; ends after Speech Day"
     },
     {
       "school": "benenden",
@@ -64,7 +64,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-05-22",
       "endDate": "2026-05-31",
-      "notes": "Half Term break"
+      "notes": "Half Term begins 12.30pm 22 May, ends 7.30pm 31 May"
     },
     {
       "school": "benenden",
@@ -83,7 +83,7 @@
       "academicYear": "2026-2027",
       "startDate": "2026-09-02",
       "endDate": "2026-12-10",
-      "notes": "Term begins for boarders on September 2, day students return September 3"
+      "notes": "Term begins for boarders on 2 September 2026; day students return 3 September 2026"
     },
     {
       "school": "benenden",
@@ -110,7 +110,7 @@
       "academicYear": "2026-2027",
       "startDate": "2026-10-16",
       "endDate": "2026-11-01",
-      "notes": "Half Term break"
+      "notes": "Half Term begins 12.30pm 16 October, ends 7.30pm 1 November"
     },
     {
       "school": "benenden",
@@ -118,7 +118,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-01-05",
       "endDate": "2027-03-24",
-      "notes": "Term begins for boarders on January 5, day students return January 6"
+      "notes": "Term begins for boarders on 5 January 2027 at 4.00pm; day students return 6 January 2027"
     },
     {
       "school": "benenden",
@@ -137,7 +137,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-02-12",
       "endDate": "2027-02-21",
-      "notes": "Half Term break"
+      "notes": "Half Term begins 12.30pm 12 February, ends 7.30pm 21 February"
     },
     {
       "school": "benenden",
@@ -145,7 +145,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-04-19",
       "endDate": "2027-07-03",
-      "notes": "Term begins for boarders on April 19, day students return April 20"
+      "notes": "Term begins for boarders on 19 April 2027 at 4.00pm; day students return 20 April 2027; ends after Speech Day"
     },
     {
       "school": "benenden",
@@ -175,7 +175,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-05-28",
       "endDate": "2027-06-06",
-      "notes": "Half Term break"
+      "notes": "Half Term begins 12.30pm 28 May, ends 7.30pm 6 June"
     },
     {
       "school": "benenden",
