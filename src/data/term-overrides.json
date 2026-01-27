@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-01-26T03:39:36.964Z",
+  "updatedAt": "2026-01-27T03:35:19.073Z",
   "overrides": [
     {
       "school": "benenden",
@@ -7,7 +7,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-01-05",
       "endDate": "2026-03-27",
-      "notes": "Term begins for boarders on January 5, day students return January 6"
+      "notes": "Staff training from 4.00pm on Jan 5, boarders return; Day students return Jan 6"
     },
     {
       "school": "benenden",
@@ -34,7 +34,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-04-20",
       "endDate": "2026-07-04",
-      "notes": "Term begins for boarders on April 20, day students return April 21"
+      "notes": "Staff training from 4.00pm on Apr 20, boarders return; Day students return Apr 21"
     },
     {
       "school": "benenden",
@@ -83,7 +83,7 @@
       "academicYear": "2026-2027",
       "startDate": "2026-09-02",
       "endDate": "2026-12-10",
-      "notes": "Term begins for boarders on September 2, day students return September 3"
+      "notes": "Staff training Sep 1-2, boarders return Sep 2; Day students return Sep 3"
     },
     {
       "school": "benenden",
@@ -118,7 +118,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-01-05",
       "endDate": "2027-03-24",
-      "notes": "Term begins for boarders on January 5, day students return January 6"
+      "notes": "Staff training Jan 4-5, boarders return from 4.00pm Jan 5; Day students return Jan 6"
     },
     {
       "school": "benenden",
@@ -145,7 +145,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-04-19",
       "endDate": "2027-07-03",
-      "notes": "Term begins for boarders on April 19, day students return April 20"
+      "notes": "Staff training Apr 19, boarders return from 4.00pm; Day students return Apr 20"
     },
     {
       "school": "benenden",
@@ -213,7 +213,7 @@
       "academicYear": "2025-2026",
       "startDate": "2025-09-01",
       "endDate": "2025-12-10",
-      "notes": "UVI, LVI, UIII, UV start Sep 1; UIV, LV, LIV start Sep 2"
+      "notes": "Term starts Monday 1 September for UVI, LVI, UIII, UV; Tuesday 2 September for UIV, LV, LIV"
     },
     {
       "school": "wycombe",
@@ -278,7 +278,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-01-06",
       "endDate": "2026-03-26",
-      "notes": "Term starts Jan 6"
+      "notes": "Term starts Tuesday 6 January"
     },
     {
       "school": "wycombe",
@@ -343,7 +343,7 @@
       "academicYear": "2025-2026",
       "startDate": "2026-04-21",
       "endDate": "2026-06-26",
-      "notes": "Term starts Apr 21"
+      "notes": "Term starts Tuesday 21 April"
     },
     {
       "school": "wycombe",
@@ -408,7 +408,7 @@
       "academicYear": "2026-2027",
       "startDate": "2026-09-07",
       "endDate": "2026-12-11",
-      "notes": "Girls return Sep 12-13; term ends Dec 11"
+      "notes": "Girls return Saturday 12 and Sunday 13 September; Term ends Friday 11 December"
     },
     {
       "school": "wycombe",
@@ -481,7 +481,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-01-05",
       "endDate": "2027-03-24",
-      "notes": "Girls return Jan 5; term ends Mar 24"
+      "notes": "Girls return Tuesday 5 January; Term ends Wednesday 24 March"
     },
     {
       "school": "wycombe",
@@ -546,7 +546,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-04-20",
       "endDate": "2027-07-02",
-      "notes": "Girls return Apr 20; term ends Jul 2"
+      "notes": "Girls return Tuesday 20 April; Term ends Friday 2 July"
     },
     {
       "school": "wycombe",
