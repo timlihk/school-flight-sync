@@ -56,9 +56,27 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				benenden: 'hsl(var(--benenden-primary))',
-				wycombe: 'hsl(var(--wycombe-primary))',
-				flight: 'hsl(var(--flight-accent))',
+				benenden: {
+					DEFAULT: 'hsl(var(--benenden))',
+					subtle: 'hsl(var(--benenden-subtle))',
+					light: 'hsl(var(--benenden-light))',
+				},
+				wycombe: {
+					DEFAULT: 'hsl(var(--wycombe))',
+					subtle: 'hsl(var(--wycombe-subtle))',
+					light: 'hsl(var(--wycombe-light))',
+				},
+				'journey-complete': 'hsl(var(--journey-complete))',
+				'journey-pending': 'hsl(var(--journey-pending))',
+				'journey-missing': 'hsl(var(--journey-missing))',
+				'transport-flight': {
+					DEFAULT: 'hsl(var(--transport-flight))',
+					subtle: 'hsl(var(--transport-flight-subtle))',
+				},
+				'transport-ground': {
+					DEFAULT: 'hsl(var(--transport-ground))',
+					subtle: 'hsl(var(--transport-ground-subtle))',
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
