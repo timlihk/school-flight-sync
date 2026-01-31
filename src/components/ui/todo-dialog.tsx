@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, isAfter, isBefore, addMonths } from "date-fns";
 import { CheckSquare, Plane, Car, Calendar, AlertCircle, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,17 @@ export function ToDoDialog({
   const [typeFilter, setTypeFilter] = useState<'all' | 'flight' | 'transport'>('all');
   const [schoolFilter, setSchoolFilter] = useState<'all' | 'benenden' | 'wycombe'>('all');
 
+  // Debug logging when dialog opens
+  useEffect(() => {
+    if (open) {
+      console.log('=== To-Do Dialog Debug ===');
+      console.log('All flights:', flights.map(f => ({ id: f.id, termId: f.termId, type: f.type, flightNumber: f.flightNumber })));
+      console.log('All terms:', terms.map(t => ({ id: t.id, name: t.name, school: t.school, startDate: t.startDate })));
+      console.log('Not travelling:', notTravelling);
+      console.log('Upcoming terms:', upcomingTerms.map(t => ({ id: t.id, name: t.name, school: t.school })));
+    }
+  }, [open, flights, terms, notTravelling, upcomingTerms]);
+
   // Get terms in next 12 months
   const now = new Date();
   const next12Months = addMonths(now, 12);
@@ -62,11 +73,26 @@ export function ToDoDialog({
       const termTransport = transport.filter(t => t.termId === term.id);
       const termNotTravelling = notTravelling.find(nt => nt.termId === term.id);
       
+      // Debug Feb 13 terms specifically
+      if (term.startDate.getMonth() === 1 && term.startDate.getDate() === 13) {
+        console.log(`Debug Feb 13 term: ${term.name} (${term.school})`);
+        console.log(`  Term ID: ${term.id}`);
+        console.log(`  Type: ${term.type}`);
+        console.log(`  Flights found:`, termFlights);
+        console.log(`  Not travelling:`, termNotTravelling);
+      }
+      
+      // Skip if user marked as not travelling at all
+      if (termNotTravelling?.noFlights && termNotTravelling?.noTransport) {
+        return;
+      }
+      
       // Check if flights are needed and missing
       const needsFlights = term.type === 'holiday' || term.type === 'half-term' || 
                           term.type === 'exeat' || term.type === 'short-leave' || 
                           term.type === 'long-leave' || term.type === 'term';
       
+      // Skip flight check if user marked noFlights for this term
       if (needsFlights && !termNotTravelling?.noFlights) {
         const needsBothFlights = term.type === 'half-term' || term.type === 'exeat' || 
                                 term.type === 'short-leave' || term.type === 'long-leave';
@@ -87,15 +113,18 @@ export function ToDoDialog({
             if (!hasOutbound) missingTypes.push('from school');
             if (!hasReturn) missingTypes.push('to school');
 
-            items.push({
-              id: `flight-${term.id}`,
-              term,
-              type: 'flight',
-              title: `Book ${missingTypes.join(' & ')} flight${missingTypes.length > 1 ? 's' : ''} for ${term.name}`,
-              description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
-              urgency,
-              dueDate: term.startDate
-            });
+            // Only add if there are actually missing flights to book
+            if (missingTypes.length > 0) {
+              items.push({
+                id: `flight-${term.id}`,
+                term,
+                type: 'flight',
+                title: `Book ${missingTypes.join(' & ')} flight${missingTypes.length > 1 ? 's' : ''} for ${term.name}`,
+                description: `${term.school === 'benenden' ? 'Benenden' : 'Wycombe'} - ${format(term.startDate, 'MMM dd, yyyy')}`,
+                urgency,
+                dueDate: term.startDate
+              });
+            }
           }
         } else if (termFlights.length === 0) {
           // For other term types, check if any flights exist
@@ -117,8 +146,8 @@ export function ToDoDialog({
         }
       }
 
-      // Check if transport is needed and missing
-      if (needsFlights && termTransport.length === 0) {
+      // Check if transport is needed and missing (skip if noTransport flagged)
+      if (needsFlights && termTransport.length === 0 && !termNotTravelling?.noTransport) {
         const daysUntil = Math.ceil((term.startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         let urgency: 'high' | 'medium' | 'low' = 'low';
         
