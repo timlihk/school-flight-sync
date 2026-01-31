@@ -176,7 +176,7 @@ export function FamilyLogin() {
                       "focus:border-primary focus:ring-4 focus:ring-primary/10",
                       error && "border-journey-missing focus:border-journey-missing focus:ring-journey-missing/10"
                     )}
-                    maxLength={6}
+
                   />
                   <button
                     type="button"
