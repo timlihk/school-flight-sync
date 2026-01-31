@@ -200,7 +200,10 @@ function inferOverrides(school: SchoolConfig, remoteTerms: RemoteTermRecord[]): 
 
   for (const remote of remoteTerms) {
     const normalizedName = normalizeName(remote.termName);
-    const candidates = existingTerms.filter(
+    const remoteStartDate = new Date(remote.startDateISO);
+    
+    // Try 1: Exact name match
+    let candidates = existingTerms.filter(
       (term) =>
         term.school === school.id &&
         normalizeName(term.name) === normalizedName &&
@@ -209,11 +212,35 @@ function inferOverrides(school: SchoolConfig, remoteTerms: RemoteTermRecord[]): 
 
     let match = candidates.length === 1 ? candidates[0] : undefined;
 
-    if (!match && remote.academicYear) {
-      const startYear = new Date(remote.startDateISO).getFullYear();
-      const filtered = candidates.filter((term) => term.startDate.getFullYear() === startYear);
-      if (filtered.length === 1) {
-        match = filtered[0];
+    // Try 2: Match by exact date + school (name might differ, e.g., "Spring Half Term" vs "Half Term")
+    if (!match) {
+      const dateMatch = existingTerms.find(
+        (term) =>
+          term.school === school.id &&
+          term.startDate.toISOString().split('T')[0] === remote.startDateISO,
+      );
+      if (dateMatch) {
+        console.warn(
+          `  • Matched by date: "${remote.termName}" → existing "${dateMatch.name}" (${dateMatch.id})`,
+        );
+        match = dateMatch;
+      }
+    }
+
+    // Try 3: Partial name match (e.g., "Spring Half Term" contains "Half Term")
+    if (!match) {
+      const partialMatches = existingTerms.filter(
+        (term) =>
+          term.school === school.id &&
+          (normalizedName.includes(normalizeName(term.name)) ||
+           normalizeName(term.name).includes(normalizedName)) &&
+          term.startDate.getFullYear() === remoteStartDate.getFullYear(),
+      );
+      if (partialMatches.length === 1) {
+        console.warn(
+          `  • Matched by partial name: "${remote.termName}" → "${partialMatches[0].name}" (${partialMatches[0].id})`,
+        );
+        match = partialMatches[0];
       }
     }
 
@@ -233,7 +260,7 @@ function inferOverrides(school: SchoolConfig, remoteTerms: RemoteTermRecord[]): 
       });
       newCount += 1;
       console.warn(
-        `  • Added new entry for ${school.name}: "${remote.termName}" (${academicYear}) ${remote.startDateISO} → ${remote.endDateISO}`,
+        `  • Added NEW term for ${school.name}: "${remote.termName}" (${academicYear}) ${remote.startDateISO} → ${remote.endDateISO}`,
       );
       continue;
     }
