@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-01-30T03:48:16.707Z",
+  "updatedAt": "2026-01-31T03:46:34.243Z",
   "overrides": [
     {
       "school": "benenden",
@@ -27,6 +27,28 @@
       "startDate": "2026-02-13",
       "endDate": "2026-02-22",
       "notes": "Half Term break"
+    },
+    {
+      "school": "benenden",
+      "id": "benenden-half-term-spring-20252026",
+      "name": "Half Term (Spring)",
+      "academicYear": "2025-2026",
+      "startDate": "2026-02-13",
+      "endDate": "2026-02-22",
+      "type": "half-term",
+      "notes": "Half Term break",
+      "isNew": true
+    },
+    {
+      "school": "benenden",
+      "id": "benenden-fixed-exeat-spring-20252026",
+      "name": "Fixed Exeat (Spring)",
+      "academicYear": "2025-2026",
+      "startDate": "2026-03-13",
+      "endDate": "2026-03-15",
+      "type": "exeat",
+      "notes": "Fixed Exeat break",
+      "isNew": true
     },
     {
       "school": "benenden",
@@ -68,6 +90,17 @@
     },
     {
       "school": "benenden",
+      "id": "benenden-half-term-summer-20252026",
+      "name": "Half Term (Summer)",
+      "academicYear": "2025-2026",
+      "startDate": "2026-05-22",
+      "endDate": "2026-05-31",
+      "type": "half-term",
+      "notes": "Half Term break",
+      "isNew": true
+    },
+    {
+      "school": "benenden",
       "id": "benenden-fixed-exeat-20252026",
       "name": "Fixed Exeat",
       "academicYear": "2025-2026",
@@ -75,6 +108,17 @@
       "endDate": "2026-06-21",
       "type": "exeat",
       "notes": "Summer Term exeat",
+      "isNew": true
+    },
+    {
+      "school": "benenden",
+      "id": "benenden-fixed-exeat-summer-20252026",
+      "name": "Fixed Exeat (Summer)",
+      "academicYear": "2025-2026",
+      "startDate": "2026-06-19",
+      "endDate": "2026-06-21",
+      "type": "exeat",
+      "notes": "Fixed Exeat break",
       "isNew": true
     },
     {
@@ -114,6 +158,28 @@
     },
     {
       "school": "benenden",
+      "id": "benenden-half-term-autumn-20262027",
+      "name": "Half Term (Autumn)",
+      "academicYear": "2026-2027",
+      "startDate": "2026-10-16",
+      "endDate": "2026-11-01",
+      "type": "half-term",
+      "notes": "Half Term break",
+      "isNew": true
+    },
+    {
+      "school": "benenden",
+      "id": "benenden-fixed-exeat-autumn-20262027",
+      "name": "Fixed Exeat (Autumn)",
+      "academicYear": "2026-2027",
+      "startDate": "2026-11-20",
+      "endDate": "2026-11-22",
+      "type": "exeat",
+      "notes": "Fixed Exeat break",
+      "isNew": true
+    },
+    {
+      "school": "benenden",
       "name": "Spring Term",
       "academicYear": "2026-2027",
       "startDate": "2027-01-05",
@@ -138,6 +204,28 @@
       "startDate": "2027-02-12",
       "endDate": "2027-02-21",
       "notes": "Half Term break"
+    },
+    {
+      "school": "benenden",
+      "id": "benenden-half-term-spring-20262027",
+      "name": "Half Term (Spring)",
+      "academicYear": "2026-2027",
+      "startDate": "2027-02-12",
+      "endDate": "2027-02-21",
+      "type": "half-term",
+      "notes": "Half Term break",
+      "isNew": true
+    },
+    {
+      "school": "benenden",
+      "id": "benenden-fixed-exeat-spring-20262027",
+      "name": "Fixed Exeat (Spring)",
+      "academicYear": "2026-2027",
+      "startDate": "2027-03-12",
+      "endDate": "2027-03-14",
+      "type": "exeat",
+      "notes": "Fixed Exeat break",
+      "isNew": true
     },
     {
       "school": "benenden",
@@ -179,6 +267,17 @@
     },
     {
       "school": "benenden",
+      "id": "benenden-half-term-summer-20262027",
+      "name": "Half Term (Summer)",
+      "academicYear": "2026-2027",
+      "startDate": "2027-05-28",
+      "endDate": "2027-06-06",
+      "type": "half-term",
+      "notes": "Half Term break",
+      "isNew": true
+    },
+    {
+      "school": "benenden",
       "id": "benenden-fixed-exeat-20262027",
       "name": "Fixed Exeat",
       "academicYear": "2026-2027",
@@ -186,6 +285,17 @@
       "endDate": "2027-06-20",
       "type": "exeat",
       "notes": "Summer Term exeat",
+      "isNew": true
+    },
+    {
+      "school": "benenden",
+      "id": "benenden-fixed-exeat-summer-20262027",
+      "name": "Fixed Exeat (Summer)",
+      "academicYear": "2026-2027",
+      "startDate": "2027-06-18",
+      "endDate": "2027-06-20",
+      "type": "exeat",
+      "notes": "Fixed Exeat break",
       "isNew": true
     },
     {
@@ -438,7 +548,7 @@
       "academicYear": "2026-2027",
       "startDate": "2026-09-07",
       "endDate": "2026-12-11",
-      "notes": "Staff Development Days: 2026-09-03 to 2026-09-04 and 2026-09-07 to 2026-09-08; Girls return: 2026-09-12 to 2026-09-13"
+      "notes": "Girls return Saturday 12 and Sunday 13 September; term ends Friday 11 December"
     },
     {
       "school": "wycombe",
@@ -511,7 +621,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-01-05",
       "endDate": "2027-03-24",
-      "notes": "Staff Development Days: 2027-01-04 to 2027-01-05; Girls return: 2027-01-09 to 2027-01-10"
+      "notes": "Girls return Tuesday 5 January; term ends Wednesday 24 March"
     },
     {
       "school": "wycombe",
@@ -576,7 +686,7 @@
       "academicYear": "2026-2027",
       "startDate": "2027-04-20",
       "endDate": "2027-07-02",
-      "notes": "Staff Development Days: 2027-04-19 to 2027-04-20; Girls return: 2027-04-24 to 2027-04-25"
+      "notes": "Girls return Tuesday 20 April; term ends Friday 2 July"
     },
     {
       "school": "wycombe",
@@ -605,7 +715,7 @@
       "startDate": "2027-05-28",
       "endDate": "2027-06-06",
       "type": "long-leave",
-      "notes": "Summer Term",
+      "notes": "Summer Term long leave",
       "isNew": true
     },
     {
@@ -616,7 +726,7 @@
       "startDate": "2027-06-18",
       "endDate": "2027-06-20",
       "type": "short-leave",
-      "notes": "Summer Term",
+      "notes": "Summer Term short leave",
       "isNew": true
     },
     {
