@@ -55,6 +55,7 @@ const API_KEY = process.env.DEEPSEEK_API_KEY;
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36';
 const OVERRIDES_PATH = path.resolve(process.cwd(), 'src/data/term-overrides.json');
+const DRY_RUN = process.env.DRY_RUN === 'true';
 
 const normalizeName = (value: string) =>
   value.replace(/\s+/g, ' ').replace(/\u00a0/g, ' ').trim().toLowerCase();
@@ -82,7 +83,12 @@ const generateTermId = (school: SchoolId, termName: string, academicYear: string
   return `${school}-${slug}-${yearFragment}`.toLowerCase();
 };
 
-const overrideKey = (record: TermOverrideRecord) =>
+// Create a unique key for deduplication
+const duplicateKey = (record: { school: string; startDate: string; endDate: string }): string =>
+  `${record.school}|${record.startDate}|${record.endDate}`;
+
+// Key for the override map (prefers ID, falls back to name+year)
+const overrideKey = (record: TermOverrideRecord): string =>
   record.id ?? `${record.school}|${normalizeName(record.name)}|${record.academicYear}`;
 
 if (!API_KEY) {
@@ -103,12 +109,14 @@ async function readExistingOverrides(): Promise<OverridesFile> {
 }
 
 const existingTerms = mockTerms.map((term) => ({
+  id: term.id,
   school: term.school as SchoolId,
   name: term.name,
   nameNormalized: normalizeName(term.name),
   academicYear: term.academicYear,
   startDate: term.startDate,
   endDate: term.endDate,
+  type: term.type,
 }));
 
 async function fetchPage(url: string): Promise<string> {
@@ -189,41 +197,76 @@ function buildPrompt(school: SchoolConfig, text: string): string {
   ].join('\n\n');
 }
 
-function inferOverrides(school: SchoolConfig, remoteTerms: RemoteTermRecord[]): {
+function inferOverrides(
+  school: SchoolConfig,
+  remoteTerms: RemoteTermRecord[],
+  existingOverrides: TermOverrideRecord[],
+): {
   overrides: TermOverrideRecord[];
   matchedCount: number;
   newCount: number;
+  skippedCount: number;
 } {
   const overrides: TermOverrideRecord[] = [];
   let matchedCount = 0;
   let newCount = 0;
+  let skippedCount = 0;
+
+  // Build lookup of existing overrides by date (for duplicate detection)
+  const existingOverridesByDate = new Map<string, TermOverrideRecord[]>();
+  for (const override of existingOverrides) {
+    const key = duplicateKey(override);
+    if (!existingOverridesByDate.has(key)) {
+      existingOverridesByDate.set(key, []);
+    }
+    existingOverridesByDate.get(key)!.push(override);
+  }
 
   for (const remote of remoteTerms) {
     const normalizedName = normalizeName(remote.termName);
     const remoteStartDate = new Date(remote.startDateISO);
-    
-    // Try 1: Exact name match
-    let candidates = existingTerms.filter(
+
+    // Check if this exact term already exists in overrides (by date + school)
+    const duplicateKeyValue = duplicateKey({
+      school: school.id,
+      startDate: remote.startDateISO,
+      endDate: remote.endDateISO,
+    });
+
+    const existingByDate = existingOverridesByDate.get(duplicateKeyValue);
+    if (existingByDate && existingByDate.length > 0) {
+      // Check if dates are the same
+      const exactMatch = existingByDate.find(
+        (o) => o.startDate === remote.startDateISO && o.endDate === remote.endDateISO,
+      );
+      if (exactMatch) {
+        console.warn(
+          `  • SKIPPED (duplicate): "${remote.termName}" - already exists as "${exactMatch.name}" (${exactMatch.id ?? 'no-id'})`,
+        );
+        skippedCount++;
+        continue;
+      }
+    }
+
+    // Try 1: Exact name match against base terms
+    let match = existingTerms.find(
       (term) =>
         term.school === school.id &&
-        normalizeName(term.name) === normalizedName &&
-        (!remote.academicYear || term.academicYear === remote.academicYear),
+        term.nameNormalized === normalizedName &&
+        term.academicYear === remote.academicYear,
     );
-
-    let match = candidates.length === 1 ? candidates[0] : undefined;
 
     // Try 2: Match by exact date + school (name might differ, e.g., "Spring Half Term" vs "Half Term")
     if (!match) {
-      const dateMatch = existingTerms.find(
+      match = existingTerms.find(
         (term) =>
           term.school === school.id &&
           term.startDate.toISOString().split('T')[0] === remote.startDateISO,
       );
-      if (dateMatch) {
+      if (match) {
         console.warn(
-          `  • Matched by date: "${remote.termName}" → existing "${dateMatch.name}" (${dateMatch.id})`,
+          `  • Matched by date: "${remote.termName}" → existing "${match.name}" (${match.id})`,
         );
-        match = dateMatch;
       }
     }
 
@@ -232,21 +275,32 @@ function inferOverrides(school: SchoolConfig, remoteTerms: RemoteTermRecord[]): 
       const partialMatches = existingTerms.filter(
         (term) =>
           term.school === school.id &&
-          (normalizedName.includes(normalizeName(term.name)) ||
-           normalizeName(term.name).includes(normalizedName)) &&
+          (normalizedName.includes(term.nameNormalized) ||
+            term.nameNormalized.includes(normalizedName)) &&
           term.startDate.getFullYear() === remoteStartDate.getFullYear(),
       );
       if (partialMatches.length === 1) {
-        console.warn(
-          `  • Matched by partial name: "${remote.termName}" → "${partialMatches[0].name}" (${partialMatches[0].id})`,
-        );
         match = partialMatches[0];
+        console.warn(
+          `  • Matched by partial name: "${remote.termName}" → "${match.name}" (${match.id})`,
+        );
       }
     }
 
     if (!match) {
       const academicYear = deriveAcademicYear(remote.startDateISO, remote.academicYear);
       const generatedId = generateTermId(school.id, remote.termName, academicYear);
+      
+      // Check if this generated ID already exists
+      const idExists = existingOverrides.some((o) => o.id === generatedId);
+      if (idExists) {
+        console.warn(
+          `  • SKIPPED (ID exists): "${remote.termName}" - ID "${generatedId}" already in use`,
+        );
+        skippedCount++;
+        continue;
+      }
+
       overrides.push({
         school: school.id,
         id: generatedId,
@@ -278,18 +332,51 @@ function inferOverrides(school: SchoolConfig, remoteTerms: RemoteTermRecord[]): 
     matchedCount += 1;
   }
 
-  return { overrides, matchedCount, newCount };
+  return { overrides, matchedCount, newCount, skippedCount };
 }
 
 async function main() {
+  console.log('========================================');
+  console.log('School Term Date Checker');
+  console.log('========================================');
+  
+  if (DRY_RUN) {
+    console.log('🔍 DRY RUN MODE - No changes will be saved\n');
+  }
+
   const { overrides: existingOverrides } = await readExistingOverrides();
+  console.log(`Loaded ${existingOverrides.length} existing overrides\n`);
+
+  // Deduplicate existing overrides first
+  const seenKeys = new Set<string>();
+  const deduplicatedExisting: TermOverrideRecord[] = [];
+  let duplicatesRemoved = 0;
+
+  for (const override of existingOverrides) {
+    const key = duplicateKey(override);
+    if (seenKeys.has(key)) {
+      duplicatesRemoved++;
+      console.warn(`  • Removing duplicate from existing: ${override.name} (${override.school}) ${override.startDate}`);
+    } else {
+      seenKeys.add(key);
+      deduplicatedExisting.push(override);
+    }
+  }
+
+  if (duplicatesRemoved > 0) {
+    console.warn(`\nRemoved ${duplicatesRemoved} duplicate entries from existing overrides\n`);
+  }
+
   const overrideMap = new Map<string, TermOverrideRecord>();
-  existingOverrides.forEach((record) => {
+  
+  // Add existing overrides to map (deduplicated)
+  deduplicatedExisting.forEach((record) => {
     overrideMap.set(overrideKey(record), record);
   });
 
   let totalMatched = 0;
   let totalNew = 0;
+  let totalSkipped = 0;
 
   for (const school of SCHOOLS) {
     console.log(`Fetching ${school.name} term dates...`);
@@ -299,15 +386,20 @@ async function main() {
     const remoteTerms = await askDeepseek(prompt);
     console.log(`  Received ${remoteTerms.length} entries from Deepseek for ${school.name}.`);
 
-    const { overrides, matchedCount, newCount } = inferOverrides(school, remoteTerms);
+    const { overrides, matchedCount, newCount, skippedCount } = inferOverrides(
+      school,
+      remoteTerms,
+      deduplicatedExisting,
+    );
     totalMatched += matchedCount;
     totalNew += newCount;
+    totalSkipped += skippedCount;
 
     for (const record of overrides) {
       overrideMap.set(overrideKey(record), record);
     }
 
-    console.log(`  Matched ${matchedCount} entries and recorded ${newCount} new entries.`);
+    console.log(`  Matched: ${matchedCount}, New: ${newCount}, Skipped: ${skippedCount}\n`);
   }
 
   const finalOverrides = Array.from(overrideMap.values()).sort((a, b) => {
@@ -322,13 +414,25 @@ async function main() {
     overrides: finalOverrides,
   };
 
-  await fs.writeFile(OVERRIDES_PATH, JSON.stringify(payload, null, 2));
-  console.log(
-    `Saved ${finalOverrides.length} overrides (${totalMatched} updated, ${totalNew} new) to ${path.relative(
-      process.cwd(),
-      OVERRIDES_PATH,
-    )}.`,
-  );
+  console.log('========================================');
+  console.log('Summary:');
+  console.log(`  Existing: ${existingOverrides.length}`);
+  console.log(`  Duplicates removed: ${duplicatesRemoved}`);
+  console.log(`  Matched/Updated: ${totalMatched}`);
+  console.log(`  New: ${totalNew}`);
+  console.log(`  Skipped (duplicates): ${totalSkipped}`);
+  console.log(`  Final count: ${finalOverrides.length}`);
+  console.log('========================================');
+
+  if (DRY_RUN) {
+    console.log('\n🔍 DRY RUN - No changes saved');
+    console.log(`Would save to: ${path.relative(process.cwd(), OVERRIDES_PATH)}`);
+  } else {
+    await fs.writeFile(OVERRIDES_PATH, JSON.stringify(payload, null, 2));
+    console.log(
+      `\n✅ Saved to ${path.relative(process.cwd(), OVERRIDES_PATH)}`,
+    );
+  }
 }
 
 main().catch((error) => {
