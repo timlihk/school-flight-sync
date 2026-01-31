@@ -12,6 +12,7 @@ import flightsRouter from './routes/flights.js';
 import transportRouter from './routes/transport.js';
 import serviceProvidersRouter from './routes/serviceProviders.js';
 import notTravellingRouter from './routes/notTravelling.js';
+import termCheckRouter from './routes/termCheck.js';
 
 // Load environment variables
 dotenv.config();
@@ -45,6 +46,14 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// Public term-check status endpoint (no auth required)
+app.get('/api/term-check/status', (req, res) => {
+  res.json({
+    configured: !!process.env.DEEPSEEK_API_KEY,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Apply authentication middleware to all API routes
 app.use('/api', authenticateFamily);
 
@@ -53,6 +62,7 @@ app.use('/api/flights', flightsRouter);
 app.use('/api/transport', transportRouter);
 app.use('/api/service-providers', serviceProvidersRouter);
 app.use('/api/not-travelling', notTravellingRouter);
+app.use('/api/term-check', termCheckRouter);
 
 // 404 handler
 app.use((req, res) => {
