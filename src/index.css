@@ -2,12 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Orbit Design System - Journey-Centric UI */
+/* ═══════════════════════════════════════════════════════════════
+   Orbit Design System v2.0 - Premium Journey-Centric UI
+   Enhanced with Glassmorphism, Fluid Animations & Micro-interactions
+   ═══════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root {
-    /* Core Colors */
-    --background: 0 0% 98%;
+    /* ═══════════════════════════════════════════════════════════
+       Core Color System - Soft, Modern Palette
+       ═══════════════════════════════════════════════════════════ */
+    --background: 220 25% 97%;
     --foreground: 222 25% 12%;
     
     --card: 0 0% 100%;
@@ -16,58 +21,86 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 25% 12%;
     
-    /* Primary - Soft Indigo */
-    --primary: 230 55% 48%;
+    /* Primary - Soft Indigo with depth */
+    --primary: 230 65% 52%;
     --primary-foreground: 0 0% 100%;
-    --primary-subtle: 230 55% 96%;
-    --primary-light: 230 55% 92%;
+    --primary-subtle: 230 65% 96%;
+    --primary-light: 230 65% 92%;
+    --primary-glow: 230 65% 70%;
     
-    /* Secondary */
+    /* Secondary - Slate with warmth */
     --secondary: 220 14% 96%;
     --secondary-foreground: 222 25% 12%;
+    --secondary-light: 220 14% 98%;
     
-    /* Muted */
+    /* Muted - Softer grays */
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 46%;
     
-    /* Accent */
-    --accent: 230 55% 48%;
+    /* Accent - Vibrant but soft */
+    --accent: 230 65% 52%;
     --accent-foreground: 0 0% 100%;
     
-    /* Destructive */
-    --destructive: 0 70% 55%;
+    /* Destructive - Warm red */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     
-    /* Border */
+    /* Border hierarchy */
     --border: 220 13% 90%;
     --border-subtle: 220 13% 94%;
+    --border-strong: 220 13% 80%;
     --input: 220 13% 90%;
-    --ring: 230 55% 48%;
+    --ring: 230 65% 52%;
     
-    --radius: 0.75rem;
+    /* Radius system */
+    --radius: 0.875rem;
     --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
     --radius-lg: 1rem;
-    --radius-xl: 1.5rem;
+    --radius-xl: 1.25rem;
+    --radius-2xl: 1.5rem;
+    --radius-full: 9999px;
     
-    /* School Colors */
-    --benenden: 265 60% 45%;
-    --benenden-subtle: 265 60% 96%;
-    --benenden-light: 265 60% 94%;
+    /* ═══════════════════════════════════════════════════════════
+       School Colors - Distinct but harmonious
+       ═══════════════════════════════════════════════════════════ */
+    --benenden: 265 65% 48%;
+    --benenden-subtle: 265 65% 96%;
+    --benenden-light: 265 65% 94%;
+    --benenden-glow: 265 65% 75%;
     
-    --wycombe: 160 55% 35%;
+    --wycombe: 160 55% 38%;
     --wycombe-subtle: 160 55% 96%;
     --wycombe-light: 160 55% 94%;
+    --wycombe-glow: 160 55% 65%;
     
-    /* Journey States */
-    --journey-complete: 145 55% 42%;
+    /* ═══════════════════════════════════════════════════════════
+       Journey States - Clear visual hierarchy
+       ═══════════════════════════════════════════════════════════ */
+    --journey-complete: 145 60% 45%;
     --journey-pending: 38 92% 50%;
     --journey-missing: 0 70% 55%;
     
-    /* Transport Types */
-    --transport-flight: 217 70% 55%;
-    --transport-flight-subtle: 217 70% 96%;
-    --transport-ground: 25 85% 52%;
-    --transport-ground-subtle: 25 85% 96%;
+    /* ═══════════════════════════════════════════════════════════
+       Transport Types - Distinct but related
+       ═══════════════════════════════════════════════════════════ */
+    --transport-flight: 217 75% 58%;
+    --transport-flight-subtle: 217 75% 96%;
+    --transport-flight-glow: 217 75% 75%;
+    
+    --transport-ground: 25 90% 55%;
+    --transport-ground-subtle: 25 90% 96%;
+    --transport-ground-glow: 25 90% 70%;
+    
+    /* ═══════════════════════════════════════════════════════════
+       Glassmorphism - Premium frosted glass effect
+       ═══════════════════════════════════════════════════════════ */
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-bg-hover: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-border-strong: rgba(255, 255, 255, 0.8);
+    --glass-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.08);
+    --glass-shadow-lg: 0 20px 50px -12px rgba(0, 0, 0, 0.15);
     
     /* Sidebar */
     --sidebar-background: 0 0% 98%;
@@ -78,59 +111,94 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* ═══════════════════════════════════════════════════════════
+       Gradients - Beautiful mesh gradients
+       ═══════════════════════════════════════════════════════════ */
+    --gradient-sky: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-sunset: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-ocean: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --gradient-forest: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --gradient-warm: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --gradient-cool: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    --gradient-premium: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    
+    /* Mesh gradient backgrounds */
+    --mesh-primary: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                    radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                    radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
   }
 
+  /* ═════════════════════════════════════════════════════════════
+     Dark Mode - Deep, rich colors with enhanced contrast
+     ═════════════════════════════════════════════════════════════ */
   .dark {
-    --background: 222 25% 8%;
-    --foreground: 220 10% 92%;
+    --background: 222 25% 6%;
+    --foreground: 220 10% 94%;
     
-    --card: 222 25% 11%;
-    --card-foreground: 220 10% 92%;
+    --card: 222 25% 9%;
+    --card-foreground: 220 10% 94%;
     
-    --popover: 222 25% 11%;
-    --popover-foreground: 220 10% 92%;
+    --popover: 222 25% 9%;
+    --popover-foreground: 220 10% 94%;
     
-    --primary: 230 60% 60%;
-    --primary-foreground: 222 25% 8%;
-    --primary-subtle: 230 40% 18%;
-    --primary-light: 230 40% 22%;
+    --primary: 230 70% 62%;
+    --primary-foreground: 222 25% 6%;
+    --primary-subtle: 230 35% 18%;
+    --primary-light: 230 35% 22%;
+    --primary-glow: 230 70% 70%;
     
-    --secondary: 222 20% 16%;
-    --secondary-foreground: 220 10% 92%;
+    --secondary: 222 20% 14%;
+    --secondary-foreground: 220 10% 94%;
+    --secondary-light: 222 20% 18%;
     
-    --muted: 222 20% 16%;
+    --muted: 222 20% 14%;
     --muted-foreground: 220 9% 56%;
     
-    --accent: 230 60% 60%;
-    --accent-foreground: 222 25% 8%;
+    --accent: 230 70% 62%;
+    --accent-foreground: 222 25% 6%;
     
-    --destructive: 0 60% 50%;
+    --destructive: 0 65% 52%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 222 20% 18%;
-    --border-subtle: 222 20% 14%;
-    --input: 222 20% 18%;
-    --ring: 230 60% 60%;
+    --border: 222 20% 16%;
+    --border-subtle: 222 20% 12%;
+    --border-strong: 222 20% 22%;
+    --input: 222 20% 16%;
+    --ring: 230 70% 62%;
     
-    /* School Colors - Brighter for dark */
-    --benenden: 265 65% 65%;
-    --benenden-subtle: 265 40% 18%;
-    --benenden-light: 265 35% 22%;
+    /* School Colors - Brighter for dark mode visibility */
+    --benenden: 265 70% 68%;
+    --benenden-subtle: 265 35% 20%;
+    --benenden-light: 265 30% 24%;
+    --benenden-glow: 265 70% 75%;
     
-    --wycombe: 160 50% 50%;
-    --wycombe-subtle: 160 35% 16%;
-    --wycombe-light: 160 30% 20%;
+    --wycombe: 160 55% 52%;
+    --wycombe-subtle: 160 35% 18%;
+    --wycombe-light: 160 30% 22%;
+    --wycombe-glow: 160 55% 60%;
     
-    /* Journey States */
-    --journey-complete: 145 55% 50%;
-    --journey-pending: 38 90% 55%;
-    --journey-missing: 0 65% 60%;
+    /* Journey States - Vibrant on dark */
+    --journey-complete: 145 60% 52%;
+    --journey-pending: 38 95% 58%;
+    --journey-missing: 0 70% 60%;
     
-    /* Transport */
-    --transport-flight: 217 70% 65%;
+    /* Transport - Enhanced for dark */
+    --transport-flight: 217 80% 68%;
     --transport-flight-subtle: 217 40% 18%;
-    --transport-ground: 30 85% 58%;
-    --transport-ground-subtle: 25 40% 16%;
+    --transport-flight-glow: 217 80% 75%;
+    
+    --transport-ground: 30 90% 60%;
+    --transport-ground-subtle: 25 40% 18%;
+    --transport-ground-glow: 30 90% 68%;
+    
+    /* Glassmorphism - Dark mode adjustments */
+    --glass-bg: rgba(22, 24, 32, 0.75);
+    --glass-bg-hover: rgba(28, 31, 42, 0.9);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-strong: rgba(255, 255, 255, 0.15);
+    --glass-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.4);
+    --glass-shadow-lg: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
     
     /* Sidebar */
     --sidebar-background: 240 5.9% 10%;
@@ -149,13 +217,41 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  
+  /* Custom scrollbar - Premium feel */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: var(--radius-full);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 }
 
 @layer utilities {
-  /* Journey status colors */
+  /* ═══════════════════════════════════════════════════════════════
+     Journey Status Utilities
+     ═══════════════════════════════════════════════════════════════ */
   .text-journey-complete {
     color: hsl(var(--journey-complete));
   }
@@ -192,7 +288,9 @@
     border-color: hsl(var(--journey-missing));
   }
   
-  /* Transport colors */
+  /* ═══════════════════════════════════════════════════════════════
+     Transport Utilities
+     ═══════════════════════════════════════════════════════════════ */
   .text-transport-flight {
     color: hsl(var(--transport-flight));
   }
@@ -225,7 +323,9 @@
     border-color: hsl(var(--transport-ground));
   }
   
-  /* School colors */
+  /* ═══════════════════════════════════════════════════════════════
+     School Color Utilities
+     ═══════════════════════════════════════════════════════════════ */
   .text-benenden {
     color: hsl(var(--benenden));
   }
@@ -248,5 +348,331 @@
   
   .bg-wycombe-subtle {
     background-color: hsl(var(--wycombe-subtle));
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+     Glassmorphism Utilities - Premium frosted glass
+     ═══════════════════════════════════════════════════════════════ */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+  
+  .glass-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .glass-hover:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-strong);
+    transform: translateY(-2px);
+    box-shadow: var(--glass-shadow-lg);
+  }
+  
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--glass-shadow);
+  }
+  
+  .glass-strong {
+    background: var(--glass-bg-hover);
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border: 1px solid var(--glass-border-strong);
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+     Animation Utilities - Fluid, purposeful motion
+     ═══════════════════════════════════════════════════════════════ */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-pulse-soft {
+    animation: pulse-soft 4s ease-in-out infinite;
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .animate-slide-down {
+    animation: slide-down 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Stagger children animations */
+  .stagger-children > * {
+    opacity: 0;
+    animation: fade-slide-up 0.5s ease-out forwards;
+  }
+  
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+  .stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+  .stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+  
+  /* ═══════════════════════════════════════════════════════════════
+     Gradient Text & Backgrounds
+     ═══════════════════════════════════════════════════════════════ */
+  .gradient-text {
+    background: var(--gradient-premium);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .gradient-text-sky {
+    background: var(--gradient-sky);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .gradient-bg-sky {
+    background: var(--gradient-sky);
+  }
+  
+  .gradient-bg-sunset {
+    background: var(--gradient-sunset);
+  }
+  
+  .gradient-bg-ocean {
+    background: var(--gradient-ocean);
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+     Interactive States - Enhanced hover/focus/active
+     ═══════════════════════════════════════════════════════════════ */
+  .interactive {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .interactive:hover {
+    transform: translateY(-1px);
+  }
+  
+  .interactive:active {
+    transform: translateY(0) scale(0.98);
+  }
+  
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.4);
+  }
+  
+  .glow-benenden {
+    box-shadow: 0 0 20px -5px hsl(var(--benenden) / 0.4);
+  }
+  
+  .glow-wycombe {
+    box-shadow: 0 0 20px -5px hsl(var(--wycombe) / 0.4);
+  }
+  
+  .glow-success {
+    box-shadow: 0 0 20px -5px hsl(var(--journey-complete) / 0.4);
+  }
+  
+  /* Ring animations */
+  .ring-pulse {
+    animation: ring-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+     Layout Utilities
+     ═══════════════════════════════════════════════════════════════ */
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Touch action optimization */
+  .touch-pan-y {
+    touch-action: pan-y;
+  }
+  
+  /* Hardware acceleration for animations */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Keyframe Animations
+   ═══════════════════════════════════════════════════════════════════ */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ring-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+  }
+}
+
+@keyframes countdown-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+@keyframes plane-fly {
+  0% {
+    transform: translateX(-100%) translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100vw + 100px)) translateY(-20px) rotate(-5deg);
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Reduced Motion - Respect user preferences
+   ═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-float,
+  .animate-pulse-soft,
+  .animate-shimmer,
+  .stagger-children > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Print Styles - Clean printing
+   ═══════════════════════════════════════════════════════════════════ */
+@media print {
+  .glass,
+  .glass-card,
+  .glass-strong {
+    background: white !important;
+    backdrop-filter: none !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
   }
 }
