@@ -16,32 +16,7 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json(result.rows);
 }));
 
-// GET /api/service-providers/:id - Get single service provider
-router.get('/:id', validateParams(z.object({ id: uuidSchema })), asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const result = await query<ServiceProvider>(
-    'SELECT * FROM public.service_providers WHERE id = $1',
-    [id]
-  );
-
-  if (result.rows.length === 0) {
-    return res.status(404).json({ error: 'Service provider not found' });
-  }
-
-  res.json(result.rows[0]);
-}));
-
-// GET /api/service-providers/type/:vehicleType - Get providers by vehicle type
-router.get('/type/:vehicleType', asyncHandler(async (req, res) => {
-  const { vehicleType } = req.params;
-  const result = await query<ServiceProvider>(
-    'SELECT * FROM public.service_providers WHERE vehicle_type = $1 AND is_active = true ORDER BY name ASC',
-    [vehicleType]
-  );
-  res.json(result.rows);
-}));
-
-// GET /api/service-providers/search?q= - Search service providers
+// GET /api/service-providers/search?q= - Search service providers (MUST be before /:id)
 router.get('/search', asyncHandler(async (req, res) => {
   const { q } = req.query;
   if (!q) {
@@ -57,6 +32,31 @@ router.get('/search', asyncHandler(async (req, res) => {
     [searchTerm]
   );
   res.json(result.rows);
+}));
+
+// GET /api/service-providers/type/:vehicleType - Get providers by vehicle type (MUST be before /:id)
+router.get('/type/:vehicleType', asyncHandler(async (req, res) => {
+  const { vehicleType } = req.params;
+  const result = await query<ServiceProvider>(
+    'SELECT * FROM public.service_providers WHERE vehicle_type = $1 AND is_active = true ORDER BY name ASC',
+    [vehicleType]
+  );
+  res.json(result.rows);
+}));
+
+// GET /api/service-providers/:id - Get single service provider
+router.get('/:id', validateParams(z.object({ id: uuidSchema })), asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const result = await query<ServiceProvider>(
+    'SELECT * FROM public.service_providers WHERE id = $1',
+    [id]
+  );
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ error: 'Service provider not found' });
+  }
+
+  res.json(result.rows[0]);
 }));
 
 // POST /api/service-providers - Create new service provider
