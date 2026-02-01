@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy, memo } from "react";
 import { Plane, Calendar, Share2, Plus, List, LayoutGrid, LogOut, BusFront } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,30 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { NextTravelEntry } from "@/types/next-travel";
 
 const NAV_TABS: MainNavTab[] = ['today', 'trips', 'calendar', 'settings'];
+
+// Extracted SchoolPills component to avoid TDZ
+interface SchoolPillsProps {
+  selectedSchool: 'both' | 'benenden' | 'wycombe';
+  onSelect: (scope: 'both' | 'benenden' | 'wycombe') => void;
+}
+
+const SchoolPillsComponent = memo(function SchoolPillsComponent({ selectedSchool, onSelect }: SchoolPillsProps) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {(['both', 'benenden', 'wycombe'] as const).map(scope => (
+        <Button
+          key={scope}
+          size="sm"
+          variant={selectedSchool === scope ? 'default' : 'outline'}
+          className="rounded-full px-4"
+          onClick={() => onSelect(scope)}
+        >
+          {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
+        </Button>
+      ))}
+    </div>
+  );
+});
 
 export default function Index() {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -797,22 +821,6 @@ export default function Index() {
     onSwipe: handleSwipeTabs,
   });
 
-  const SchoolPills = () => (
-    <div className="flex flex-wrap gap-2">
-      {(['both', 'benenden', 'wycombe'] as const).map(scope => (
-        <Button
-          key={scope}
-          size="sm"
-          variant={selectedSchool === scope ? 'default' : 'outline'}
-          className="rounded-full px-4"
-          onClick={() => handleSchoolSelect(scope)}
-        >
-          {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
-        </Button>
-      ))}
-    </div>
-  );
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'today':
@@ -867,7 +875,7 @@ export default function Index() {
               </div>
             </div>
 
-            <SchoolPills />
+            <SchoolPillsComponent selectedSchool={selectedSchool} onSelect={handleSchoolSelect} />
 
             {tripsView === 'timeline' ? (
               <TripTimeline
@@ -995,7 +1003,7 @@ export default function Index() {
                 Today
               </Button>
             </div>
-            <SchoolPills />
+            <SchoolPillsComponent selectedSchool={selectedSchool} onSelect={handleSchoolSelect} />
             <CompactCalendar
               selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'}
               onEventClick={handleCalendarEventClick}
