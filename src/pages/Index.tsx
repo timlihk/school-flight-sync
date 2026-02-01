@@ -81,6 +81,21 @@ export default function Index() {
       : activeTab === 'calendar'
         ? 'Add travel'
         : 'Share';
+
+  const triggerHaptic = useCallback((type: 'select' | 'success' | 'warning' = 'select') => {
+    if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return;
+    const patterns: Record<typeof type, number | number[]> = {
+      select: 10,
+      success: [10, 30, 10],
+      warning: [40, 30, 40],
+    };
+    try {
+      navigator.vibrate(patterns[type] || 10);
+    } catch {
+      // Vibration not supported
+    }
+  }, []);
+
   const handleFab = () => {
     triggerHaptic();
     switch (activeTab) {
@@ -111,20 +126,6 @@ export default function Index() {
   const scrollToTop = useCallback(() => {
     if (typeof window === 'undefined') return;
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
-  const triggerHaptic = useCallback((type: 'select' | 'success' | 'warning' = 'select') => {
-    if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return;
-    const patterns: Record<typeof type, number | number[]> = {
-      select: 10,
-      success: [10, 30, 10],
-      warning: [40, 30, 40],
-    };
-    try {
-      navigator.vibrate(patterns[type] || 10);
-    } catch {
-      // Vibration not supported
-    }
   }, []);
 
   useEffect(() => {
