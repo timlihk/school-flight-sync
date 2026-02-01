@@ -34,10 +34,11 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { MobileBottomNav, MainNavTab } from "@/components/dashboard/MobileBottomNav";
 import { TodayTab } from "@/components/dashboard/tabs/TodayTab";
+import { TodoList } from "@/components/dashboard/TodoList";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { NextTravelEntry } from "@/types/next-travel";
 
-const NAV_TABS: MainNavTab[] = ['today', 'calendar', 'settings'];
+const NAV_TABS: MainNavTab[] = ['today', 'todo', 'calendar', 'settings'];
 // Build: 2026-02-01-0945
 
 // Extracted SchoolPills component to avoid TDZ
@@ -101,9 +102,11 @@ export default function Index() {
 
   const fabLabel = activeTab === 'today'
     ? 'Add flight'
-    : activeTab === 'calendar'
-      ? 'Add travel'
-      : 'Share';
+    : activeTab === 'todo'
+      ? 'Quick add'
+      : activeTab === 'calendar'
+        ? 'Add travel'
+        : 'Share';
 
   const triggerHaptic = useCallback((type: 'select' | 'success' | 'warning' = 'select') => {
     if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return;
@@ -770,6 +773,9 @@ export default function Index() {
           toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
         }
         break;
+      case 'todo':
+        setAddSheetOpen(true);
+        break;
       case 'calendar':
         setAddSheetOpen(true);
         break;
@@ -827,6 +833,26 @@ export default function Index() {
             onAddTransport={handleAddTransport}
             onShareHero={handleHeroShare}
           />
+        );
+      case 'todo':
+        return (
+          <div className="px-4 py-5 md:px-6 pb-28 lg:pb-10 max-w-3xl mx-auto">
+            {/* Header */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4">To Do</h2>
+              <SchoolPillsComponent selectedSchool={selectedSchool} onSelect={handleSchoolSelect} />
+            </div>
+            
+            {/* Todo List */}
+            <TodoList 
+              selectedSchool={selectedSchool}
+              flights={flights}
+              transport={transport}
+              terms={filteredTerms}
+              onAddFlight={handleAddFlight}
+              onAddTransport={handleAddTransport}
+            />
+          </div>
         );
       case 'calendar':
         return (
