@@ -86,40 +86,51 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
     );
 
     relevantTerms.forEach(term => {
-      // Add term start event
-      addEvent(allEvents, {
-        id: `term-start-${term.id}`,
-        date: term.startDate,
-        type: 'term',
-        school: term.school,
-        title: `${term.name} - Start`,
-        description: term.description || '',
-        details: term
-      });
-
-      // Add term end event
-      addEvent(allEvents, {
-        id: `term-end-${term.id}`,
-        date: term.endDate,
-        type: 'term',
-        school: term.school,
-        title: `${term.name} - End`,
-        description: term.description || '',
-        details: term
-      });
-
-      // Add schedule detail events
+      // Collect schedule detail dates to avoid duplicates
+      const scheduleDates = new Set<string>();
       if (term.scheduleDetails) {
         term.scheduleDetails.forEach((detail, index) => {
+          const detailDate = new Date(detail.date);
+          const dateKey = format(detailDate, 'yyyy-MM-dd');
+          scheduleDates.add(dateKey);
+          
           addEvent(allEvents, {
             id: `schedule-${term.id}-${index}`,
-            date: new Date(detail.date),
+            date: detailDate,
             type: 'term',
             school: term.school,
             title: detail.event,
             description: detail.time,
             details: { ...term, scheduleDetail: detail }
           });
+        });
+      }
+
+      // Only add term start event if there's no schedule detail on the same date
+      const startDateKey = format(term.startDate, 'yyyy-MM-dd');
+      if (!scheduleDates.has(startDateKey)) {
+        addEvent(allEvents, {
+          id: `term-start-${term.id}`,
+          date: term.startDate,
+          type: 'term',
+          school: term.school,
+          title: `${term.name} - Start`,
+          description: term.description || '',
+          details: term
+        });
+      }
+
+      // Only add term end event if there's no schedule detail on the same date
+      const endDateKey = format(term.endDate, 'yyyy-MM-dd');
+      if (!scheduleDates.has(endDateKey)) {
+        addEvent(allEvents, {
+          id: `term-end-${term.id}`,
+          date: term.endDate,
+          type: 'term',
+          school: term.school,
+          title: `${term.name} - End`,
+          description: term.description || '',
+          details: term
         });
       }
     });
