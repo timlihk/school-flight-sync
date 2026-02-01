@@ -8,3 +8,4 @@
 
 [environments.production.variables]
   NODE_ENV = "production"
+  # Build timestamp: 2026-02-01 (force rebuild)
