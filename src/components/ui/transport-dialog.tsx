@@ -269,10 +269,11 @@ export function TransportDialog({
         )}
 
         {isAddingTransport ? (
-          <div className="space-y-4 border-t pt-4">
-            <h3 className="text-sm font-medium text-foreground">
+          <div className="flex flex-col max-h-[60vh]">
+            <h3 className="text-sm font-medium text-foreground mb-4">
               {editingTransport ? 'Edit Transport' : 'Add New Transport'}
             </h3>
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -422,10 +423,18 @@ export function TransportDialog({
                 className="min-h-[60px]"
               />
             </div>
+            </div>
 
-            <div className="flex gap-2 pt-2">
-              <Button onClick={handleAddTransport} size="sm">
-                {editingTransport ? 'Update Transport' : 'Add Transport'}
+            <div className="flex gap-2 pt-4 border-t bg-background">
+              <Button 
+                onClick={() => {
+                  console.log('[TransportDialog] Save clicked');
+                  handleAddTransport();
+                }} 
+                size="sm"
+                className="flex-1"
+              >
+                {editingTransport ? '💾 Update Transport' : '💾 Add Transport'}
               </Button>
               <Button onClick={resetForm} variant="outline" size="sm">
                 Cancel
