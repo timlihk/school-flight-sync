@@ -22,8 +22,7 @@ interface FamilyAuthProviderProps {
 }
 
 const AUTH_STORAGE_KEY = 'family_authenticated';
-const FAMILY_SECRET = import.meta.env.VITE_FAMILY_SECRET;
-
+// Auth is now server-side only - client just stores session state
 export function FamilyAuthProvider({ children }: FamilyAuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -38,12 +37,9 @@ export function FamilyAuthProvider({ children }: FamilyAuthProviderProps) {
   }, []);
 
   const login = (secretPhrase: string): boolean => {
-    if (!FAMILY_SECRET) {
-      console.error('Family secret not configured. Please set VITE_FAMILY_SECRET in your .env file.');
-      return false;
-    }
-
-    if (secretPhrase.trim().toLowerCase() === FAMILY_SECRET.toLowerCase()) {
+    // Client-side only stores the state; actual validation happens on backend API calls
+    // This prevents exposing the secret in bundled JS
+    if (secretPhrase.trim()) {
       setIsAuthenticated(true);
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
       return true;

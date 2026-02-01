@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { WifiOff, RefreshCw, Check } from 'lucide-react';
+import { WifiOff, RefreshCw, Check, ChevronDown, ChevronUp, Database } from 'lucide-react';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 interface NetworkStatusBannerProps {
   onRefresh?: () => void;
@@ -19,8 +20,7 @@ export function NetworkStatusBanner({
 }: NetworkStatusBannerProps) {
   const { isOnline, wasOffline, clearWasOffline } = useNetworkStatus();
   const [showReconnected, setShowReconnected] = useState(false);
-  void dataUpdatedAt;
-  void perSource;
+  const [showDetails, setShowDetails] = useState(false);
 
   // Show reconnected banner briefly when coming back online
   useEffect(() => {
@@ -75,7 +75,69 @@ export function NetworkStatusBanner({
     );
   }
 
-  return null;
+  // Online status bar with data freshness
+  const hasDataInfo = dataUpdatedAt || perSource.length > 0;
+  const anyFetching = perSource.some(s => s.isFetching);
+  
+  if (!hasDataInfo) return null;
+
+  return (
+    <div className="bg-muted/50 border-b border-border px-4 py-1.5">
+      <div className="flex items-center justify-between gap-3">
+        <button 
+          onClick={() => setShowDetails(!showDetails)}
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Database className="h-3 w-3" />
+          {anyFetching ? (
+            <span className="flex items-center gap-1">
+              <RefreshCw className="h-3 w-3 animate-spin" />
+              Updating...
+            </span>
+          ) : dataUpdatedAt ? (
+            <span>Updated {formatDistanceToNow(dataUpdatedAt, { addSuffix: true })}</span>
+          ) : (
+            <span>Data loaded</span>
+          )}
+          {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        </button>
+        
+        {onRefresh && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isRefreshing || anyFetching}
+            className="h-6 text-xs"
+          >
+            <RefreshCw className={cn("h-3 w-3 mr-1", (isRefreshing || anyFetching) && "animate-spin")} />
+            Refresh
+          </Button>
+        )}
+      </div>
+      
+      {/* Per-source details */}
+      {showDetails && perSource.length > 0 && (
+        <div className="mt-2 space-y-1 border-t border-border/50 pt-2">
+          {perSource.map((source) => (
+            <div key={source.label} className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">{source.label}</span>
+              <span className="flex items-center gap-1">
+                {source.isFetching && <RefreshCw className="h-3 w-3 animate-spin text-muted-foreground" />}
+                {source.updatedAt ? (
+                  <span className="text-muted-foreground">
+                    {formatDistanceToNow(source.updatedAt, { addSuffix: true })}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">-</span>
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default NetworkStatusBanner;

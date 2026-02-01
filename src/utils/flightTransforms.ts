@@ -1,4 +1,5 @@
 import { FlightDetails } from '@/types/school';
+import { format } from 'date-fns';
 
 // Database record type for flights table
 interface DbFlightRecord {
@@ -25,10 +26,10 @@ export function transformFlightToDb(flight: Omit<FlightDetails, 'id'>): Omit<DbF
     airline: flight.airline,
     flight_number: flight.flightNumber,
     departure_airport: flight.departure.airport,
-    departure_date: flight.departure.date.toISOString().split('T')[0],
+    departure_date: format(flight.departure.date, 'yyyy-MM-dd'),
     departure_time: flight.departure.time,
     arrival_airport: flight.arrival.airport,
-    arrival_date: flight.arrival.date.toISOString().split('T')[0],
+    arrival_date: format(flight.arrival.date, 'yyyy-MM-dd'),
     arrival_time: flight.arrival.time,
     confirmation_code: flight.confirmationCode || null,
     notes: flight.notes || null,
