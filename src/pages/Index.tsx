@@ -830,20 +830,16 @@ export default function Index() {
         );
       case 'calendar':
         return (
-          <div className="px-4 py-5 md:px-6 pb-28 lg:pb-10 space-y-5">
-            {/* Header with month indicator */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Calendar</h2>
-              <div className="flex items-center gap-2">
-                <SchoolPillsComponent selectedSchool={selectedSchool} onSelect={handleSchoolSelect} />
-              </div>
+          <div className="px-4 py-5 md:px-6 pb-28 lg:pb-10 max-w-3xl mx-auto">
+            {/* Simple Header */}
+            <div className="mb-6">
+              <SchoolPillsComponent selectedSchool={selectedSchool} onSelect={handleSchoolSelect} />
             </div>
             
             {/* Calendar */}
             <CompactCalendar
               selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'}
               onEventClick={handleCalendarEventClick}
-              onSelectTermIds={handleHighlightTerms}
             />
           </div>
         );

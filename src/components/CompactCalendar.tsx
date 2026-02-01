@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   format,
   startOfMonth,
@@ -11,597 +11,284 @@ import {
   isSameMonth,
   isToday,
   isValid,
-  startOfDay
+  startOfDay,
+  isAfter,
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { ChevronLeft, ChevronRight, Plane, Car, CalendarDays, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle
-} from '@/components/ui/sheet';
-import {
-  InteractiveHoverCard,
-  InteractiveHoverCardContent,
-  InteractiveHoverCardTrigger,
-} from '@/components/ui/interactive-hover-card';
-import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useCalendarEvents, School, CalendarEvent } from '@/hooks/use-calendar-events';
 
 interface CompactCalendarProps {
   selectedSchool: School;
-  onSelectTermIds?: (termIds: string[]) => void;
   onEventClick?: (event: CalendarEvent) => void;
-  eventFilter?: (event: CalendarEvent) => boolean;
 }
 
-export function CompactCalendar({ selectedSchool, onSelectTermIds: _onSelectTermIds, onEventClick, eventFilter }: CompactCalendarProps) {
-  const navigate = useNavigate();
+export function CompactCalendar({ selectedSchool, onEventClick }: CompactCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [monthsToShow, setMonthsToShow] = useState(1);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileEvents, setMobileEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { getEventsForDate, events } = useCalendarEvents(selectedSchool);
-  const autoSetRef = useRef(false);
-  const openedAtRef = useRef<number | null>(null);
-  const touchHandledRef = useRef(false);
-  const hasManualViewSelection = useRef(false);
 
-  const setViewModeManual = useCallback((mode: 'grid' | 'list') => {
-    hasManualViewSelection.current = true;
-    setViewMode(mode);
+  // Update responsive state
+  useEffect(() => {
+    const updateResponsive = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    updateResponsive();
+    window.addEventListener('resize', updateResponsive);
+    return () => window.removeEventListener('resize', updateResponsive);
   }, []);
 
-  const filteredEvents = useMemo(() => {
-    return (events || []).filter(ev => !eventFilter || eventFilter(ev));
-  }, [events, eventFilter]);
-
-  const getFilteredEventsForDate = useCallback((date: Date) => {
-    const start = startOfDay(date);
-    return filteredEvents.filter(e => startOfDay(e.date).getTime() === start.getTime());
-  }, [filteredEvents]);
-
-  const markTouchHandled = () => {
-    touchHandledRef.current = true;
-    setTimeout(() => {
-      touchHandledRef.current = false;
-    }, 250);
-  };
-  const hasAnyEvents = useMemo(() => {
-    for (let i = 0; i < monthsToShow; i++) {
-      const monthDate = addMonths(currentDate, i);
-      const monthStart = startOfWeek(startOfMonth(monthDate));
-      const monthEnd = endOfWeek(endOfMonth(monthDate));
-      let day = monthStart;
-      while (day <= monthEnd) {
-        if (getFilteredEventsForDate(day).length > 0) return true;
-        day = addDays(day, 1);
-      }
-    }
-    return false;
-  }, [currentDate, monthsToShow, getFilteredEventsForDate]);
-
-  const flatEvents = useMemo(() => {
+  // Auto-select first upcoming event date on load
+  useEffect(() => {
     const today = startOfDay(new Date());
-    const items: { date: Date; events: CalendarEvent[] }[] = [];
-    for (let i = 0; i < monthsToShow; i++) {
-      const monthDate = addMonths(currentDate, i);
-      const monthStart = startOfWeek(startOfMonth(monthDate));
-      const monthEnd = endOfWeek(endOfMonth(monthDate));
-      let day = monthStart;
-      while (day <= monthEnd) {
-        const events = getFilteredEventsForDate(day);
-        if (events.length && day >= today) {
-          items.push({ date: day, events });
-        }
-        day = addDays(day, 1);
-      }
-    }
-    const sorted = items.sort((a, b) => a.date.getTime() - b.date.getTime());
-    if (sorted.length === 0 && events?.length) {
-      const next = events
-        .filter(e => startOfDay(e.date) >= today)
-        .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
-      if (next) {
-        return [{
-          date: startOfDay(next.date),
-          events: events.filter(e => startOfDay(e.date).getTime() === startOfDay(next.date).getTime())
-        }];
-      }
-    }
-    return sorted;
-  }, [currentDate, monthsToShow, getFilteredEventsForDate, events]);
-
-  const updateResponsiveState = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    const width = window.innerWidth;
-    const mobile = width < 768;
-    setIsMobile(mobile);
-    const months = width >= 1536 ? 3 : width >= 1024 ? 2 : 1;
-    setMonthsToShow(months);
-    if (!hasManualViewSelection.current) {
-      setViewMode(mobile ? 'list' : 'grid');
-    }
-  }, []);
-
-  // Calculate how many months to show based on screen width; update on resize
-  useEffect(() => {
-    updateResponsiveState();
-    window.addEventListener('resize', updateResponsiveState);
-    return () => window.removeEventListener('resize', updateResponsiveState);
-  }, [updateResponsiveState]);
-
-  useEffect(() => {
-    autoSetRef.current = false;
-  }, [selectedSchool]);
-
-  useEffect(() => {
-    if (autoSetRef.current) return;
-    const today = startOfDay(new Date());
-    const next = events
-      ?.filter(e => startOfDay(e.date) >= today)
+    const upcoming = events
+      ?.filter(e => isAfter(startOfDay(e.date), today) || startOfDay(e.date).getTime() === today.getTime())
       .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
-    if (next) {
-      setCurrentDate(startOfMonth(next.date));
-      autoSetRef.current = true;
+    if (upcoming && !selectedDate) {
+      setCurrentDate(startOfMonth(upcoming.date));
+      setSelectedDate(startOfDay(upcoming.date));
     }
-  }, [events]);
+  }, [events, selectedDate]);
 
-  const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  // Get events for selected date
+  const selectedDateEvents = useMemo(() => {
+    if (!selectedDate) return [];
+    return getEventsForDate(selectedDate);
+  }, [selectedDate, getEventsForDate]);
 
-  const getEventTypeColor = (type: CalendarEvent['type']) => {
-    switch (type) {
-      case 'term':
-        return 'bg-purple-500';
-      case 'flight':
-        return 'bg-blue-500';
-      case 'transport':
-        return 'bg-green-500';
-      case 'not-travelling':
-        return 'bg-orange-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const renderEventCount = (events: CalendarEvent[]) => {
-    const count = events.length;
-    if (!count) return null;
-    return (
-      <div className="inline-flex items-center justify-center px-1.5 min-w-[18px] h-[18px] text-[11px] font-semibold text-foreground bg-muted rounded-full">
-        {count}
-      </div>
-    );
-  };
-
-  const eventTypeLabel = useMemo(() => ({
-    term: 'School Date',
-    flight: 'Flight',
-    transport: 'Transport',
-    'not-travelling': 'Not travelling'
-  }), []);
-
-  const flightDirectionLabel = (event: CalendarEvent) => {
-    if (event.type !== 'flight') return eventTypeLabel[event.type];
-    const details = event.details as { type?: 'outbound' | 'return' } | undefined;
-    return details?.type === 'outbound' ? 'From School' : 'To School';
-  };
-
-  const renderEventDetails = (events: CalendarEvent[]) => {
-    const formattedDate = events[0]?.date && isValid(events[0].date)
-      ? format(events[0].date, 'MMMM d, yyyy')
-      : 'Date to be confirmed';
-
-    return (
-      <div className="space-y-2 max-w-xs">
-        <div className="font-semibold text-xs">
-          {formattedDate}
-        </div>
-        {events.map((event, index) => {
-          const handleEventNav = () => {
-            console.log('[CompactCalendar] Event clicked:', event.title, event.type);
-            if (onEventClick) {
-              console.log('[CompactCalendar] Using onEventClick callback');
-              onEventClick(event);
-            } else {
-              const termIds = getTermIdsFromEvents([event]);
-              console.log('[CompactCalendar] termIds:', termIds);
-              openTermViaUrl(termIds, event);
-            }
-          };
-          return (
-          <button
-            key={event.id}
-            type="button"
-            className={cn(
-              'w-full text-left pb-1.5 touch-manipulation select-none',
-              index !== events.length - 1 && 'border-b',
-              'cursor-pointer rounded-sm px-1 transition-colors active:bg-accent/80'
-            )}
-            onTouchEnd={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              markTouchHandled();
-              handleEventNav();
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (touchHandledRef.current) return;
-              handleEventNav();
-            }}
-          >
-            <div className="flex items-start gap-1.5">
-              <div className={cn('w-1.5 h-1.5 rounded-full mt-1 flex-shrink-0', getEventTypeColor(event.type))} />
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-xs">{event.title}</div>
-                {event.description && (
-                  <div className="text-xs text-muted-foreground mt-0.5">{event.description}</div>
-                )}
-                <div className="mt-1 flex flex-wrap gap-1.5 items-center">
-                  <Badge variant="secondary" className="text-[10px]">
-                    {flightDirectionLabel(event)}
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px] shrink-0">
-                    {event.school === 'benenden' ? 'Benenden' : 'Wycombe'}
-                  </Badge>
-                </div>
-                {event.type === 'flight' && (
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    <div>{event.details.departure.airport} to {event.details.arrival.airport}</div>
-                  </div>
-                )}
-                {event.type === 'transport' && event.details.driverName && (
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    Driver: {event.details.driverName}
-                  </div>
-                )}
-              </div>
-            </div>
-          </button>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const getTermIdsFromEvents = (events: CalendarEvent[]) =>
-    Array.from(
-      new Set(
-        events
-          .map(event => {
-            const details = event.details as Record<string, unknown>;
-            if (event.type === 'term') return details?.id as string | undefined;
-            if (event.type === 'not-travelling') {
-              const term = details?.term as Record<string, unknown> | undefined;
-              return (term?.id as string | undefined) ?? (details?.termId as string | undefined);
-            }
-            const term = details?.term as Record<string, unknown> | undefined;
-            return (details?.termId as string | undefined) ?? (term?.id as string | undefined);
-          })
-          .filter(Boolean) as string[]
-      )
-    );
-
-  const openTermViaUrl = (termIds: string[], event?: CalendarEvent) => {
-    if (!termIds.length) return;
-
-    const firstTermId = termIds[0];
-    const params = new URLSearchParams();
-    params.set('highlight', termIds.join(','));
-    params.set('termId', firstTermId);
-    if (event?.type) {
-      params.set('open', event.type);
-    }
-
-    navigate(`/?${params.toString()}`);
-  };
-
-  const renderMonth = (monthOffset: number) => {
-    const monthDate = addMonths(currentDate, monthOffset);
-    const today = startOfDay(new Date());
-    if (isMobile && monthDate < startOfMonth(today)) {
-      return null;
-    }
-    const monthStart = startOfMonth(monthDate);
-    const monthEnd = endOfMonth(monthDate);
+  // Calendar grid data
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
     const startDate = startOfWeek(monthStart);
     const endDate = endOfWeek(monthEnd);
 
     const days = [];
     let day = startDate;
-
     while (day <= endDate) {
       days.push(day);
       day = addDays(day, 1);
     }
+    return days;
+  }, [currentDate]);
 
-    return (
-      <div key={monthOffset} className="flex-1 min-w-0">
-        <div className="text-center mb-2">
-          <h3 className="text-sm font-semibold">
-            {format(monthDate, 'MMMM yyyy')}
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
-          {/* Week Day Headers */}
-          {weekDays.map((day, i) => (
-            <div
-              key={i}
-              className="bg-muted p-1 text-center text-xs font-medium"
-            >
-              {day}
-            </div>
-          ))}
-
-          {/* Calendar Days */}
-          {days.map(day => {
-            const events = getEventsForDate(day);
-            const hasEvents = events.length > 0;
-            const isCurrentMonth = isSameMonth(day, monthDate);
-            const isCurrentDay = isToday(day);
-            const handleMobileOpen = () => {
-              if (isMobile && hasEvents) {
-                openedAtRef.current = Date.now();
-                setMobileEvents({ date: day, events });
-              }
-            };
-
-            if (isMobile) {
-              return (
-                <div
-                  key={day.toString()}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={
-                    hasEvents
-                      ? `Events on ${format(day, 'MMMM d')}`
-                      : `No events on ${format(day, 'MMMM d')}`
-                  }
-                  className={cn(
-                    'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative transition-colors touch-manipulation select-none',
-                    !isCurrentMonth && 'opacity-30',
-                    isCurrentDay && 'ring-1 ring-primary ring-inset',
-                    hasEvents && 'cursor-pointer active:bg-accent/80'
-                  )}
-                  onTouchEnd={(e) => {
-                    if (hasEvents) {
-                      e.preventDefault();
-                      markTouchHandled();
-                      handleMobileOpen();
-                    }
-                  }}
-                  onClick={() => {
-                    if (touchHandledRef.current) return;
-                    handleMobileOpen();
-                  }}
-                >
-                  <div className={cn(
-                    'text-xs text-center pointer-events-none',
-                    isCurrentDay && 'text-primary font-bold'
-                  )}>
-                    {format(day, 'd')}
-                  </div>
-                  {hasEvents && (
-                    <div className="pointer-events-none absolute top-1 right-1">
-                      {renderEventCount(events)}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
-            return (
-              <InteractiveHoverCard key={day.toString()}>
-                <InteractiveHoverCardTrigger asChild>
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    aria-label={
-                      hasEvents
-                        ? `Events on ${format(day, 'MMMM d')}`
-                        : `No events on ${format(day, 'MMMM d')}`
-                    }
-                    className={cn(
-                      'bg-background p-1 min-h-[32px] sm:min-h-[40px] relative hover:bg-accent transition-colors',
-                      !isCurrentMonth && 'opacity-30',
-                      isCurrentDay && 'ring-1 ring-primary ring-inset',
-                      hasEvents && 'cursor-pointer'
-                    )}
-                  >
-                    <div className={cn(
-                      'text-xs text-center',
-                      isCurrentDay && 'text-primary font-bold'
-                    )}>
-                      {format(day, 'd')}
-                    </div>
-                    {hasEvents && (
-                      <div className="pointer-events-none absolute top-1 right-1">
-                        {renderEventCount(events)}
-                      </div>
-                    )}
-                  </div>
-                </InteractiveHoverCardTrigger>
-                {hasEvents && (
-                  <InteractiveHoverCardContent className="w-auto" side="top">
-                    {renderEventDetails(events)}
-                  </InteractiveHoverCardContent>
-                )}
-              </InteractiveHoverCard>
-            );
-          })}
-        </div>
-      </div>
-    );
+  // Event type color
+  const getEventColor = (type: CalendarEvent['type']) => {
+    switch (type) {
+      case 'flight': return 'bg-blue-500';
+      case 'transport': return 'bg-green-500';
+      case 'not-travelling': return 'bg-orange-400';
+      default: return 'bg-purple-500';
+    }
   };
 
+  // Event icon
+  const EventIcon = ({ type }: { type: CalendarEvent['type'] }) => {
+    switch (type) {
+      case 'flight': return <Plane className="w-3.5 h-3.5" />;
+      case 'transport': return <Car className="w-3.5 h-3.5" />;
+      case 'not-travelling': return <Home className="w-3.5 h-3.5" />;
+      default: return <CalendarDays className="w-3.5 h-3.5" />;
+    }
+  };
+
+  // Handle date click
+  const handleDateClick = useCallback((date: Date) => {
+    const dayEvents = getEventsForDate(date);
+    if (dayEvents.length > 0) {
+      setSelectedDate(date);
+    }
+  }, [getEventsForDate]);
+
+  // Handle event click
+  const handleEventClick = useCallback((event: CalendarEvent) => {
+    onEventClick?.(event);
+  }, [onEventClick]);
+
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
   return (
-    <>
-      <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Upcoming Events</CardTitle>
-          <div className="flex items-center gap-2">
+    <div className="space-y-4">
+      {/* Calendar Card */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <h3 className="text-lg font-semibold">
+            {format(currentDate, 'MMMM yyyy')}
+          </h3>
+          <div className="flex items-center gap-1">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-8 w-8"
               onClick={() => setCurrentDate(subMonths(currentDate, 1))}
             >
-              <ChevronLeft className="w-3 h-3" />
+              <ChevronLeft className="w-4 h-4" />
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="h-7 text-xs"
-              onClick={() => setCurrentDate(new Date())}
+              className="h-8 text-xs font-medium"
+              onClick={() => {
+                const today = new Date();
+                setCurrentDate(today);
+                const todayEvents = getEventsForDate(today);
+                if (todayEvents.length > 0) setSelectedDate(today);
+              }}
             >
               Today
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-8 w-8"
               onClick={() => setCurrentDate(addMonths(currentDate, 1))}
             >
-              <ChevronRight className="w-3 h-3" />
+              <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
-      </CardHeader>
-        <CardContent className="pt-0">
-          {/* Legend */}
-          <div className="flex gap-3 mb-3 text-xs flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-purple-500" />
-              <span>Term Dates</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span>Flights</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span>Transport</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-orange-500" />
-              <span>Not Travelling</span>
-            </div>
-          </div>
-          {isMobile && (
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                className="h-11 gap-2"
-                onClick={() => setViewModeManual('grid')}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Grid view
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                className="h-11 gap-2"
-                onClick={() => setViewModeManual('list')}
-              >
-                <List className="h-4 w-4" />
-                List view
-              </Button>
-            </div>
-          )}
 
-          {viewMode === 'grid' && (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
-                {Array.from({ length: monthsToShow }, (_, i) => renderMonth(i)).filter(Boolean)}
+        {/* Calendar Grid */}
+        <div className="p-4">
+          {/* Weekday Headers */}
+          <div className="grid grid-cols-7 mb-2">
+            {weekDays.map(day => (
+              <div key={day} className="text-center text-xs font-medium text-muted-foreground py-1">
+                {isMobile ? day.charAt(0) : day.slice(0, 3)}
               </div>
-              {!hasAnyEvents && (
-                <EmptyState variant="calendar" compact />
-              )}
-            </>
-          )}
-
-          {viewMode === 'list' && (
-            <div className="space-y-3">
-              {flatEvents.length === 0 && (
-                <EmptyState variant="calendar" compact />
-              )}
-              {flatEvents.map(({ date, events }) => (
-                <div key={date.toISOString()} className="space-y-1">
-                  <div className="sticky top-0 z-10 bg-card/90 backdrop-blur px-1 py-1 rounded">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-semibold">
-                        {isValid(date) ? format(date, 'EEE, MMM d') : 'Date'}
-                      </div>
-                      {renderEventCount(events)}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="w-full text-left rounded-lg border border-border/60 bg-card/60 p-3 transition-colors touch-manipulation select-none active:bg-accent/80"
-                    onTouchEnd={(e) => {
-                      e.preventDefault();
-                      markTouchHandled();
-                      openedAtRef.current = Date.now();
-                      setMobileEvents({ date, events });
-                    }}
-                    onClick={() => {
-                      if (touchHandledRef.current) return;
-                      openedAtRef.current = Date.now();
-                      setMobileEvents({ date, events });
-                    }}
-                  >
-                    <div className="mt-2 space-y-1">
-                      {events.map(event => (
-                        <div key={event.id} className="flex items-center gap-2 text-xs">
-                          <div className={cn('w-1.5 h-1.5 rounded-full', getEventTypeColor(event.type))} />
-                          <span className="font-medium truncate">{event.title}</span>
-                          <Badge variant="outline" className="text-[10px]">
-                            {event.school === 'benenden' ? 'Benenden' : 'Wycombe'}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      {isMobile && mobileEvents && (
-      <Sheet
-        open={!!mobileEvents}
-        onOpenChange={(open) => {
-          if (!open) {
-            const now = Date.now();
-            if (openedAtRef.current && now - openedAtRef.current < 200) return;
-            setMobileEvents(null);
-          }
-        }}
-      >
-        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
-          <div className="mx-auto h-1 w-12 rounded-full bg-muted-foreground/40 mb-3" />
-          <SheetHeader className="flex flex-row items-center justify-between">
-            <SheetTitle>
-              {mobileEvents.date && isValid(mobileEvents.date) ? format(mobileEvents.date, 'MMMM d, yyyy') : 'Events'}
-            </SheetTitle>
-            <Button variant="ghost" size="sm" onClick={() => setMobileEvents(null)}>
-              Close
-            </Button>
-          </SheetHeader>
-          <div className="mt-3">
-            {renderEventDetails(mobileEvents.events)}
+            ))}
           </div>
-        </SheetContent>
-        </Sheet>
+
+          {/* Days */}
+          <div className="grid grid-cols-7 gap-1">
+            {calendarDays.map((day, idx) => {
+              const dayEvents = getEventsForDate(day);
+              const hasEvents = dayEvents.length > 0;
+              const isCurrentMonth = isSameMonth(day, currentDate);
+              const isCurrentDay = isToday(day);
+              const isSelected = selectedDate && startOfDay(day).getTime() === startOfDay(selectedDate).getTime();
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleDateClick(day)}
+                  disabled={!hasEvents}
+                  className={cn(
+                    'relative aspect-square flex flex-col items-center justify-center rounded-lg transition-all',
+                    'hover:bg-accent/50',
+                    !isCurrentMonth && 'opacity-25',
+                    isCurrentDay && 'bg-primary/10 font-semibold',
+                    isSelected && 'bg-primary text-primary-foreground hover:bg-primary/90',
+                    hasEvents && !isSelected && 'cursor-pointer',
+                    !hasEvents && 'cursor-default'
+                  )}
+                >
+                  <span className={cn(
+                    'text-sm',
+                    isCurrentDay && !isSelected && 'text-primary',
+                    isSelected && 'text-primary-foreground'
+                  )}>
+                    {format(day, 'd')}
+                  </span>
+                  {hasEvents && (
+                    <div className="flex gap-0.5 mt-0.5">
+                      {dayEvents.slice(0, 3).map((event, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            'w-1.5 h-1.5 rounded-full',
+                            getEventColor(event.type),
+                            isSelected && 'bg-primary-foreground/70'
+                          )}
+                        />
+                      ))}
+                      {dayEvents.length > 3 && (
+                        <span className={cn(
+                          'text-[8px] leading-none',
+                          isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                        )}>
+                          +{dayEvents.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Selected Date Events */}
+      {selectedDate && selectedDateEvents.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-medium">
+              {isValid(selectedDate) && format(selectedDate, 'EEEE, MMMM d')}
+            </h4>
+            <span className="text-xs text-muted-foreground">
+              {selectedDateEvents.length} event{selectedDateEvents.length > 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {selectedDateEvents.map((event) => (
+              <button
+                key={event.id}
+                onClick={() => handleEventClick(event)}
+                className="w-full flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
+              >
+                <div className={cn(
+                  'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-white',
+                  getEventColor(event.type)
+                )}>
+                  <EventIcon type={event.type} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{event.title}</p>
+                  {event.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{event.description}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={cn(
+                      'text-[10px] px-1.5 py-0.5 rounded-full font-medium',
+                      event.school === 'benenden' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'bg-green-100 text-green-700'
+                    )}>
+                      {event.school === 'benenden' ? 'Ben' : 'WA'}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
-    </>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-4 justify-center text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-purple-500" />
+          <span>School</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-blue-500" />
+          <span>Flight</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-green-500" />
+          <span>Transport</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-orange-400" />
+          <span>Staying</span>
+        </div>
+      </div>
+    </div>
   );
 }
+
+export default CompactCalendar;
