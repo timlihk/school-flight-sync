@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { format, formatDistanceToNow, isAfter, differenceInDays, differenceInHours, differenceInMinutes } from "date-fns";
+import { format, formatDistanceToNow, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,16 +7,12 @@ import {
   Plane,
   Car,
   Clock,
-  MapPin,
   Calendar,
-  ArrowRight,
   AlertCircle,
   CheckCircle2,
   User,
   Phone,
   Share2,
-  WifiOff,
-  School,
 } from "lucide-react";
 import type { NextTravelEntry } from "@/types/next-travel";
 import type { Term } from "@/types/school";
@@ -36,436 +32,225 @@ export function NextTravelHero({
   entry,
   scope,
   onScopeChange,
-  isOnline,
   earliestTerm,
   onAddFlight,
   onAddTransport,
   onShare,
 }: NextTravelHeroProps) {
-  // Calculate countdown from entry date
-  const countdown = useMemo(() => {
+  const daysUntil = useMemo(() => {
     if (!entry) return null;
-    const now = new Date();
-    const targetDate = entry.date;
-    
-    const days = differenceInDays(targetDate, now);
-    const hours = differenceInHours(targetDate, now) % 24;
-    const minutes = differenceInMinutes(targetDate, now) % 60;
-    
-    if (days > 0) {
-      return { value: days, unit: days === 1 ? "day" : "days", urgent: days <= 3 };
-    } else if (hours > 0) {
-      return { value: hours, unit: hours === 1 ? "hour" : "hours", urgent: true };
-    } else {
-      return { value: minutes, unit: minutes === 1 ? "minute" : "minutes", urgent: true };
-    }
+    return differenceInDays(entry.date, new Date());
   }, [entry]);
 
-  const schoolName = scope === "benenden" ? "Benenden" : "Wycombe Abbey";
-  const schoolColor = scope === "benenden" ? "benenden" : "wycombe";
+  const schoolName = scope === "benenden" ? "Benenden" : "Wycombe";
 
-  // Empty state when no entry
+  // Empty state
   if (!entry) {
     return (
-      <div
-        className={cn(
-          "relative overflow-hidden rounded-3xl",
-          "bg-gradient-to-br from-card via-card to-muted/50",
-          "border-2 border-dashed border-border",
-          "p-8 text-center"
-        )}
-      >
-        {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div
+      <div className="rounded-2xl border border-dashed border-border bg-card p-6 text-center">
+        <div className="flex justify-center gap-2 mb-4">
+          <Button
+            variant={scope === "benenden" ? "default" : "outline"}
+            size="sm"
+            onClick={() => onScopeChange("benenden")}
             className={cn(
-              "absolute -top-20 -right-20 w-64 h-64 rounded-full blur-3xl opacity-10",
-              scope === "benenden" ? "bg-benenden" : "bg-wycombe"
+              "rounded-full",
+              scope === "benenden" && "bg-benenden hover:bg-benenden/90"
             )}
-          />
+          >
+            Benenden
+          </Button>
+          <Button
+            variant={scope === "wycombe" ? "default" : "outline"}
+            size="sm"
+            onClick={() => onScopeChange("wycombe")}
+            className={cn(
+              "rounded-full",
+              scope === "wycombe" && "bg-wycombe hover:bg-wycombe/90"
+            )}
+          >
+            Wycombe
+          </Button>
         </div>
-
-        <div className="relative">
-          {/* School Selector */}
-          <div className="flex justify-center gap-2 mb-6">
-            <Button
-              variant={scope === "benenden" ? "default" : "outline"}
-              size="sm"
-              onClick={() => onScopeChange("benenden")}
-              className={cn(
-                "rounded-full",
-                scope === "benenden" && "bg-benenden hover:bg-benenden/90"
-              )}
-            >
-              Benenden
-            </Button>
-            <Button
-              variant={scope === "wycombe" ? "default" : "outline"}
-              size="sm"
-              onClick={() => onScopeChange("wycombe")}
-              className={cn(
-                "rounded-full",
-                scope === "wycombe" && "bg-wycombe hover:bg-wycombe/90"
-              )}
-            >
-              Wycombe
-            </Button>
-          </div>
-
-          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-            <Calendar className="w-10 h-10 text-muted-foreground" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">No Upcoming Travel</h2>
-          <p className="text-muted-foreground mb-4 max-w-xs mx-auto">
-            Add your first flight to start tracking your journey
-          </p>
-          {earliestTerm && (
-            <Button onClick={() => onAddFlight(earliestTerm.id)}>
-              <Plane className="w-4 h-4 mr-2" />
-              Add Flight
-            </Button>
-          )}
-        </div>
+        <Calendar className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <h2 className="text-lg font-semibold mb-1">No Upcoming Travel</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Add a flight to get started
+        </p>
+        {earliestTerm && (
+          <Button size="sm" onClick={() => onAddFlight(earliestTerm.id)}>
+            <Plane className="w-4 h-4 mr-2" />
+            Add Flight
+          </Button>
+        )}
       </div>
     );
   }
 
   const isFlight = entry.kind === "flight";
   const needsTransport = entry.status === "needs-transport";
-  const isStaying = entry.status === "staying";
+  const hasTransport = entry.meta?.transport?.status === "booked";
 
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-3xl",
-        "bg-gradient-to-br from-card via-card to-muted/30",
-        "border-2 transition-all duration-500",
-        entry.status === "booked" || entry.status === "complete"
-          ? "border-journey-complete/30"
-          : needsTransport
-          ? "border-journey-pending/30"
-          : "border-border",
-        "shadow-elevated-lg"
-      )}
-    >
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className={cn(
-            "absolute -top-20 -right-20 w-64 h-64 rounded-full blur-3xl opacity-20",
-            scope === "benenden" ? "bg-benenden" : "bg-wycombe"
+    <div className="space-y-3">
+      {/* Header: School + Date + Countdown */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={scope === "benenden" ? "default" : "outline"}
+            size="sm"
+            onClick={() => onScopeChange("benenden")}
+            className={cn(
+              "rounded-full h-7 text-xs",
+              scope === "benenden" && "bg-benenden hover:bg-benenden/90"
+            )}
+          >
+            Ben
+          </Button>
+          <Button
+            variant={scope === "wycombe" ? "default" : "outline"}
+            size="sm"
+            onClick={() => onScopeChange("wycombe")}
+            className={cn(
+              "rounded-full h-7 text-xs",
+              scope === "wycombe" && "bg-wycombe hover:bg-wycombe/90"
+            )}
+          >
+            WA
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          {daysUntil !== null && (
+            <span className={cn(
+              "text-sm font-medium",
+              daysUntil <= 3 ? "text-journey-pending" : "text-muted-foreground"
+            )}>
+              {daysUntil === 0 ? "Today" : `${daysUntil} day${daysUntil > 1 ? 's' : ''}`}
+            </span>
           )}
-        />
-        <div
-          className={cn(
-            "absolute -bottom-20 -left-20 w-48 h-48 rounded-full blur-3xl opacity-10",
-            isFlight ? "bg-transport-flight" : "bg-transport-ground"
-          )}
-        />
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onShare}>
+            <Share2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="relative p-6 lg:p-8">
-        {/* Header with School Selector */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "w-12 h-12 rounded-2xl flex items-center justify-center",
-                "bg-gradient-to-br",
-                scope === "benenden"
-                  ? "from-benenden/20 to-benenden/5"
-                  : "from-wycombe/20 to-wycombe/5"
-              )}
-            >
-              {isStaying ? (
-                <School className={cn("w-6 h-6", scope === "benenden" ? "text-benenden" : "text-wycombe")} />
-              ) : (
-                <Plane className={cn("w-6 h-6", scope === "benenden" ? "text-benenden" : "text-wycombe")} />
-              )}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold">
-                  {isStaying ? "Staying at School" : entry.title}
-                </h2>
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    "text-[10px] font-medium",
-                    scope === "benenden"
-                      ? "bg-benenden-subtle text-benenden"
-                      : "bg-wycombe-subtle text-wycombe"
-                  )}
-                >
-                  {schoolName}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">{entry.detail}</p>
-            </div>
+      {/* Main Card */}
+      <div className={cn(
+        "rounded-2xl border bg-card p-4",
+        entry.status === "booked" ? "border-journey-complete/30" :
+        needsTransport ? "border-journey-pending/30" : "border-border"
+      )}>
+        {/* Date & Status */}
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <p className="text-2xl font-bold">{format(entry.date, "MMM d")}</p>
+            <p className="text-sm text-muted-foreground">
+              {format(entry.date, "EEEE")} · {formatDistanceToNow(entry.date, { addSuffix: true })}
+            </p>
           </div>
-
-          <div className="flex items-center gap-2">
-            {/* School Toggle */}
-            <div className="flex rounded-lg border border-border p-0.5 bg-background">
-              <button
-                onClick={() => onScopeChange("benenden")}
-                className={cn(
-                  "px-3 py-1 rounded-md text-xs font-medium transition-all",
-                  scope === "benenden"
-                    ? "bg-benenden text-white"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Ben
-              </button>
-              <button
-                onClick={() => onScopeChange("wycombe")}
-                className={cn(
-                  "px-3 py-1 rounded-md text-xs font-medium transition-all",
-                  scope === "wycombe"
-                    ? "bg-wycombe text-white"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                WA
-              </button>
-            </div>
-
-            {/* Share Button */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onShare}
-              className="rounded-xl"
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Countdown & Date Row */}
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          {countdown && (
-            <div
-              className={cn(
-                "flex flex-col items-center px-5 py-3 rounded-2xl",
-                "bg-gradient-to-br",
-                countdown.urgent
-                  ? "from-journey-pending/10 to-journey-pending/5"
-                  : "from-journey-complete/10 to-journey-complete/5"
-              )}
-            >
-              <span
-                className={cn(
-                  "text-4xl font-bold",
-                  countdown.urgent ? "text-journey-pending" : "text-journey-complete"
-                )}
-              >
-                {countdown.value}
-              </span>
-              <span className="text-xs text-muted-foreground uppercase tracking-wide">
-                {countdown.unit}
-              </span>
-            </div>
-          )}
-
-          <div className="flex-1 min-w-[200px]">
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-lg">
-                    {format(entry.date, "EEEE, MMMM d")}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDistanceToNow(entry.date, { addSuffix: true })}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Status Badge */}
-        <div className="flex items-center gap-2 mb-4">
           <Badge
             variant="outline"
             className={cn(
-              "text-sm font-medium px-3 py-1",
+              "text-xs",
               entry.status === "booked" && "border-journey-complete text-journey-complete",
-              entry.status === "needs-transport" && "border-journey-pending text-journey-pending",
-              entry.status === "needs-flight" && "border-journey-missing text-journey-missing",
-              entry.status === "staying" && "border-primary text-primary",
-              entry.status === "unplanned" && "border-muted-foreground text-muted-foreground"
+              needsTransport && "border-journey-pending text-journey-pending",
+              entry.status === "needs-flight" && "border-journey-missing text-journey-missing"
             )}
           >
-            {entry.status === "booked" && <CheckCircle2 className="w-4 h-4 mr-1.5" />}
-            {entry.status === "needs-transport" && <Car className="w-4 h-4 mr-1.5" />}
-            {entry.status === "needs-flight" && <Plane className="w-4 h-4 mr-1.5" />}
-            {entry.status === "staying" && <School className="w-4 h-4 mr-1.5" />}
-            {entry.status === "unplanned" && <AlertCircle className="w-4 h-4 mr-1.5" />}
-            {entry.status === "booked" && "Fully Booked"}
-            {entry.status === "needs-transport" && "Needs Transport"}
-            {entry.status === "needs-flight" && "Needs Flight"}
-            {entry.status === "staying" && "Staying at School"}
-            {entry.status === "unplanned" && "Not Planned"}
+            {entry.status === "booked" && <CheckCircle2 className="w-3 h-3 mr-1" />}
+            {needsTransport && <Car className="w-3 h-3 mr-1" />}
+            {entry.status === "needs-flight" && <Plane className="w-3 h-3 mr-1" />}
+            {entry.status === "booked" ? "Ready" : needsTransport ? "Need Transport" : "Need Flight"}
           </Badge>
-
-          {!isOnline && (
-            <Badge variant="secondary" className="gap-1.5 text-muted-foreground">
-              <WifiOff className="w-3 h-3" />
-              Offline
-            </Badge>
-          )}
         </div>
 
-        {/* Flight Details (if flight entry) */}
+        {/* Flight Info */}
         {isFlight && entry.meta && (
-          <div className="glass-card p-5 mb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-transport-flight-subtle flex items-center justify-center">
-                  <Plane className="w-7 h-7 text-transport-flight" />
-                </div>
-                <div>
-                  <p className="font-bold text-lg">{entry.title}</p>
-                  <p className="text-sm text-muted-foreground">{entry.detail}</p>
-                </div>
-              </div>
-
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Plane className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm truncate">{entry.title}</p>
+              <p className="text-xs text-muted-foreground truncate">{entry.detail}</p>
               {entry.meta.timeLabel && (
-                <div className="sm:ml-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10">
-                  <Clock className="w-5 h-5 text-primary" />
-                  <span className="font-bold text-primary">{entry.meta.timeLabel}</span>
-                </div>
+                <p className="text-xs font-medium text-primary mt-0.5">
+                  {entry.meta.timeLabel}
+                </p>
               )}
             </div>
-
             {entry.meta.confirmation && (
-              <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap gap-2">
-                <Badge variant="secondary" className="gap-1.5">
-                  <span className="text-muted-foreground">Confirmation:</span>
-                  <span className="font-mono">{entry.meta.confirmation}</span>
-                </Badge>
-              </div>
-            )}
-            
-            {entry.meta.notes && (
-              <div className="mt-3 text-sm text-muted-foreground bg-muted/30 rounded-lg p-3">
-                <span className="font-medium text-foreground">Notes:</span>{' '}
-                {entry.meta.notes}
-              </div>
+              <Badge variant="secondary" className="text-[10px] shrink-0">
+                {entry.meta.confirmation}
+              </Badge>
             )}
           </div>
         )}
 
-        {/* Transport Section */}
-        {isFlight && entry.meta?.transport && (
-          <div className="mt-4">
-            {entry.meta.transport.status === "booked" ? (
-              <div
-                className={cn(
-                  "rounded-2xl p-4 border-l-4",
-                  "bg-transport-ground-subtle border-transport-ground"
-                )}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-transport-ground text-white flex items-center justify-center">
-                      <Car className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">{entry.meta.transport.label}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-journey-complete" />
-                        <span>Confirmed</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
+        {/* Transport Info */}
+        {isFlight && (
+          <>
+            {hasTransport && entry.meta?.transport ? (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-100">
+                <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
+                  <Car className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{entry.meta.transport.label}</p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                     {entry.meta.transport.timeLabel && (
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-background">
-                        <Clock className="w-4 h-4 text-transport-ground" />
-                        <span className="font-medium">
-                          Pickup: {entry.meta.transport.timeLabel}
-                        </span>
-                      </div>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {entry.meta.transport.timeLabel}
+                      </span>
                     )}
-
                     {entry.meta.transport.driverName && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <User className="w-4 h-4" />
-                        <span>{entry.meta.transport.driverName}</span>
-                      </div>
-                    )}
-
-                    {entry.meta.transport.phoneNumber && (
-                      <a
-                        href={`tel:${entry.meta.transport.phoneNumber}`}
-                        className="flex items-center gap-2 text-sm text-primary hover:underline"
-                      >
-                        <Phone className="w-4 h-4" />
-                        <span>{entry.meta.transport.phoneNumber}</span>
-                      </a>
+                      <span className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {entry.meta.transport.driverName}
+                      </span>
                     )}
                   </div>
                 </div>
-
-                {entry.meta.transport.notes && (
-                  <p className="mt-3 text-sm text-muted-foreground bg-background/50 rounded-lg p-3">
-                    <span className="font-medium">Note:</span>{" "}
-                    {entry.meta.transport.notes}
-                  </p>
+                {entry.meta.transport.phoneNumber && (
+                  <a
+                    href={`tel:${entry.meta.transport.phoneNumber}`}
+                    className="shrink-0 p-2 rounded-lg bg-white hover:bg-green-100 transition-colors"
+                  >
+                    <Phone className="w-4 h-4 text-green-600" />
+                  </a>
                 )}
               </div>
             ) : needsTransport ? (
-              <div
-                className={cn(
-                  "rounded-2xl p-4 border-l-4",
-                  "bg-journey-missing/5 border-journey-missing"
-                )}
+              <Button 
+                size="sm" 
+                className="w-full bg-journey-pending hover:bg-journey-pending/90"
+                onClick={() => entry.termId && onAddTransport(entry.termId)}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-journey-missing/10 flex items-center justify-center">
-                      <AlertCircle className="w-5 h-5 text-journey-missing" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-journey-missing">
-                        Transport Not Booked
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Book transport to reach your flight on time
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => entry.termId && onAddTransport(entry.termId)}
-                    className="sm:ml-auto bg-journey-missing hover:bg-journey-missing/90"
-                  >
-                    <Car className="w-4 h-4 mr-2" />
-                    Book Transport
-                  </Button>
-                </div>
-              </div>
+                <Car className="w-4 h-4 mr-2" />
+                Book Transport
+              </Button>
             ) : null}
-          </div>
+          </>
         )}
 
-        {/* Action Buttons */}
-        {(entry.status === "needs-flight" || entry.status === "unplanned") && entry.termId && (
-          <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            <Button onClick={() => onAddFlight(entry.termId!)} className="flex-1">
-              <Plane className="w-4 h-4 mr-2" />
-              Add Flight
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
+        {/* Notes */}
+        {entry.meta?.notes && (
+          <p className="mt-3 text-xs text-muted-foreground bg-muted/30 rounded-lg p-2">
+            <span className="font-medium">Note:</span> {entry.meta.notes}
+          </p>
         )}
       </div>
+
+      {/* Add Flight Button (if needed) */}
+      {(entry.status === "needs-flight" || entry.status === "unplanned") && entry.termId && (
+        <Button onClick={() => onAddFlight(entry.termId)} className="w-full">
+          <Plane className="w-4 h-4 mr-2" />
+          Add Flight
+        </Button>
+      )}
     </div>
   );
 }
+
+export default NextTravelHero;
