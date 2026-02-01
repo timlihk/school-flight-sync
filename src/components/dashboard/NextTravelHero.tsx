@@ -351,6 +351,13 @@ export function NextTravelHero({
                 </Badge>
               </div>
             )}
+            
+            {entry.meta.notes && (
+              <div className="mt-3 text-sm text-muted-foreground bg-muted/30 rounded-lg p-3">
+                <span className="font-medium text-foreground">Notes:</span>{' '}
+                {entry.meta.notes}
+              </div>
+            )}
           </div>
         )}
 
