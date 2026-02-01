@@ -8,3 +8,6 @@
 
 [environments.production.variables]
   NODE_ENV = "production"
+
+[build.args]
+  BUILD_TIMESTAMP = "2026-02-01-0908"

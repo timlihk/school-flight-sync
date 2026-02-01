@@ -6,7 +6,7 @@ RUN npm install --include=dev --no-fund --no-audit
 FROM deps AS build
 WORKDIR /app
 # Cache-busting arg to force rebuild when needed
-ARG BUILD_TIMESTAMP
+ARG BUILD_TIMESTAMP=unknown
 COPY . .
 # Build args for Vite - these are used at build time only
 ARG VITE_API_URL
