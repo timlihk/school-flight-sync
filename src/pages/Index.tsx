@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense, lazy, memo } from "react";
-import { Plane, Calendar, Share2, Plus, List, LayoutGrid, LogOut, BusFront } from "lucide-react";
+import { Plane, Calendar, Share2, Plus, LogOut, BusFront } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -14,12 +14,12 @@ import { TermCard } from "@/components/ui/term-card";
 import { TermDetailsDialog } from "@/components/ui/term-details-dialog";
 import { SchoolHeader } from "@/components/school-header";
 import { CompactCalendar } from "@/components/CompactCalendar";
-import TripTimeline from "@/components/ui/trip-timeline";
+
 
 const FlightDialog = lazy(() => import("@/components/ui/flight-dialog"));
 const TransportDialog = lazy(() => import("@/components/ui/transport-dialog"));
 const ExportDialog = lazy(() => import("@/components/ui/export-dialog"));
-import ToDoDialog from "@/components/ui/todo-dialog";
+
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { mockTerms } from "@/data/mock-terms";
 import { useFlights } from "@/hooks/use-flights";
@@ -37,7 +37,7 @@ import { TodayTab } from "@/components/dashboard/tabs/TodayTab";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { NextTravelEntry } from "@/types/next-travel";
 
-const NAV_TABS: MainNavTab[] = ['today', 'trips', 'calendar', 'settings'];
+const NAV_TABS: MainNavTab[] = ['today', 'calendar', 'settings'];
 // Build: 2026-02-01-0945
 
 // Extracted SchoolPills component to avoid TDZ
@@ -81,7 +81,7 @@ export default function Index() {
   const [heroScope, setHeroScope] = useState<'benenden' | 'wycombe'>('benenden');
   const [activeTab, setActiveTab] = useState<MainNavTab>('today');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [tripsView, setTripsView] = useState<'timeline' | 'cards'>('timeline');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'booked' | 'needs' | 'staying'>('all');
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -101,11 +101,9 @@ export default function Index() {
 
   const fabLabel = activeTab === 'today'
     ? 'Add flight'
-    : activeTab === 'trips'
-      ? 'Add transport'
-      : activeTab === 'calendar'
-        ? 'Add travel'
-        : 'Share';
+    : activeTab === 'calendar'
+      ? 'Add travel'
+      : 'Share';
 
   const triggerHaptic = useCallback((type: 'select' | 'success' | 'warning' = 'select') => {
     if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return;
@@ -772,13 +770,6 @@ export default function Index() {
           toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
         }
         break;
-      case 'trips':
-        if (nextAvailableTerm) {
-          handleAddTransport(nextAvailableTerm.id);
-        } else {
-          toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
-        }
-        break;
       case 'calendar':
         setAddSheetOpen(true);
         break;
@@ -787,7 +778,7 @@ export default function Index() {
         setShareDialogOpen(true);
         break;
     }
-  }, [activeTab, nextAvailableTerm, selectedSchool, triggerHaptic, toast, handleAddFlight, handleAddTransport]);
+  }, [activeTab, nextAvailableTerm, selectedSchool, triggerHaptic, toast, handleAddFlight]);
 
   const handleHeroShare = useCallback(() => {
     setShareScope(heroScope);
@@ -837,174 +828,18 @@ export default function Index() {
             onShareHero={handleHeroShare}
           />
         );
-      case 'trips':
-        return (
-          <div className="px-4 py-5 md:px-6 pb-28 lg:pb-10 space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase text-muted-foreground">Trips</p>
-                <h2 className="text-xl font-semibold">{tripsView === 'timeline' ? 'Timeline' : 'By term'}</h2>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex rounded-lg border border-border p-0.5">
-                  <Button
-                    variant={tripsView === 'timeline' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="h-7 px-2"
-                    onClick={() => setTripsView('timeline')}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={tripsView === 'cards' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="h-7 px-2"
-                    onClick={() => setTripsView('cards')}
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </Button>
-                </div>
-                <ToDoDialog
-                  terms={filteredTerms}
-                  flights={flights}
-                  transport={transport}
-                  notTravelling={notTravelling}
-                  onAddFlight={handleAddFlight}
-                  onAddTransport={handleAddTransport}
-                  onShowTerm={handleShowTerm}
-                />
-              </div>
-            </div>
-
-            <SchoolPillsComponent selectedSchool={selectedSchool} onSelect={handleSchoolSelect} />
-
-            {tripsView === 'timeline' ? (
-              <TripTimeline
-                terms={filteredTerms}
-                flights={flights}
-                transport={transport}
-                onFlightClick={handleViewFlights}
-                onTransportClick={handleViewTransport}
-                onTermClick={handleShowTerm}
-                onAddFlight={() => earliestTerm && handleAddFlight(earliestTerm.id)}
-                onAddTransport={() => earliestTerm && handleAddTransport(earliestTerm.id)}
-                selectedSchool={selectedSchool}
-              />
-            ) : (
-              <>
-
-            <div className={`grid ${selectedSchool === 'both' ? 'lg:grid-cols-2' : 'lg:grid-cols-1 max-w-4xl'} gap-6`}>
-              {/* Benenden School */}
-              {shouldShowBenenden && (
-                <div className="space-y-3">
-                  <SchoolHeader 
-                    schoolName="Benenden School"
-                    variant="benenden"
-                    onAcademicYearClick={() => handleShowScheduleForSchool('benenden')}
-                  />
-                  
-                  <div className="space-y-4">
-                    {benendenTerms.length === 0 && (
-                      <div className="rounded-lg border border-dashed border-border/50 bg-muted/30 p-3 text-sm text-muted-foreground">
-                        No future terms left for Benenden.
-                      </div>
-                    )}
-                    {benendenTerms.map((term) => {
-                      if (!termMatchesFilters(term)) return null;
-                      const pendingCount = 0;
-                      return (
-                        <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
-                          <TermCard
-                            term={term}
-                            flights={flights.filter(f => f.termId === term.id)}
-                            transport={getTransportForTerm(term.id)}
-                            onAddFlight={handleAddFlight}
-                            onViewFlights={handleViewFlights}
-                            onAddTransport={handleAddTransport}
-                            onViewTransport={handleViewTransport}
-                            onSetNotTravelling={handleSetNotTravelling}
-                            onClearNotTravelling={handleClearNotTravelling}
-                            notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
-                            className="h-full"
-                            isExpanded={expandedCards.has(term.id)}
-                            onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
-                            onUpdateFlightStatus={updateFlightStatus}
-                            isUpdatingFlightStatus={isUpdatingFlightStatus}
-                            highlighted={highlightedTerms.has(term.id)}
-                            isMobile={isMobile}
-                            pendingCount={pendingCount}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Wycombe School */}
-              {shouldShowWycombe && (
-                <div className="space-y-3">
-                  <SchoolHeader 
-                    schoolName="Wycombe School"
-                    variant="wycombe"
-                    onAcademicYearClick={() => handleShowScheduleForSchool('wycombe')}
-                  />
-                  
-                  <div className="space-y-4">
-                    {wycombeTerms.length === 0 && (
-                      <div className="rounded-lg border border-dashed border-border/50 bg-muted/30 p-3 text-sm text-muted-foreground">
-                        No future terms left for Wycombe.
-                      </div>
-                    )}
-                    {wycombeTerms.map((term) => {
-                      if (!termMatchesFilters(term)) return null;
-                      const pendingCount = 0;
-                      return (
-                        <div key={term.id} ref={(el) => { termRefs.current[term.id] = el; }}>
-                          <TermCard
-                            term={term}
-                            flights={flights.filter(f => f.termId === term.id)}
-                            transport={getTransportForTerm(term.id)}
-                            onAddFlight={handleAddFlight}
-                            onViewFlights={handleViewFlights}
-                            onAddTransport={handleAddTransport}
-                            onViewTransport={handleViewTransport}
-                            onSetNotTravelling={handleSetNotTravelling}
-                            onClearNotTravelling={handleClearNotTravelling}
-                            notTravellingStatus={notTravelling.find(nt => nt.termId === term.id)}
-                            className="h-full"
-                            isExpanded={expandedCards.has(term.id)}
-                            onExpandedChange={(expanded) => handleExpandedChange(term.id, expanded)}
-                            onUpdateFlightStatus={updateFlightStatus}
-                            isUpdatingFlightStatus={isUpdatingFlightStatus}
-                            highlighted={highlightedTerms.has(term.id)}
-                            isMobile={isMobile}
-                            pendingCount={pendingCount}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-              </>
-            )}
-          </div>
-        );
       case 'calendar':
         return (
-          <div className="px-4 py-5 md:px-6 pb-28 lg:pb-10 space-y-4">
+          <div className="px-4 py-5 md:px-6 pb-28 lg:pb-10 space-y-5">
+            {/* Header with month indicator */}
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase text-muted-foreground">Calendar</p>
-                <h2 className="text-xl font-semibold">Tap a date to manage</h2>
+              <h2 className="text-xl font-semibold">Calendar</h2>
+              <div className="flex items-center gap-2">
+                <SchoolPillsComponent selectedSchool={selectedSchool} onSelect={handleSchoolSelect} />
               </div>
-              <Button variant="outline" size="sm" onClick={() => handleNavSelect('today')}>
-                Today
-              </Button>
             </div>
-            <SchoolPillsComponent selectedSchool={selectedSchool} onSelect={handleSchoolSelect} />
+            
+            {/* Calendar */}
             <CompactCalendar
               selectedSchool={selectedSchool as 'benenden' | 'wycombe' | 'both'}
               onEventClick={handleCalendarEventClick}
