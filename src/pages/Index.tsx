@@ -48,19 +48,56 @@ interface SchoolPillsProps {
 }
 
 const SchoolPillsComponent = memo(function SchoolPillsComponent({ selectedSchool, onSelect }: SchoolPillsProps) {
+  // Check which schools are selected
+  const isBenendenSelected = selectedSchool === 'benenden' || selectedSchool === 'both';
+  const isWycombeSelected = selectedSchool === 'wycombe' || selectedSchool === 'both';
+
+  // Toggle logic: clicking a selected school deselects it (unless it's the only one selected)
+  const handleToggle = (school: 'benenden' | 'wycombe') => {
+    if (school === 'benenden') {
+      if (isBenendenSelected && isWycombeSelected) {
+        // Both selected, clicking Benenden -> only Wycombe
+        onSelect('wycombe');
+      } else if (isBenendenSelected && !isWycombeSelected) {
+        // Only Benenden selected, clicking it -> switch to Wycombe (can't have none)
+        onSelect('wycombe');
+      } else {
+        // Wycombe only selected, clicking Benenden -> both
+        onSelect('both');
+      }
+    } else {
+      // school === 'wycombe'
+      if (isWycombeSelected && isBenendenSelected) {
+        // Both selected, clicking Wycombe -> only Benenden
+        onSelect('benenden');
+      } else if (isWycombeSelected && !isBenendenSelected) {
+        // Only Wycombe selected, clicking it -> switch to Benenden (can't have none)
+        onSelect('benenden');
+      } else {
+        // Benenden only selected, clicking Wycombe -> both
+        onSelect('both');
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {(['both', 'benenden', 'wycombe'] as const).map(scope => (
-        <Button
-          key={scope}
-          size="sm"
-          variant={selectedSchool === scope ? 'default' : 'outline'}
-          className="rounded-full px-4"
-          onClick={() => onSelect(scope)}
-        >
-          {scope === 'both' ? 'Both schools' : scope === 'benenden' ? 'Benenden' : 'Wycombe'}
-        </Button>
-      ))}
+    <div className="flex gap-2">
+      <Button
+        size="sm"
+        variant={isBenendenSelected ? 'default' : 'outline'}
+        className="rounded-full px-4"
+        onClick={() => handleToggle('benenden')}
+      >
+        Benenden
+      </Button>
+      <Button
+        size="sm"
+        variant={isWycombeSelected ? 'default' : 'outline'}
+        className="rounded-full px-4"
+        onClick={() => handleToggle('wycombe')}
+      >
+        Wycombe
+      </Button>
     </div>
   );
 });
