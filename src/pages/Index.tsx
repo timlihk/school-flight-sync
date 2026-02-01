@@ -96,32 +96,7 @@ export default function Index() {
     }
   }, []);
 
-  const handleFab = () => {
-    triggerHaptic();
-    switch (activeTab) {
-      case 'today':
-        if (nextAvailableTerm) {
-          handleAddFlight(nextAvailableTerm.id);
-        } else {
-          toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
-        }
-        break;
-      case 'trips':
-        if (nextAvailableTerm) {
-          handleAddTransport(nextAvailableTerm.id);
-        } else {
-          toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
-        }
-        break;
-      case 'calendar':
-        setAddSheetOpen(true);
-        break;
-      case 'settings':
-        setShareScope(selectedSchool);
-        setShareDialogOpen(true);
-        break;
-    }
-  };
+  // handleFab is defined later after nextAvailableTerm
 
   const scrollToTop = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -760,6 +735,35 @@ export default function Index() {
     const now = new Date();
     return filteredTerms.find(term => term.startDate.getTime() >= now.getTime()) ?? earliestTerm ?? null;
   }, [filteredTerms, earliestTerm]);
+
+  // Define handleFab after nextAvailableTerm to avoid TDZ
+  const handleFab = useCallback(() => {
+    triggerHaptic();
+    switch (activeTab) {
+      case 'today':
+        if (nextAvailableTerm) {
+          handleAddFlight(nextAvailableTerm.id);
+        } else {
+          toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
+        }
+        break;
+      case 'trips':
+        if (nextAvailableTerm) {
+          handleAddTransport(nextAvailableTerm.id);
+        } else {
+          toast({ title: "No upcoming term", description: "Add a term before adding travel.", variant: "destructive" });
+        }
+        break;
+      case 'calendar':
+        setAddSheetOpen(true);
+        break;
+      case 'settings':
+        setShareScope(selectedSchool);
+        setShareDialogOpen(true);
+        break;
+    }
+  }, [activeTab, nextAvailableTerm, selectedSchool, triggerHaptic, toast, handleAddFlight, handleAddTransport]);
+
   const handleHeroShare = useCallback(() => {
     setShareScope(heroScope);
     setShareDialogOpen(true);
