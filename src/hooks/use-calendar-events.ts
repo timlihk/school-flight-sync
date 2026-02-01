@@ -6,6 +6,15 @@ import { mockTerms } from '@/data/mock-terms';
 import { format, isValid } from 'date-fns';
 import type { Term, TransportDetails } from '@/types/school';
 
+// Normalize date to YYYY-MM-DD for comparison (avoid timezone issues)
+const toDateKey = (date: Date): string => {
+  // Use UTC methods to avoid timezone shifting
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const combineDateAndTime = (date: Date, time?: string) => {
   if (!time) return new Date(date);
   const datePart = format(date, 'yyyy-MM-dd');
@@ -91,7 +100,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       if (term.scheduleDetails) {
         term.scheduleDetails.forEach((detail, index) => {
           const detailDate = new Date(detail.date);
-          const dateKey = format(detailDate, 'yyyy-MM-dd');
+          const dateKey = toDateKey(detailDate);
           scheduleDates.add(dateKey);
           
           addEvent(allEvents, {
@@ -107,7 +116,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       }
 
       // Only add term start event if there's no schedule detail on the same date
-      const startDateKey = format(term.startDate, 'yyyy-MM-dd');
+      const startDateKey = toDateKey(term.startDate);
       if (!scheduleDates.has(startDateKey)) {
         addEvent(allEvents, {
           id: `term-start-${term.id}`,
@@ -121,7 +130,7 @@ export const useCalendarEvents = (selectedSchool: School = 'both') => {
       }
 
       // Only add term end event if there's no schedule detail on the same date
-      const endDateKey = format(term.endDate, 'yyyy-MM-dd');
+      const endDateKey = toDateKey(term.endDate);
       if (!scheduleDates.has(endDateKey)) {
         addEvent(allEvents, {
           id: `term-end-${term.id}`,
