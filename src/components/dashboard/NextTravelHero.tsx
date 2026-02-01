@@ -32,6 +32,7 @@ export function NextTravelHero({
   entry,
   scope,
   onScopeChange,
+  isOnline: _isOnline,
   earliestTerm,
   onAddFlight,
   onAddTransport,
@@ -225,7 +226,14 @@ export function NextTravelHero({
               <Button 
                 size="sm" 
                 className="w-full bg-journey-pending hover:bg-journey-pending/90"
-                onClick={() => entry.termId && onAddTransport(entry.termId)}
+                onClick={() => {
+                  console.log('[NextTravelHero] Book Transport clicked, termId:', entry.termId);
+                  if (entry.termId) {
+                    onAddTransport(entry.termId);
+                  } else {
+                    console.error('[NextTravelHero] No termId available');
+                  }
+                }}
               >
                 <Car className="w-4 h-4 mr-2" />
                 Book Transport
@@ -244,7 +252,15 @@ export function NextTravelHero({
 
       {/* Add Flight Button (if needed) */}
       {(entry.status === "needs-flight" || entry.status === "unplanned") && entry.termId && (
-        <Button onClick={() => onAddFlight(entry.termId)} className="w-full">
+        <Button 
+          onClick={() => {
+            console.log('[NextTravelHero] Add Flight clicked, termId:', entry.termId);
+            if (entry.termId) {
+              onAddFlight(entry.termId);
+            }
+          }} 
+          className="w-full"
+        >
           <Plane className="w-4 h-4 mr-2" />
           Add Flight
         </Button>
