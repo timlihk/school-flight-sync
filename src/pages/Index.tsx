@@ -16,8 +16,8 @@ import { SchoolHeader } from "@/components/school-header";
 import { CompactCalendar } from "@/components/CompactCalendar";
 
 
-const FlightDialog = lazy(() => import("@/components/ui/flight-dialog"));
-const TransportDialog = lazy(() => import("@/components/ui/transport-dialog"));
+import { FlightDialog } from "@/components/ui/flight-dialog";
+import { TransportDialog } from "@/components/ui/transport-dialog";
 const ExportDialog = lazy(() => import("@/components/ui/export-dialog"));
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -1065,8 +1065,7 @@ export default function Index() {
               </div>
             </div>
           }>
-            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading flight details...</div>}>
-              <FlightDialog
+            <FlightDialog
                 term={selectedTerm}
                 flights={flights.filter(f => f.termId === selectedTerm.id)}
                 previousFlights={flights}
@@ -1076,7 +1075,6 @@ export default function Index() {
                 open={showFlightDialog}
                 onOpenChange={setShowFlightDialog}
               />
-            </Suspense>
           </ErrorBoundary>
           
           <ErrorBoundary fallback={
@@ -1087,18 +1085,16 @@ export default function Index() {
               </div>
             </div>
           }>
-            <Suspense fallback={<div className="p-6 text-center text-sm text-muted-foreground">Loading transport...</div>}>
-              <TransportDialog
-                term={selectedTerm}
-                transport={getTransportForTerm(selectedTerm.id)}
-                previousTransport={transport}
-                onAddTransport={handleAddTransportPersist}
-                onEditTransport={handleEditTransportPersist}
-                onRemoveTransport={handleRemoveTransportPersist}
-                open={showTransportDialog}
-                onOpenChange={setShowTransportDialog}
-              />
-            </Suspense>
+            <TransportDialog
+              term={selectedTerm}
+              transport={getTransportForTerm(selectedTerm.id)}
+              previousTransport={transport}
+              onAddTransport={handleAddTransportPersist}
+              onEditTransport={handleEditTransportPersist}
+              onRemoveTransport={handleRemoveTransportPersist}
+              open={showTransportDialog}
+              onOpenChange={setShowTransportDialog}
+            />
           </ErrorBoundary>
 
           <TermDetailsDialog
