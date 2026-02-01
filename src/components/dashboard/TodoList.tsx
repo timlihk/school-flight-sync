@@ -1,11 +1,14 @@
-import { useMemo } from 'react';
-import { format, isAfter, startOfDay } from 'date-fns';
-import { Plane, Car, AlertCircle, Plus, CheckCircle2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { format, isAfter, startOfDay, differenceInDays } from 'date-fns';
+import { Plane, Car, AlertCircle, Plus, CheckCircle2, Flame, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { FlightDetails, TransportDetails, Term } from '@/types/school';
+
+type FilterType = 'all' | 'flight' | 'transport';
+type Priority = 'high' | 'medium' | 'low';
 
 interface TodoListProps {
   selectedSchool: 'both' | 'benenden' | 'wycombe';
@@ -23,7 +26,10 @@ interface TodoItem {
   date: Date;
   title: string;
   description: string;
+  priority: Priority;
 }
+
+const HIGH_PRIORITY_DAYS = 90;
 
 export function TodoList({ 
   selectedSchool, 
@@ -33,7 +39,15 @@ export function TodoList({
   onAddFlight, 
   onAddTransport 
 }: TodoListProps) {
+  const [filter, setFilter] = useState<FilterType>('all');
   const now = startOfDay(new Date());
+
+  const getPriority = (date: Date): Priority => {
+    const daysUntil = differenceInDays(date, now);
+    if (daysUntil <= HIGH_PRIORITY_DAYS) return 'high';
+    if (daysUntil <= 180) return 'medium';
+    return 'low';
+  };
 
   const todoItems = useMemo(() => {
     const items: TodoItem[] = [];
@@ -62,7 +76,8 @@ export function TodoList({
             term,
             date: term.startDate,
             title: `${term.name}`,
-            description: 'Flight & transport needed for departure'
+            description: 'Flight & transport needed',
+            priority: getPriority(term.startDate)
           });
         } else if (outboundFlight && outboundTransport.length === 0) {
           // Has flight, needs transport
@@ -72,7 +87,8 @@ export function TodoList({
             term,
             date: term.startDate,
             title: `${term.name}`,
-            description: `Transport to airport for ${outboundFlight.airline} ${outboundFlight.flightNumber}`
+            description: `Transport for ${outboundFlight.airline} ${outboundFlight.flightNumber}`,
+            priority: getPriority(term.startDate)
           });
         } else if (!outboundFlight && outboundTransport.length > 0) {
           // Has transport, needs flight
@@ -82,7 +98,8 @@ export function TodoList({
             term,
             date: term.startDate,
             title: `${term.name}`,
-            description: 'Flight needed (transport booked)'
+            description: 'Flight needed (transport booked)',
+            priority: getPriority(term.startDate)
           });
         }
       }
@@ -97,7 +114,8 @@ export function TodoList({
             term,
             date: term.endDate,
             title: `${term.name} Return`,
-            description: 'Flight & transport needed for return'
+            description: 'Flight & transport needed',
+            priority: getPriority(term.endDate)
           });
         } else if (returnFlight && returnTransport.length === 0) {
           // Has flight, needs transport
@@ -107,7 +125,8 @@ export function TodoList({
             term,
             date: term.endDate,
             title: `${term.name} Return`,
-            description: `Transport from airport for ${returnFlight.airline} ${returnFlight.flightNumber}`
+            description: `Transport for ${returnFlight.airline} ${returnFlight.flightNumber}`,
+            priority: getPriority(term.endDate)
           });
         } else if (!returnFlight && returnTransport.length > 0) {
           // Has transport, needs flight
@@ -117,15 +136,31 @@ export function TodoList({
             term,
             date: term.endDate,
             title: `${term.name} Return`,
-            description: 'Flight needed (transport booked)'
+            description: 'Flight needed (transport booked)',
+            priority: getPriority(term.endDate)
           });
         }
       }
     });
 
-    // Sort by date
-    return items.sort((a, b) => a.date.getTime() - b.date.getTime());
+    // Sort by priority (high first) then by date
+    return items.sort((a, b) => {
+      const priorityOrder = { high: 0, medium: 1, low: 2 };
+      if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+        return priorityOrder[a.priority] - priorityOrder[b.priority];
+      }
+      return a.date.getTime() - b.date.getTime();
+    });
   }, [selectedSchool, flights, transport, terms, now]);
+
+  // Apply filter
+  const filteredItems = useMemo(() => {
+    if (filter === 'all') return todoItems;
+    return todoItems.filter(item => item.type === `needs-${filter}`);
+  }, [todoItems, filter]);
+
+  // Count high priority items
+  const highPriorityCount = todoItems.filter(item => item.priority === 'high').length;
 
   if (todoItems.length === 0) {
     return (
@@ -143,69 +178,107 @@ export function TodoList({
     );
   }
 
+  const filterButtons: { key: FilterType; label: string; count: number }[] = [
+    { key: 'all', label: 'All', count: todoItems.length },
+    { key: 'flight', label: 'Flights', count: todoItems.filter(i => i.type === 'needs-flight').length },
+    { key: 'transport', label: 'Transport', count: todoItems.filter(i => i.type === 'needs-transport').length },
+  ];
+
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground mb-4">
-        {todoItems.length} item{todoItems.length > 1 ? 's' : ''} need attention
-      </p>
+      {/* Filter buttons */}
+      <div className="flex gap-2 mb-4">
+        {filterButtons.map(({ key, label, count }) => (
+          <Button
+            key={key}
+            size="sm"
+            variant={filter === key ? 'default' : 'outline'}
+            className="flex-1 h-9"
+            onClick={() => setFilter(key)}
+          >
+            {label}
+            <span className="ml-1.5 text-xs opacity-70">({count})</span>
+          </Button>
+        ))}
+      </div>
+
+      {/* Summary */}
+      <div className="flex items-center justify-between text-sm">
+        <p className="text-muted-foreground">
+          {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
+        </p>
+        {highPriorityCount > 0 && (
+          <div className="flex items-center gap-1.5 text-journey-pending">
+            <Flame className="w-4 h-4" />
+            <span className="font-medium">{highPriorityCount} urgent</span>
+          </div>
+        )}
+      </div>
       
-      {todoItems.map((item) => (
+      {filteredItems.map((item) => (
         <Card 
           key={item.id} 
           className={cn(
             "overflow-hidden",
-            item.type === 'needs-flight' ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-green-500'
+            item.type === 'needs-flight' ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-green-500',
+            item.priority === 'high' && 'ring-1 ring-journey-pending/30'
           )}
         >
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
+          <CardContent className="p-3">
+            <div className="flex items-start gap-2.5">
               {/* Icon */}
               <div className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                "w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0",
                 item.type === 'needs-flight' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
               )}>
-                {item.type === 'needs-flight' ? <Plane className="w-5 h-5" /> : <Car className="w-5 h-5" />}
+                {item.type === 'needs-flight' ? <Plane className="w-4 h-4" /> : <Car className="w-4 h-4" />}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-medium truncate">{item.title}</h3>
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      "text-[10px] shrink-0",
-                      item.term.school === 'benenden' 
-                        ? 'border-blue-200 text-blue-700' 
-                        : 'border-green-200 text-green-700'
-                    )}
-                  >
-                    {item.term.school === 'benenden' ? 'Ben' : 'WA'}
-                  </Badge>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <h3 className="font-medium text-sm truncate">{item.title}</h3>
+                  {item.priority === 'high' && (
+                    <Flame className="w-3.5 h-3.5 text-journey-pending flex-shrink-0" />
+                  )}
                 </div>
                 
-                <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                <p className="text-xs text-muted-foreground mb-1.5">{item.description}</p>
                 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  <span>{format(item.date, 'EEE, MMM d')}</span>
-                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {format(item.date, 'MMM d')}
+                    </span>
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        "text-[9px] px-1 py-0 h-4",
+                        item.term.school === 'benenden' 
+                          ? 'border-blue-200 text-blue-700' 
+                          : 'border-green-200 text-green-700'
+                      )}
+                    >
+                      {item.term.school === 'benenden' ? 'Ben' : 'WA'}
+                    </Badge>
+                  </div>
 
-                {/* Action Button */}
-                <Button 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => {
-                    if (item.type === 'needs-flight') {
-                      onAddFlight(item.term.id);
-                    } else {
-                      onAddTransport(item.term.id);
-                    }
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  {item.type === 'needs-flight' ? 'Add Flight' : 'Add Transport'}
-                </Button>
+                  {/* Action Button */}
+                  <Button 
+                    size="sm" 
+                    className="h-7 text-xs px-2"
+                    onClick={() => {
+                      if (item.type === 'needs-flight') {
+                        onAddFlight(item.term.id);
+                      } else {
+                        onAddTransport(item.term.id);
+                      }
+                    }}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    {item.type === 'needs-flight' ? 'Flight' : 'Transport'}
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
