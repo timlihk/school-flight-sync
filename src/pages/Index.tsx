@@ -38,6 +38,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { NextTravelEntry } from "@/types/next-travel";
 
 const NAV_TABS: MainNavTab[] = ['today', 'trips', 'calendar', 'settings'];
+// Build: 2026-02-01-0945
 
 // Extracted SchoolPills component to avoid TDZ
 interface SchoolPillsProps {
