@@ -678,7 +678,7 @@ export default function Index() {
     let url = '';
     switch (channel) {
       case 'sms':
-        url = `sms:&body=${encoded}`;
+        url = `sms:?body=${encoded}`;
         break;
       case 'whatsapp':
         url = `https://wa.me/?text=${encoded}`;

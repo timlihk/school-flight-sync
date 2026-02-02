@@ -1,6 +1,7 @@
 // API client for backend server
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-const FAMILY_SECRET = import.meta.env.VITE_FAMILY_SECRET || '';
+// Note: Authentication is handled server-side via session/JWT
+// Client no longer sends family secret in headers
 
 export interface ApiResponse<T> {
   data: T | null;
@@ -13,11 +14,9 @@ export interface ApiError extends Error {
 
 class ApiClient {
   private baseUrl: string;
-  private familySecret: string;
 
-  constructor(baseUrl: string, familySecret: string) {
+  constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
-    this.familySecret = familySecret;
   }
 
   private async request<T>(
@@ -28,7 +27,6 @@ class ApiClient {
       const url = `${this.baseUrl}${endpoint}`;
       const headers = {
         'Content-Type': 'application/json',
-        'X-Family-Secret': this.familySecret,
         ...options.headers,
       };
 
@@ -123,4 +121,4 @@ class ApiClient {
   };
 }
 
-export const apiClient = new ApiClient(API_URL, FAMILY_SECRET);
+export const apiClient = new ApiClient(API_URL);
