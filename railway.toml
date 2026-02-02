@@ -10,4 +10,4 @@
   NODE_ENV = "production"
 
 [build.args]
-  BUILD_TIMESTAMP = "2026-02-02-0500"
+  BUILD_TIMESTAMP = "2026-02-02-0600"
