@@ -269,11 +269,11 @@ export function TransportDialog({
         )}
 
         {isAddingTransport ? (
-          <div className="flex flex-col max-h-[60vh]">
+          <div className="flex flex-col">
             <h3 className="text-sm font-medium text-foreground mb-4">
               {editingTransport ? 'Edit Transport' : 'Add New Transport'}
             </h3>
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
