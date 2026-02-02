@@ -15,6 +15,7 @@ export interface ApiError extends Error {
 class ApiClient {
   private baseUrl: string;
   private onAuthError?: () => void;
+  private familySecret: string | null = null;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -22,6 +23,11 @@ class ApiClient {
 
   setOnAuthError(callback: () => void) {
     this.onAuthError = callback;
+  }
+
+  // Set the family secret to send on each request (header-based auth)
+  setFamilySecret(secret: string | null) {
+    this.familySecret = secret;
   }
 
   private async request<T>(
@@ -33,6 +39,7 @@ class ApiClient {
       const headers = {
         'Content-Type': 'application/json',
         ...options.headers,
+        ...(this.familySecret ? { 'X-Family-Secret': this.familySecret } : {}),
       };
 
       const response = await fetch(url, {

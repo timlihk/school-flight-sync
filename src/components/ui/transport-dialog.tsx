@@ -434,7 +434,7 @@ export function TransportDialog({
                 size="sm"
                 className="flex-1"
               >
-                {editingTransport ? '💾 Update Transport' : '💾 Add Transport'}
+                {editingTransport ? 'Update Transport' : 'Add Transport'}
               </Button>
               <Button onClick={resetForm} variant="outline" size="sm">
                 Cancel

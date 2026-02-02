@@ -23,11 +23,7 @@ interface FamilyAuthProviderProps {
   children: React.ReactNode;
 }
 
-// Demo mode: Set to true to bypass server auth (for development/testing)
-const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true' || false;
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-// For demo mode, use a simple secret check
-const DEMO_SECRET = 'cullinan';
+const STORAGE_KEY = 'family_secret';
 
 export function FamilyAuthProvider({ children }: FamilyAuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,39 +31,39 @@ export function FamilyAuthProvider({ children }: FamilyAuthProviderProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if already authenticated on app load
-    checkAuthStatus();
-    
-    // Set up auth error handler for 401 responses
+    const savedSecret = localStorage.getItem(STORAGE_KEY);
+    if (savedSecret) {
+      apiClient.setFamilySecret(savedSecret);
+      void verifySecret(savedSecret);
+    } else {
+      setLoading(false);
+    }
+
+    // Any 401 from apiClient should log the user out
     apiClient.setOnAuthError(() => {
+      apiClient.setFamilySecret(null);
+      localStorage.removeItem(STORAGE_KEY);
       setIsAuthenticated(false);
-      setError('Session expired. Please log in again.');
+      setError('Session expired or invalid family secret. Please log in again.');
     });
   }, []);
 
-  const checkAuthStatus = async () => {
-    // Demo mode: check localStorage
-    if (DEMO_MODE) {
-      const stored = localStorage.getItem('family_authenticated');
-      setIsAuthenticated(stored === 'true');
-      setLoading(false);
-      return;
-    }
-
+  const verifySecret = async (secret: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_URL}/api/auth/status`, {
-        credentials: 'include',
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setIsAuthenticated(data.authenticated);
-      }
-    } catch {
-      // Backend not available - try demo mode fallback
-      const stored = localStorage.getItem('family_authenticated');
-      if (stored === 'true') {
-        setIsAuthenticated(true);
-      }
+      // Call a lightweight endpoint to validate the secret
+      const { error } = await apiClient.flights.getAll();
+      if (error) throw error;
+      setIsAuthenticated(true);
+      setError(null);
+      localStorage.setItem(STORAGE_KEY, secret);
+      return true;
+    } catch (err) {
+      console.error('Auth verification failed', err);
+      apiClient.setFamilySecret(null);
+      localStorage.removeItem(STORAGE_KEY);
+      setIsAuthenticated(false);
+      setError('Invalid family secret. Please try again.');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -81,78 +77,18 @@ export function FamilyAuthProvider({ children }: FamilyAuthProviderProps) {
       return false;
     }
 
-    // Demo mode: simple client-side check
-    if (DEMO_MODE) {
-      if (secretPhrase.trim().toLowerCase() === DEMO_SECRET) {
-        setIsAuthenticated(true);
-        localStorage.setItem('family_authenticated', 'true');
-        return true;
-      } else {
-        setError('Invalid secret');
-        return false;
-      }
+    const cleanedSecret = secretPhrase.trim();
+    apiClient.setFamilySecret(cleanedSecret);
+    const ok = await verifySecret(cleanedSecret);
+    if (!ok) {
+      apiClient.setFamilySecret(null);
     }
-
-    try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ secret: secretPhrase.trim() }),
-      });
-
-      if (response.ok) {
-        const data = await response.json().catch(() => ({ authenticated: false }));
-        if (data.authenticated === true) {
-          setIsAuthenticated(true);
-          localStorage.setItem('family_authenticated', 'true');
-          return true;
-        } else {
-          setError(data.error || 'Authentication failed');
-          return false;
-        }
-      } else if (response.status === 404) {
-        // Backend auth not implemented - fallback to demo mode behavior
-        if (secretPhrase.trim().toLowerCase() === DEMO_SECRET) {
-          setIsAuthenticated(true);
-          localStorage.setItem('family_authenticated', 'true');
-          return true;
-        } else {
-          setError('Invalid secret');
-          return false;
-        }
-      } else {
-        const data = await response.json().catch(() => ({ error: 'Invalid secret' }));
-        setError(data.error || 'Invalid secret');
-        return false;
-      }
-    } catch (err) {
-      // Backend not available - fallback to demo mode
-      if (secretPhrase.trim().toLowerCase() === DEMO_SECRET) {
-        setIsAuthenticated(true);
-        localStorage.setItem('family_authenticated', 'true');
-        return true;
-      } else {
-        setError('Invalid secret');
-        return false;
-      }
-    }
+    return ok;
   };
 
   const logout = async () => {
-    localStorage.removeItem('family_authenticated');
-    
-    if (!DEMO_MODE) {
-      try {
-        await fetch(`${API_URL}/api/auth/logout`, {
-          method: 'POST',
-          credentials: 'include',
-        });
-      } catch {
-        // Ignore errors
-      }
-    }
-    
+    apiClient.setFamilySecret(null);
+    localStorage.removeItem(STORAGE_KEY);
     setIsAuthenticated(false);
     setError(null);
   };
