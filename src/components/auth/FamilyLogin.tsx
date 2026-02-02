@@ -23,21 +23,14 @@ export function FamilyLogin() {
   const [passcode, setPasscode] = useState("");
   const [showPasscode, setShowPasscode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const { login } = useFamilyAuth();
+  const { login, error } = useFamilyAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     try {
-      const success = await login(passcode);
-      if (!success) {
-        setError("Invalid passcode. Please try again.");
-      }
-    } catch {
-      setError("An error occurred. Please try again.");
+      await login(passcode);
     } finally {
       setIsLoading(false);
     }

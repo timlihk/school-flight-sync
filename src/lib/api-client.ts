@@ -33,6 +33,7 @@ class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include', // Send cookies for session auth
       });
 
       if (!response.ok) {

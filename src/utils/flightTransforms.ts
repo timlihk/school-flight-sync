@@ -36,6 +36,14 @@ export function transformFlightToDb(flight: Omit<FlightDetails, 'id'>): Omit<DbF
   };
 }
 
+// Parse date string (yyyy-MM-dd) to Date object in local timezone
+// Avoids UTC shift issues by explicitly setting local midnight
+function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  // Month is 0-indexed in JavaScript Date
+  return new Date(year, month - 1, day);
+}
+
 // Transform database record to FlightDetails format
 export function transformDbToFlight(dbFlight: DbFlightRecord): FlightDetails {
   return {
@@ -46,12 +54,12 @@ export function transformDbToFlight(dbFlight: DbFlightRecord): FlightDetails {
     flightNumber: dbFlight.flight_number,
     departure: {
       airport: dbFlight.departure_airport,
-      date: new Date(dbFlight.departure_date),
+      date: parseLocalDate(dbFlight.departure_date),
       time: dbFlight.departure_time,
     },
     arrival: {
       airport: dbFlight.arrival_airport,
-      date: new Date(dbFlight.arrival_date),
+      date: parseLocalDate(dbFlight.arrival_date),
       time: dbFlight.arrival_time,
     },
     confirmationCode: dbFlight.confirmation_code || undefined,
