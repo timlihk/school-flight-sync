@@ -14,9 +14,14 @@ export interface ApiError extends Error {
 
 class ApiClient {
   private baseUrl: string;
+  private onAuthError?: () => void;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  setOnAuthError(callback: () => void) {
+    this.onAuthError = callback;
   }
 
   private async request<T>(
@@ -35,6 +40,16 @@ class ApiClient {
         headers,
         credentials: 'include', // Send cookies for session auth
       });
+
+      // Handle 401 Unauthorized - trigger auth error callback
+      if (response.status === 401) {
+        if (this.onAuthError) {
+          this.onAuthError();
+        }
+        const error: ApiError = new Error('Session expired. Please log in again.');
+        error.statusCode = 401;
+        return { data: null, error };
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: response.statusText }));

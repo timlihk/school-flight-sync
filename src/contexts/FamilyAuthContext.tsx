@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 interface FamilyAuthContextType {
   isAuthenticated: boolean;
@@ -32,6 +33,12 @@ export function FamilyAuthProvider({ children }: FamilyAuthProviderProps) {
   useEffect(() => {
     // Check if already authenticated on app load
     checkAuthStatus();
+    
+    // Set up auth error handler for 401 responses
+    apiClient.setOnAuthError(() => {
+      setIsAuthenticated(false);
+      setError('Session expired. Please log in again.');
+    });
   }, []);
 
   const checkAuthStatus = async () => {
@@ -67,8 +74,14 @@ export function FamilyAuthProvider({ children }: FamilyAuthProviderProps) {
       });
 
       if (response.ok) {
-        setIsAuthenticated(true);
-        return true;
+        const data = await response.json().catch(() => ({ authenticated: false }));
+        if (data.authenticated === true) {
+          setIsAuthenticated(true);
+          return true;
+        } else {
+          setError(data.error || 'Authentication failed');
+          return false;
+        }
       } else {
         const data = await response.json().catch(() => ({ error: 'Invalid secret' }));
         setError(data.error || 'Invalid secret');
