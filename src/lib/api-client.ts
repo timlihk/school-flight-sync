@@ -1,6 +1,5 @@
 // API client for backend server
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-const FAMILY_SECRET = import.meta.env.VITE_FAMILY_SECRET || '';
 
 export interface ApiResponse<T> {
   data: T | null;
@@ -13,11 +12,34 @@ export interface ApiError extends Error {
 
 class ApiClient {
   private baseUrl: string;
-  private familySecret: string;
+  private familySecret: string | null = null;
 
-  constructor(baseUrl: string, familySecret: string) {
+  constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
-    this.familySecret = familySecret;
+    // Try to get secret from localStorage on init
+    this.loadFamilySecret();
+  }
+
+  private loadFamilySecret() {
+    try {
+      this.familySecret = localStorage.getItem('family_secret');
+    } catch {
+      this.familySecret = null;
+    }
+  }
+
+  setFamilySecret(secret: string | null) {
+    this.familySecret = secret;
+    if (secret) {
+      localStorage.setItem('family_secret', secret);
+    } else {
+      localStorage.removeItem('family_secret');
+    }
+  }
+
+  clearFamilySecret() {
+    this.familySecret = null;
+    localStorage.removeItem('family_secret');
   }
 
   private async request<T>(
@@ -25,12 +47,20 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
+      // Reload secret in case it was set in another tab
+      if (!this.familySecret) {
+        this.loadFamilySecret();
+      }
+      
       const url = `${this.baseUrl}${endpoint}`;
-      const headers = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'X-Family-Secret': this.familySecret,
-        ...options.headers,
+        ...options.headers as Record<string, string>,
       };
+      
+      if (this.familySecret) {
+        headers['X-Family-Secret'] = this.familySecret;
+      }
 
       const response = await fetch(url, {
         ...options,
@@ -123,4 +153,4 @@ class ApiClient {
   };
 }
 
-export const apiClient = new ApiClient(API_URL, FAMILY_SECRET);
+export const apiClient = new ApiClient(API_URL);

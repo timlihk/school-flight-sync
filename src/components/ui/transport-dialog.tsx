@@ -459,55 +459,26 @@ export function TransportDialog({
   );
 
   const dialogContent = (
-    <div className="flex flex-col h-full">
-      {/* Scrollable Content */}
-      <ScrollArea className="flex-1 -mx-6 px-6">
-        <div className="space-y-6 pb-20">
-          {currentTransportList}
+    <div className="space-y-6">
+      {currentTransportList}
+      
+      {isAddingTransport ? (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              {editingTransport ? <Edit className="h-4 w-4 text-primary" /> : <Plus className="h-4 w-4 text-primary" />}
+            </div>
+            <h3 className="font-semibold">
+              {editingTransport ? 'Edit Transport' : 'Add New Transport'}
+            </h3>
+          </div>
+          {transportForm}
           
-          {isAddingTransport ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-border/50">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  {editingTransport ? <Edit className="h-4 w-4 text-primary" /> : <Plus className="h-4 w-4 text-primary" />}
-                </div>
-                <h3 className="font-semibold">
-                  {editingTransport ? 'Edit Transport' : 'Add New Transport'}
-                </h3>
-              </div>
-              {transportForm}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3 pt-4">
-              <Button 
-                onClick={() => setIsAddingTransport(true)}
-                className="w-full h-12 gap-2"
-              >
-                <Plus className="h-5 w-5" />
-                Add New Transport
-              </Button>
-              {previousTransport.length > 0 && (
-                <Button
-                  onClick={handleDuplicateLast}
-                  variant="outline"
-                  className="w-full h-12 gap-2"
-                >
-                  <Copy className="h-4 w-4" />
-                  Reuse Last Transport
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-
-      {/* Fixed Footer with Actions */}
-      {isAddingTransport && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/50 md:relative md:bottom-auto md:left-auto md:right-auto md:mt-6 md:-mx-6 md:-mb-6 md:px-6 md:py-4">
-          <div className="flex gap-3 max-w-2xl mx-auto md:max-w-none">
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-border/50">
             <Button 
               onClick={handleAddTransport}
-              className="flex-1 h-12 gap-2"
+              className="flex-1 h-11 gap-2"
             >
               <Check className="h-4 w-4" />
               {editingTransport ? 'Update Transport' : 'Add Transport'}
@@ -515,11 +486,32 @@ export function TransportDialog({
             <Button 
               onClick={resetForm} 
               variant="outline" 
-              className="h-12 px-6"
+              className="h-11 px-6"
             >
               <X className="h-4 w-4" />
+              Cancel
             </Button>
           </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3 pt-4">
+          <Button 
+            onClick={() => setIsAddingTransport(true)}
+            className="w-full h-11 gap-2"
+          >
+            <Plus className="h-5 w-5" />
+            Add New Transport
+          </Button>
+          {previousTransport.length > 0 && (
+            <Button
+              onClick={handleDuplicateLast}
+              variant="outline"
+              className="w-full h-11 gap-2"
+            >
+              <Copy className="h-4 w-4" />
+              Reuse Last Transport
+            </Button>
+          )}
         </div>
       )}
     </div>

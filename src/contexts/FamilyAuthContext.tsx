@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 interface FamilyAuthContextType {
   isAuthenticated: boolean;
-  login: (secretPhrase: string) => boolean;
+  login: (secretPhrase: string) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
 }
@@ -21,35 +22,48 @@ interface FamilyAuthProviderProps {
   children: React.ReactNode;
 }
 
-const AUTH_STORAGE_KEY = 'family_authenticated';
-// Auth is now server-side only - client just stores session state
+const FAMILY_SECRET_KEY = 'family_secret';
+
 export function FamilyAuthProvider({ children }: FamilyAuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check if already authenticated on app load
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (stored === 'true') {
+    const storedSecret = localStorage.getItem(FAMILY_SECRET_KEY);
+    if (storedSecret) {
+      apiClient.setFamilySecret(storedSecret);
       setIsAuthenticated(true);
     }
     setLoading(false);
   }, []);
 
-  const login = (secretPhrase: string): boolean => {
-    // Client-side only stores the state; actual validation happens on backend API calls
-    // This prevents exposing the secret in bundled JS
-    if (secretPhrase.trim()) {
-      setIsAuthenticated(true);
-      localStorage.setItem(AUTH_STORAGE_KEY, 'true');
-      return true;
+  const login = async (secretPhrase: string): Promise<boolean> => {
+    if (!secretPhrase.trim()) {
+      return false;
     }
-    return false;
+    
+    // Set the secret in API client
+    apiClient.setFamilySecret(secretPhrase);
+    
+    // Verify by making a test request
+    try {
+      const { error } = await apiClient.flights.getAll();
+      if (error) {
+        apiClient.clearFamilySecret();
+        return false;
+      }
+      setIsAuthenticated(true);
+      return true;
+    } catch {
+      apiClient.clearFamilySecret();
+      return false;
+    }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    apiClient.clearFamilySecret();
   };
 
   const value = {
