@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Car, Plus, Trash2, Edit, Phone, Clock, CreditCard, User, Search } from "lucide-react";
+import { Car, Plus, Trash2, Edit, Phone, Clock, CreditCard, User, Search, ArrowRight, ArrowLeft, Check, X, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,8 @@ import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Term, TransportDetails, ServiceProvider } from "@/types/school";
 import { useServiceProviders } from "@/hooks/use-service-providers";
+import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TransportDialogProps {
   term: Term;
@@ -62,7 +64,6 @@ export function TransportDialog({
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;
 
-  // Auto-fill transport details when a provider is selected
   const handleProviderSelect = (providerId: string, option: ComboboxOption) => {
     const provider = option.data as ServiceProvider;
     if (provider) {
@@ -79,7 +80,6 @@ export function TransportDialog({
     }
   };
 
-  // Handle saving new provider when manually entered
   const handleSaveAsNewProvider = async () => {
     if (newTransport.driverName && newTransport.phoneNumber && newTransport.type) {
       try {
@@ -99,11 +99,8 @@ export function TransportDialog({
   };
 
   const handleAddTransport = async () => {
-    if (!newTransport.type) {
-      return;
-    }
+    if (!newTransport.type) return;
 
-    // Save as new provider if this is a new provider and not editing
     if (!editingTransport && !selectedProvider && newTransport.driverName && newTransport.phoneNumber) {
       await handleSaveAsNewProvider();
     }
@@ -163,7 +160,7 @@ export function TransportDialog({
   const handleEditTransport = (transportItem: TransportDetails) => {
     setNewTransport({
       type: transportItem.type,
-      direction: transportItem.direction, // Add direction field
+      direction: transportItem.direction,
       driverName: transportItem.driverName,
       phoneNumber: transportItem.phoneNumber,
       licenseNumber: transportItem.licenseNumber,
@@ -171,7 +168,7 @@ export function TransportDialog({
       notes: transportItem.notes || ''
     });
     setEditingTransport(transportItem);
-    setShowProviderSelection(false); // Skip provider selection when editing
+    setShowProviderSelection(false);
     setIsAddingTransport(true);
   };
 
@@ -179,7 +176,6 @@ export function TransportDialog({
     return type === 'school-coach' ? 'School Coach' : 'Taxi';
   };
 
-  // Get provider options for the combobox
   const getProviderOptions = (): ComboboxOption[] => {
     const filteredProviders = getProvidersByType(newTransport.type);
     return filteredProviders.map(provider => ({
@@ -189,7 +185,6 @@ export function TransportDialog({
     }));
   };
 
-  // Reset provider selection when transport type changes
   useEffect(() => {
     if (selectedProvider && !editingTransport) {
       setSelectedProvider('');
@@ -197,68 +192,96 @@ export function TransportDialog({
     }
   }, [newTransport.type, editingTransport, selectedProvider]);
 
+  const getDirectionIcon = (direction: string) => {
+    return direction === 'outbound' ? 
+      <ArrowRight className="h-4 w-4" /> : 
+      <ArrowLeft className="h-4 w-4" />;
+  };
+
   const dialogTitle = (
-    <span className="flex items-center gap-2">
-      <Car className="h-5 w-5" />
-      Transport for {term.name}
-    </span>
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+        <Car className="h-5 w-5 text-white" />
+      </div>
+      <div>
+        <h2 className="text-lg font-semibold">Transport</h2>
+        <p className="text-sm text-muted-foreground">{term.name}</p>
+      </div>
+    </div>
   );
 
-  const dialogContent = (
-    <div className="space-y-6">
-        {transport.length > 0 && (
+  const currentTransportList = (
+    <div className="space-y-3">
+      {transport.length > 0 && (
+        <>
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Current Arrangements</h3>
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-foreground">Current Transport</h3>
             {transport.map((transportItem) => (
-              <Card key={transportItem.id} className="border border-muted/50">
+              <Card key={transportItem.id} className="border border-border/50 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-card to-card/50">
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">
-                          {transportItem.direction === 'outbound' ? 'From school' : 'To school'} - {getTransportTypeDisplay(transportItem.type)}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium",
+                          transportItem.type === 'school-coach' 
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                            : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                        )}>
+                          {getDirectionIcon(transportItem.direction)}
+                          {transportItem.direction === 'outbound' ? 'From School' : 'To School'}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {getTransportTypeDisplay(transportItem.type)}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {transportItem.driverName}
+                      
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div className="flex items-center gap-2 text-foreground">
+                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="truncate">{transportItem.driverName}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {transportItem.phoneNumber}
+                        <div className="flex items-center gap-2 text-foreground">
+                          <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="truncate">{transportItem.phoneNumber}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <CreditCard className="h-3 w-3" />
-                          {transportItem.licenseNumber}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {transportItem.pickupTime}
-                        </div>
+                        {transportItem.licenseNumber && (
+                          <div className="flex items-center gap-2 text-foreground">
+                            <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="truncate">{transportItem.licenseNumber}</span>
+                          </div>
+                        )}
+                        {transportItem.pickupTime && (
+                          <div className="flex items-center gap-2 text-foreground">
+                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span>{transportItem.pickupTime}</span>
+                          </div>
+                        )}
                       </div>
+                      
                       {transportItem.notes && (
-                        <div className="text-xs text-muted-foreground mt-2">
+                        <p className="mt-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-2">
                           {transportItem.notes}
-                        </div>
+                        </p>
                       )}
                     </div>
-                    <div className="flex gap-1 ml-2">
+                    
+                    <div className="flex gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEditTransport(transportItem)}
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
                       >
-                        <Edit className="h-3 w-3" />
+                        <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setConfirmDelete({ open: true, transportId: transportItem.id })}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -266,211 +289,241 @@ export function TransportDialog({
               </Card>
             ))}
           </div>
-        )}
-
-        {isAddingTransport ? (
-          <div className="space-y-4 border-t pt-4">
-            <h3 className="text-sm font-medium text-foreground">
-              {editingTransport ? 'Edit Transport' : 'Add New Transport'}
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="direction">Direction</Label>
-                <Select
-                  value={newTransport.direction}
-                  onValueChange={(value: 'outbound' | 'return') =>
-                    setNewTransport({ ...newTransport, direction: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="outbound">From School (Outbound)</SelectItem>
-                    <SelectItem value="return">To School (Return)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="transport-type">Type</Label>
-                <Select
-                  value={newTransport.type}
-                  onValueChange={(value: 'school-coach' | 'taxi') =>
-                    setNewTransport({ ...newTransport, type: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="school-coach">School Coach</SelectItem>
-                    <SelectItem value="taxi">Taxi</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pickup-time">Pickup Time</Label>
-                <Input
-                  id="pickup-time"
-                  type="time"
-                  value={newTransport.pickupTime}
-                  onChange={(e) => setNewTransport({ ...newTransport, pickupTime: e.target.value })}
-                  placeholder="e.g., 14:30"
-                />
-              </div>
-            </div>
-
-            {/* Service Provider Selection */}
-            {showProviderSelection && !editingTransport && getProviderOptions().length > 0 && (
-              <div className="space-y-2 border-t pt-4">
-                <Label>Select Existing Service Provider</Label>
-                <Combobox
-                  options={getProviderOptions()}
-                  value={selectedProvider}
-                  onSelect={handleProviderSelect}
-                  placeholder="Search for a service provider..."
-                  searchPlaceholder="Search providers..."
-                  emptyMessage="No matching providers found."
-                  className="w-full"
-                />
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowProviderSelection(false)}
-                  >
-                    Enter new provider instead
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Manual Entry or New Provider Notice */}
-            {(!showProviderSelection || getProviderOptions().length === 0) && !editingTransport && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-800">
-                    {getProviderOptions().length === 0 
-                      ? 'No existing providers found. Enter details below to add a new one.'
-                      : 'Adding new service provider'
-                    }
-                  </span>
-                </div>
-                {getProviderOptions().length > 0 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowProviderSelection(true)}
-                    className="mt-2 text-blue-600 hover:text-blue-800"
-                  >
-                    Back to provider selection
-                  </Button>
-                )}
-              </div>
-            )}
-
-            {/* Driver details - only show for taxi transport */}
-            {newTransport.type === 'taxi' && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="driver-name">Driver Name</Label>
-                    <Input
-                      id="driver-name"
-                      value={newTransport.driverName}
-                      onChange={(e) => setNewTransport({ ...newTransport, driverName: e.target.value })}
-                      placeholder="e.g., John Smith"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone-number">Phone Number</Label>
-                    <Input
-                      id="phone-number"
-                      value={newTransport.phoneNumber}
-                      onChange={(e) => setNewTransport({ ...newTransport, phoneNumber: e.target.value })}
-                      placeholder="e.g., +44 7123 456789"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="license-number">License Number</Label>
-                  <Input
-                    id="license-number"
-                    value={newTransport.licenseNumber}
-                    onChange={(e) => setNewTransport({ ...newTransport, licenseNumber: e.target.value })}
-                    placeholder="e.g., ABC123 or License #12345"
-                  />
-                </div>
-              </>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="transport-notes">Notes (optional)</Label>
-              <Textarea
-                id="transport-notes"
-                value={newTransport.notes}
-                onChange={(e) => setNewTransport({ ...newTransport, notes: e.target.value })}
-                placeholder="Additional details..."
-                className="min-h-[60px]"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button onClick={handleAddTransport} size="sm">
-                {editingTransport ? 'Update Transport' : 'Add Transport'}
-              </Button>
-              <Button onClick={resetForm} variant="outline" size="sm">
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex justify-center pt-4 border-t gap-3">
-            <Button 
-              onClick={() => setIsAddingTransport(true)}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add New Transport
-            </Button>
-            <Button
-              onClick={handleDuplicateLast}
-              variant="secondary"
-              size="sm"
-              className="gap-2"
-            >
-              Reuse last
-            </Button>
-          </div>
-        )}
+        </>
+      )}
     </div>
   );
 
-  if (children) {
-    return (
-      <div onClick={() => setIsOpen(true)}>
-        {children}
-        <ResponsiveDialog
-          open={isOpen}
-          onOpenChange={setIsOpen}
-          title={dialogTitle}
-          className="max-w-2xl"
-        >
-          {dialogContent}
-        </ResponsiveDialog>
+  const transportForm = (
+    <div className="space-y-5">
+      {/* Direction & Type */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Direction</Label>
+          <Select
+            value={newTransport.direction}
+            onValueChange={(value: 'outbound' | 'return') =>
+              setNewTransport({ ...newTransport, direction: value })
+            }
+          >
+            <SelectTrigger className="h-11">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="outbound">
+                <span className="flex items-center gap-2">
+                  <ArrowRight className="h-4 w-4" />
+                  From School
+                </span>
+              </SelectItem>
+              <SelectItem value="return">
+                <span className="flex items-center gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  To School
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Vehicle Type</Label>
+          <Select
+            value={newTransport.type}
+            onValueChange={(value: 'school-coach' | 'taxi') =>
+              setNewTransport({ ...newTransport, type: value })
+            }
+          >
+            <SelectTrigger className="h-11">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="school-coach">School Coach</SelectItem>
+              <SelectItem value="taxi">Taxi</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-    );
-  }
+
+      {/* Pickup Time */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Pickup Time</Label>
+        <Input
+          type="time"
+          value={newTransport.pickupTime}
+          onChange={(e) => setNewTransport({ ...newTransport, pickupTime: e.target.value })}
+          className="h-11"
+        />
+      </div>
+
+      {/* Service Provider Selection */}
+      {showProviderSelection && !editingTransport && getProviderOptions().length > 0 && (
+        <div className="space-y-3 p-4 bg-muted/30 rounded-xl border border-border/50">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            Quick Select Provider
+          </Label>
+          <Combobox
+            options={getProviderOptions()}
+            value={selectedProvider}
+            onSelect={handleProviderSelect}
+            placeholder="Search existing providers..."
+            searchPlaceholder="Type to search..."
+            emptyMessage="No matching providers found."
+            className="w-full"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowProviderSelection(false)}
+            className="text-xs"
+          >
+            Or enter new provider details manually
+          </Button>
+        </div>
+      )}
+
+      {/* New Provider Notice */}
+      {(!showProviderSelection || getProviderOptions().length === 0) && !editingTransport && (
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+            <Search className="h-4 w-4" />
+            <span className="text-sm font-medium">
+              {getProviderOptions().length === 0 
+                ? 'No existing providers. Enter details below.'
+                : 'Adding new service provider'}
+            </span>
+          </div>
+          {getProviderOptions().length > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowProviderSelection(true)}
+              className="mt-2 text-xs text-blue-600 hover:text-blue-800"
+            >
+              Back to provider selection
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Driver Details - only for taxi */}
+      {newTransport.type === 'taxi' && (
+        <div className="space-y-4 p-4 bg-muted/30 rounded-xl border border-border/50">
+          <h4 className="text-sm font-semibold text-muted-foreground">Driver Information</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm">Driver Name</Label>
+              <Input
+                value={newTransport.driverName}
+                onChange={(e) => setNewTransport({ ...newTransport, driverName: e.target.value })}
+                placeholder="John Smith"
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Phone Number</Label>
+              <Input
+                value={newTransport.phoneNumber}
+                onChange={(e) => setNewTransport({ ...newTransport, phoneNumber: e.target.value })}
+                placeholder="+44 7123 456789"
+                className="h-11"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm">License Number</Label>
+            <Input
+              value={newTransport.licenseNumber}
+              onChange={(e) => setNewTransport({ ...newTransport, licenseNumber: e.target.value })}
+              placeholder="ABC123"
+              className="h-11"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Notes */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Notes (Optional)</Label>
+        <Textarea
+          value={newTransport.notes}
+          onChange={(e) => setNewTransport({ ...newTransport, notes: e.target.value })}
+          placeholder="Any additional details..."
+          className="min-h-[80px] resize-none"
+        />
+      </div>
+    </div>
+  );
+
+  const dialogContent = (
+    <div className="flex flex-col h-full">
+      {/* Scrollable Content */}
+      <ScrollArea className="flex-1 -mx-6 px-6">
+        <div className="space-y-6 pb-20">
+          {currentTransportList}
+          
+          {isAddingTransport ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  {editingTransport ? <Edit className="h-4 w-4 text-primary" /> : <Plus className="h-4 w-4 text-primary" />}
+                </div>
+                <h3 className="font-semibold">
+                  {editingTransport ? 'Edit Transport' : 'Add New Transport'}
+                </h3>
+              </div>
+              {transportForm}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 pt-4">
+              <Button 
+                onClick={() => setIsAddingTransport(true)}
+                className="w-full h-12 gap-2"
+              >
+                <Plus className="h-5 w-5" />
+                Add New Transport
+              </Button>
+              {previousTransport.length > 0 && (
+                <Button
+                  onClick={handleDuplicateLast}
+                  variant="outline"
+                  className="w-full h-12 gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Reuse Last Transport
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* Fixed Footer with Actions */}
+      {isAddingTransport && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/50 md:relative md:bottom-auto md:left-auto md:right-auto md:mt-6 md:-mx-6 md:-mb-6 md:px-6 md:py-4">
+          <div className="flex gap-3 max-w-2xl mx-auto md:max-w-none">
+            <Button 
+              onClick={handleAddTransport}
+              className="flex-1 h-12 gap-2"
+            >
+              <Check className="h-4 w-4" />
+              {editingTransport ? 'Update Transport' : 'Add Transport'}
+            </Button>
+            <Button 
+              onClick={resetForm} 
+              variant="outline" 
+              className="h-12 px-6"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const handleConfirmDelete = () => {
     if (confirmDelete.transportId) {
@@ -480,11 +533,17 @@ export function TransportDialog({
 
   return (
     <>
+      {children && (
+        <div onClick={() => setIsOpen(true)}>
+          {children}
+        </div>
+      )}
+      
       <ResponsiveDialog
         open={isOpen}
         onOpenChange={setIsOpen}
         title={dialogTitle}
-        className="max-w-2xl"
+        className="max-w-lg"
       >
         {dialogContent}
       </ResponsiveDialog>

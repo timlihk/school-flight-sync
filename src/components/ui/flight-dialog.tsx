@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar, Clock, Plane, Plus, X, Edit2 } from "lucide-react";
+import { 
+  Plane, Plus, X, Edit2, Calendar, Clock, 
+  ArrowRight, ArrowLeft, Check, MapPin, 
+  Ticket, StickyNote, Copy, Trash2
+} from "lucide-react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +20,9 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FlightDetails, Term } from "@/types/school";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface FlightDialogProps {
   term: Term;
@@ -66,30 +73,27 @@ export function FlightDialog({
     notes: ''
   });
 
-  // Airline mapping based on IATA codes
+  const airlineMap: { [key: string]: string } = {
+    'CX': 'Cathay Pacific', 'BA': 'British Airways', 'LH': 'Lufthansa',
+    'AF': 'Air France', 'KL': 'KLM', 'QF': 'Qantas',
+    'SQ': 'Singapore Airlines', 'EK': 'Emirates', 'QR': 'Qatar Airways',
+    'TG': 'Thai Airways', 'UA': 'United Airlines', 'DL': 'Delta Air Lines',
+    'AA': 'American Airlines', 'VS': 'Virgin Atlantic', 'EY': 'Etihad Airways',
+    'TK': 'Turkish Airlines', 'JL': 'Japan Airlines', 'NH': 'ANA'
+  };
+
   const getAirlineFromCode = (flightNumber: string): string => {
     const code = flightNumber.substring(0, 2).toUpperCase();
-    const airlineMap: { [key: string]: string } = {
-      'CX': 'Cathay Pacific',
-      'BA': 'British Airways',
-      'LH': 'Lufthansa',
-      'AF': 'Air France',
-      'KL': 'KLM',
-      'QF': 'Qantas',
-      'SQ': 'Singapore Airlines',
-      'EK': 'Emirates',
-      'QR': 'Qatar Airways',
-      'TG': 'Thai Airways',
-      'UA': 'United Airlines',
-      'DL': 'Delta Air Lines',
-      'AA': 'American Airlines',
-      'VS': 'Virgin Atlantic',
-      'EY': 'Etihad Airways',
-      'TK': 'Turkish Airlines',
-      'JL': 'Japan Airlines',
-      'NH': 'ANA'
-    };
     return airlineMap[code] || '';
+  };
+
+  const handleFlightNumberChange = (flightNumber: string) => {
+    const airline = getAirlineFromCode(flightNumber);
+    setNewFlight(prev => ({ 
+      ...prev, 
+      flightNumber: flightNumber.toUpperCase(),
+      airline: airline || prev.airline
+    }));
   };
 
   const handleAddFlight = () => {
@@ -155,7 +159,7 @@ export function FlightDialog({
       confirmationCode: last.confirmationCode || '',
       notes: last.notes || ''
     });
-    toast({ title: "Copied last flight", description: "Review times and save." });
+    toast({ title: "Flight details copied", description: "Review and update times as needed." });
   };
 
   const resetForm = () => {
@@ -194,279 +198,378 @@ export function FlightDialog({
     setIsAddingFlight(true);
   };
 
-  const handleFlightNumberChange = (flightNumber: string) => {
-    const airline = getAirlineFromCode(flightNumber);
-    setNewFlight(prev => ({ 
-      ...prev, 
-      flightNumber,
-      airline: airline || prev.airline
-    }));
+  const getDirectionIcon = (type: string) => {
+    return type === 'outbound' ? 
+      <ArrowRight className="h-4 w-4" /> : 
+      <ArrowLeft className="h-4 w-4" />;
   };
 
+  const formatAirportDisplay = (airport: string) => {
+    // Extract terminal if present
+    const match = airport.match(/^([A-Z]{3})\s*(T\d+)?$/i);
+    if (match) {
+      const [, code, terminal] = match;
+      return { code: code.toUpperCase(), terminal: terminal?.toUpperCase() };
+    }
+    return { code: airport, terminal: null };
+  };
 
   const dialogTitle = (
-    <span className="flex items-center gap-2">
-      <Plane className="h-5 w-5" />
-      Flight Details - {term.name}
-    </span>
-  );
-
-  const dialogContent = (
-    <div className="space-y-6">
-        {/* Existing Flights */}
-        {flights.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Current Flights</h3>
-            <div className="grid gap-4">
-              {flights.map((flight) => (
-                <div 
-                  key={flight.id} 
-                  className="p-4 border border-border rounded-lg bg-card hover:shadow-soft transition-shadow"
-                >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">
-                          {flight.type === 'outbound' ? '✈️' : '🛬'}
-                        </span>
-                        <span className="font-semibold text-foreground">
-                        {flight.type === 'outbound' ? 'From School Flight' : 'To School Flight'}
-                        </span>
-                      </div>
-                    <div className="flex items-center gap-1">
-                      {onEditFlight && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditFlight(flight)}
-                          className="text-primary hover:text-primary hover:bg-primary/10"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setConfirmDelete({ open: true, flightId: flight.id })}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="font-medium text-foreground mb-1">
-                        {flight.airline} {flight.flightNumber}
-                      </p>
-                      <p className="text-muted-foreground">
-                        {flight.departure.airport} → {flight.arrival.airport}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-foreground">
-                        <Calendar className="h-4 w-4 inline mr-1" />
-                        {format(flight.departure.date, 'MMM dd, yyyy')}
-                      </p>
-                      <p className="text-muted-foreground">
-                        <Clock className="h-4 w-4 inline mr-1" />
-                        Depart: {flight.departure.time} | Arrive: {flight.arrival.time}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {flight.notes && (
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {flight.notes}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Add/Edit Flight Form */}
-        {isAddingFlight ? (
-          <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/20">
-            <h3 className="text-lg font-semibold text-foreground">
-              {editingFlight ? 'Edit Flight' : 'Add New Flight'}
-            </h3>
-            
-            {/* Flight Form */}
-            <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="type">Flight Type</Label>
-                  <Select 
-                    value={newFlight.type} 
-                    onValueChange={(value: 'outbound' | 'return') => 
-                      setNewFlight(prev => ({ ...prev, type: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="outbound">From School</SelectItem>
-                      <SelectItem value="return">To School</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="flightNumber">Flight Number</Label>
-                  <Input
-                    id="flightNumber"
-                    value={newFlight.flightNumber}
-                    onChange={(e) => handleFlightNumberChange(e.target.value)}
-                    placeholder="e.g., BA123, CX251"
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="airline">Airline</Label>
-                  <Input
-                    id="airline"
-                    value={newFlight.airline}
-                    onChange={(e) => setNewFlight(prev => ({ ...prev, airline: e.target.value }))}
-                    placeholder="e.g., British Airways"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="departureDate">Departure Date</Label>
-                  <Input
-                    id="departureDate"
-                    type="date"
-                    value={newFlight.departureDate}
-                    onChange={(e) => setNewFlight(prev => ({ ...prev, departureDate: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="departureAirport">Departure Airport</Label>
-                  <Input
-                    id="departureAirport"
-                    value={newFlight.departureAirport}
-                    onChange={(e) => setNewFlight(prev => ({ ...prev, departureAirport: e.target.value }))}
-                    placeholder="e.g., LHR T5"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="departureTime">Departure Time</Label>
-                  <Input
-                    id="departureTime"
-                    type="time"
-                    value={newFlight.departureTime}
-                    onChange={(e) => setNewFlight(prev => ({ ...prev, departureTime: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="arrivalAirport">Arrival Airport</Label>
-                  <Input
-                    id="arrivalAirport"
-                    value={newFlight.arrivalAirport}
-                    onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalAirport: e.target.value }))}
-                    placeholder="e.g., HKG T1"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="arrivalTime">Arrival Time</Label>
-                  <Input
-                    id="arrivalTime"
-                    type="time"
-                    value={newFlight.arrivalTime}
-                    onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalTime: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="arrivalDate">Arrival Date</Label>
-                <Input
-                  id="arrivalDate"
-                  type="date"
-                  value={newFlight.arrivalDate}
-                  onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalDate: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmationCode">Confirmation Code (Optional)</Label>
-              <Input
-                id="confirmationCode"
-                value={newFlight.confirmationCode}
-                onChange={(e) => setNewFlight(prev => ({ ...prev, confirmationCode: e.target.value }))}
-                placeholder="e.g., ABC123"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (Optional)</Label>
-              <Textarea
-                id="notes"
-                value={newFlight.notes}
-                onChange={(e) => setNewFlight(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Additional notes about the flight..."
-                rows={2}
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleDuplicateLast} className="flex-1">
-                Reuse last flight
-              </Button>
-              <Button onClick={handleAddFlight} variant="flight">
-                {editingFlight ? 'Update Flight' : 'Add Flight'}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={resetForm}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button 
-            onClick={() => setIsAddingFlight(true)}
-            variant="flight"
-            className="w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Flight
-          </Button>
-        )}
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/25">
+        <Plane className="h-5 w-5 text-white" />
+      </div>
+      <div>
+        <h2 className="text-lg font-semibold">Flight Details</h2>
+        <p className="text-sm text-muted-foreground">{term.name}</p>
+      </div>
     </div>
   );
 
-  if (children) {
-    // When used with a trigger, we need to handle the trigger separately
-    return (
-      <div onClick={() => setIsOpen(true)}>
-        {children}
-        <ResponsiveDialog
-          open={isOpen}
-          onOpenChange={setIsOpen}
-          title={dialogTitle}
-          className="max-w-4xl"
-        >
-          {dialogContent}
-        </ResponsiveDialog>
+  const currentFlightsList = (
+    <div className="space-y-3">
+      {flights.length > 0 && (
+        <>
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Current Flights</h3>
+          <div className="space-y-3">
+            {flights.map((flight) => {
+              const dep = formatAirportDisplay(flight.departure.airport);
+              const arr = formatAirportDisplay(flight.arrival.airport);
+              
+              return (
+                <Card key={flight.id} className="border border-border/50 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                  <CardContent className="p-0">
+                    {/* Flight Header */}
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-sky-50/50 to-blue-50/50 dark:from-sky-950/20 dark:to-blue-950/20 border-b border-border/50">
+                      <div className="flex items-center gap-3">
+                        <span className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
+                          flight.type === 'outbound'
+                            ? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
+                            : "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                        )}>
+                          {getDirectionIcon(flight.type)}
+                          {flight.type === 'outbound' ? 'From School' : 'To School'}
+                        </span>
+                        <span className="font-semibold text-sm">{flight.airline}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {onEditFlight && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditFlight(flight)}
+                            className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setConfirmDelete({ open: true, flightId: flight.id })}
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Flight Route */}
+                    <div className="p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        {/* Departure */}
+                        <div className="text-center flex-1">
+                          <div className="text-2xl font-bold text-foreground">{dep.code}</div>
+                          {dep.terminal && (
+                            <div className="text-xs text-muted-foreground">{dep.terminal}</div>
+                          )}
+                          <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mt-1">
+                            <Clock className="h-3 w-3" />
+                            {flight.departure.time}
+                          </div>
+                        </div>
+                        
+                        {/* Flight Path */}
+                        <div className="flex flex-col items-center gap-1">
+                          <Plane className="h-5 w-5 text-sky-500 rotate-90" />
+                          <div className="text-xs font-medium text-sky-600">{flight.flightNumber}</div>
+                        </div>
+                        
+                        {/* Arrival */}
+                        <div className="text-center flex-1">
+                          <div className="text-2xl font-bold text-foreground">{arr.code}</div>
+                          {arr.terminal && (
+                            <div className="text-xs text-muted-foreground">{arr.terminal}</div>
+                          )}
+                          <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mt-1">
+                            <Clock className="h-3 w-3" />
+                            {flight.arrival.time}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Date & Confirmation */}
+                      <div className="flex items-center justify-center gap-4 mt-4 pt-3 border-t border-border/30 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {format(flight.departure.date, 'MMM dd, yyyy')}
+                        </span>
+                        {flight.confirmationCode && (
+                          <span className="flex items-center gap-1">
+                            <Ticket className="h-3 w-3" />
+                            {flight.confirmationCode}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {flight.notes && (
+                        <div className="mt-3 p-2 bg-muted/50 rounded-lg text-xs text-muted-foreground flex items-start gap-1.5">
+                          <StickyNote className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                          {flight.notes}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const flightForm = (
+    <div className="space-y-5">
+      {/* Flight Type & Number */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Direction</Label>
+          <Select 
+            value={newFlight.type} 
+            onValueChange={(value: 'outbound' | 'return') => 
+              setNewFlight(prev => ({ ...prev, type: value }))
+            }
+          >
+            <SelectTrigger className="h-11">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="outbound">
+                <span className="flex items-center gap-2">
+                  <ArrowRight className="h-4 w-4" />
+                  From School
+                </span>
+              </SelectItem>
+              <SelectItem value="return">
+                <span className="flex items-center gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  To School
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Flight Number</Label>
+          <Input
+            value={newFlight.flightNumber}
+            onChange={(e) => handleFlightNumberChange(e.target.value)}
+            placeholder="e.g., CX251"
+            className="h-11 font-mono uppercase"
+          />
+        </div>
       </div>
-    );
-  }
+
+      {/* Airline */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Airline</Label>
+        <Input
+          value={newFlight.airline}
+          onChange={(e) => setNewFlight(prev => ({ ...prev, airline: e.target.value }))}
+          placeholder="e.g., Cathay Pacific"
+          className="h-11"
+        />
+      </div>
+
+      {/* Route Section */}
+      <div className="p-4 bg-muted/30 rounded-xl border border-border/50 space-y-4">
+        <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+          <MapPin className="h-4 w-4" />
+          Route Details
+        </h4>
+        
+        {/* Departure */}
+        <div className="space-y-3">
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Departure</div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label className="text-xs">Airport</Label>
+              <Input
+                value={newFlight.departureAirport}
+                onChange={(e) => setNewFlight(prev => ({ ...prev, departureAirport: e.target.value.toUpperCase() }))}
+                placeholder="LHR T3"
+                className="h-10 font-mono uppercase"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Time</Label>
+              <Input
+                type="time"
+                value={newFlight.departureTime}
+                onChange={(e) => setNewFlight(prev => ({ ...prev, departureTime: e.target.value }))}
+                className="h-10"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Arrival */}
+        <div className="space-y-3 pt-2 border-t border-border/30">
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Arrival</div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label className="text-xs">Airport</Label>
+              <Input
+                value={newFlight.arrivalAirport}
+                onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalAirport: e.target.value.toUpperCase() }))}
+                placeholder="HKG T1"
+                className="h-10 font-mono uppercase"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Time</Label>
+              <Input
+                type="time"
+                value={newFlight.arrivalTime}
+                onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalTime: e.target.value }))}
+                className="h-10"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Dates */}
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/30">
+          <div className="space-y-2">
+            <Label className="text-xs">Departure Date</Label>
+            <Input
+              type="date"
+              value={newFlight.departureDate}
+              onChange={(e) => setNewFlight(prev => ({ ...prev, departureDate: e.target.value }))}
+              className="h-10"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Arrival Date</Label>
+            <Input
+              type="date"
+              value={newFlight.arrivalDate}
+              onChange={(e) => setNewFlight(prev => ({ ...prev, arrivalDate: e.target.value }))}
+              className="h-10"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation Code */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <Ticket className="h-4 w-4 text-muted-foreground" />
+          Confirmation Code (Optional)
+        </Label>
+        <Input
+          value={newFlight.confirmationCode}
+          onChange={(e) => setNewFlight(prev => ({ ...prev, confirmationCode: e.target.value.toUpperCase() }))}
+          placeholder="ABC123"
+          className="h-11 font-mono uppercase"
+        />
+      </div>
+
+      {/* Notes */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <StickyNote className="h-4 w-4 text-muted-foreground" />
+          Notes (Optional)
+        </Label>
+        <Textarea
+          value={newFlight.notes}
+          onChange={(e) => setNewFlight(prev => ({ ...prev, notes: e.target.value }))}
+          placeholder="Seat preferences, meal requests, etc."
+          className="min-h-[80px] resize-none"
+        />
+      </div>
+    </div>
+  );
+
+  const dialogContent = (
+    <div className="flex flex-col h-full">
+      {/* Scrollable Content */}
+      <ScrollArea className="flex-1 -mx-6 px-6">
+        <div className="space-y-6 pb-20">
+          {currentFlightsList}
+          
+          {isAddingFlight ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                <div className="h-8 w-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                  {editingFlight ? <Edit2 className="h-4 w-4 text-sky-600" /> : <Plus className="h-4 w-4 text-sky-600" />}
+                </div>
+                <h3 className="font-semibold">
+                  {editingFlight ? 'Edit Flight' : 'Add New Flight'}
+                </h3>
+              </div>
+              {flightForm}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 pt-4">
+              <Button 
+                onClick={() => setIsAddingFlight(true)}
+                className="w-full h-12 gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
+              >
+                <Plus className="h-5 w-5" />
+                Add New Flight
+              </Button>
+              {previousFlights.length > 0 && (
+                <Button
+                  onClick={handleDuplicateLast}
+                  variant="outline"
+                  className="w-full h-12 gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Reuse Last Flight
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* Fixed Footer with Actions */}
+      {isAddingFlight && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/50 md:relative md:bottom-auto md:left-auto md:right-auto md:mt-6 md:-mx-6 md:-mb-6 md:px-6 md:py-4">
+          <div className="flex gap-3 max-w-2xl mx-auto md:max-w-none">
+            <Button 
+              onClick={handleAddFlight}
+              className="flex-1 h-12 gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
+            >
+              <Check className="h-4 w-4" />
+              {editingFlight ? 'Update Flight' : 'Add Flight'}
+            </Button>
+            <Button 
+              onClick={resetForm} 
+              variant="outline" 
+              className="h-12 px-6"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const handleConfirmDelete = () => {
     if (confirmDelete.flightId) {
@@ -476,11 +579,17 @@ export function FlightDialog({
 
   return (
     <>
+      {children && (
+        <div onClick={() => setIsOpen(true)}>
+          {children}
+        </div>
+      )}
+      
       <ResponsiveDialog
         open={isOpen}
         onOpenChange={setIsOpen}
         title={dialogTitle}
-        className="max-w-4xl"
+        className="max-w-lg"
       >
         {dialogContent}
       </ResponsiveDialog>
