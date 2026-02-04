@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-01-31T03:46:34.243Z",
+  "updatedAt": "2026-02-04T03:48:59.772Z",
   "overrides": [
     {
       "school": "benenden",
@@ -59,17 +59,6 @@
     },
     {
       "school": "benenden",
-      "id": "benenden-fixed-exeat-summer-20252026",
-      "name": "Fixed Exeat (Summer)",
-      "academicYear": "2025-2026",
-      "startDate": "2026-06-19",
-      "endDate": "2026-06-21",
-      "type": "exeat",
-      "notes": "Fixed Exeat break",
-      "isNew": true
-    },
-    {
-      "school": "benenden",
       "name": "Autumn Term",
       "academicYear": "2026-2027",
       "startDate": "2026-09-02",
@@ -83,14 +72,6 @@
       "startDate": "2026-10-16",
       "endDate": "2026-11-01",
       "notes": "Half Term begins 12.30pm Oct 16, ends 7.30pm Nov 1"
-    },
-    {
-      "school": "benenden",
-      "name": "Autumn Half Term",
-      "academicYear": "2026-2027",
-      "startDate": "2026-10-16",
-      "endDate": "2026-11-01",
-      "notes": "Half Term break"
     },
     {
       "school": "benenden",
@@ -158,17 +139,6 @@
       "isNew": true
     },
     {
-      "school": "benenden",
-      "id": "benenden-fixed-exeat-summer-20262027",
-      "name": "Fixed Exeat (Summer)",
-      "academicYear": "2026-2027",
-      "startDate": "2027-06-18",
-      "endDate": "2027-06-20",
-      "type": "exeat",
-      "notes": "Fixed Exeat break",
-      "isNew": true
-    },
-    {
       "school": "wycombe",
       "name": "Autumn Term",
       "academicYear": "2025-2026",
@@ -178,27 +148,11 @@
     },
     {
       "school": "wycombe",
-      "name": "Autumn Term 2025",
-      "academicYear": "2025-2026",
-      "startDate": "2025-09-01",
-      "endDate": "2025-12-10",
-      "notes": "Term starts Monday 1 September for UVI, LVI, UIII, UV; Tuesday 2 September for UIV, LV, LIV"
-    },
-    {
-      "school": "wycombe",
       "name": "Long Leave Autumn 2025",
       "academicYear": "2025-2026",
       "startDate": "2025-10-17",
       "endDate": "2025-11-02",
       "notes": "Long Leave"
-    },
-    {
-      "school": "wycombe",
-      "name": "Long Leave",
-      "academicYear": "2025-2026",
-      "startDate": "2025-10-17",
-      "endDate": "2025-11-02",
-      "notes": "Autumn Term long leave"
     },
     {
       "school": "wycombe",
@@ -218,23 +172,6 @@
     },
     {
       "school": "wycombe",
-      "name": "Spring Term 2026",
-      "academicYear": "2025-2026",
-      "startDate": "2026-01-06",
-      "endDate": "2026-03-26",
-      "notes": "Term starts Tuesday 6 January"
-    },
-    {
-      "school": "wycombe",
-      "name": "Long Leave Spring 2026",
-      "academicYear": "2025-2026",
-      "startDate": "2026-02-13",
-      "endDate": "2026-02-22",
-      "notes": "Long Leave",
-      "id": "wyc-spring-long-2026"
-    },
-    {
-      "school": "wycombe",
       "name": "Short Leave Spring 2026",
       "academicYear": "2025-2026",
       "startDate": "2026-03-14",
@@ -248,14 +185,6 @@
       "startDate": "2026-04-21",
       "endDate": "2026-06-26",
       "notes": "Term starts Apr 21 after INSET days"
-    },
-    {
-      "school": "wycombe",
-      "name": "Summer Term 2026",
-      "academicYear": "2025-2026",
-      "startDate": "2026-04-21",
-      "endDate": "2026-06-26",
-      "notes": "Term starts Tuesday 21 April"
     },
     {
       "school": "wycombe",
@@ -284,11 +213,13 @@
     },
     {
       "school": "wycombe",
-      "name": "Autumn Term 2026",
+      "id": "wyc-autumn-short-2026",
+      "name": "Short Leave",
       "academicYear": "2026-2027",
-      "startDate": "2026-09-07",
-      "endDate": "2026-12-11",
-      "notes": "Girls return Saturday 12 and Sunday 13 September; term ends Friday 11 December"
+      "startDate": "2026-09-26",
+      "endDate": "2026-09-28",
+      "type": "short-leave",
+      "notes": "Autumn Term closed weekend"
     },
     {
       "school": "wycombe",
@@ -308,14 +239,6 @@
     },
     {
       "school": "wycombe",
-      "name": "Short Leave Autumn 2026",
-      "academicYear": "2026-2027",
-      "startDate": "2026-11-18",
-      "endDate": "2026-11-22",
-      "notes": "Short Leave"
-    },
-    {
-      "school": "wycombe",
       "name": "Spring Term",
       "academicYear": "2026-2027",
       "startDate": "2027-01-05",
@@ -324,11 +247,13 @@
     },
     {
       "school": "wycombe",
-      "name": "Spring Term 2027",
+      "id": "wyc-jan-short-2027",
+      "name": "Short Leave",
       "academicYear": "2026-2027",
-      "startDate": "2027-01-05",
-      "endDate": "2027-03-24",
-      "notes": "Girls return Tuesday 5 January; term ends Wednesday 24 March"
+      "startDate": "2027-01-29",
+      "endDate": "2027-01-31",
+      "type": "short-leave",
+      "notes": "Spring Term closed weekend"
     },
     {
       "school": "wycombe",
@@ -348,6 +273,17 @@
     },
     {
       "school": "wycombe",
+      "id": "wycombe-closed-weekend-20262027",
+      "name": "Closed Weekend",
+      "academicYear": "2026-2027",
+      "startDate": "2027-03-20",
+      "endDate": "2027-03-21",
+      "type": "term",
+      "notes": "Spring Term closed weekend",
+      "isNew": true
+    },
+    {
+      "school": "wycombe",
       "name": "Summer Term",
       "academicYear": "2026-2027",
       "startDate": "2027-04-20",
@@ -356,11 +292,13 @@
     },
     {
       "school": "wycombe",
-      "name": "Summer Term 2027",
+      "id": "wyc-apr-short-2027",
+      "name": "Short Leave",
       "academicYear": "2026-2027",
-      "startDate": "2027-04-20",
-      "endDate": "2027-07-02",
-      "notes": "Girls return Tuesday 20 April; term ends Friday 2 July"
+      "startDate": "2027-04-30",
+      "endDate": "2027-05-03",
+      "type": "short-leave",
+      "notes": "Summer Term closed weekend"
     },
     {
       "school": "wycombe",
