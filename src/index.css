@@ -124,9 +124,13 @@
     --gradient-premium: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
     
     /* Mesh gradient backgrounds */
-    --mesh-primary: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                    radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+    --mesh-primary: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+                    radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
                     radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+
+    /* Academic gradient - soft indigo for buttons */
+    --gradient-academic: linear-gradient(135deg, hsl(230 65% 52%) 0%, hsl(250 60% 48%) 100%);
+    --gradient-elegant: linear-gradient(135deg, hsl(220 14% 96%) 0%, hsl(220 14% 92%) 100%);
   }
 
   /* ═════════════════════════════════════════════════════════════
@@ -209,6 +213,10 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Academic gradient - brighter for dark mode */
+    --gradient-academic: linear-gradient(135deg, hsl(230 70% 62%) 0%, hsl(250 65% 58%) 100%);
+    --gradient-elegant: linear-gradient(135deg, hsl(222 20% 18%) 0%, hsl(222 20% 22%) 100%);
   }
 }
 

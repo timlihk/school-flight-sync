@@ -134,6 +134,8 @@ export default {
 				'gradient-warm': 'var(--gradient-warm)',
 				'gradient-cool': 'var(--gradient-cool)',
 				'gradient-premium': 'var(--gradient-premium)',
+				'gradient-academic': 'var(--gradient-academic)',
+				'gradient-elegant': 'var(--gradient-elegant)',
 				'mesh-primary': 'var(--mesh-primary)',
 			},
 			boxShadow: {
@@ -144,6 +146,10 @@ export default {
 				'elevated': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
 				'elevated-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08)',
 				'elevated-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+				// Button hover shadows
+				'elegant': '0 4px 14px -3px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.08)',
+				'soft': '0 2px 8px -2px rgba(0, 0, 0, 0.08), 0 1px 4px -1px rgba(0, 0, 0, 0.04)',
+				'warm': '0 4px 14px -3px rgba(250, 112, 154, 0.3), 0 2px 6px -2px rgba(254, 225, 64, 0.2)',
 				// Glow shadows
 				'glow-primary': '0 0 20px -5px hsl(var(--primary) / 0.4)',
 				'glow-benenden': '0 0 20px -5px hsl(var(--benenden) / 0.4)',

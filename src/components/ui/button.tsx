@@ -9,15 +9,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-academic text-primary-foreground hover:shadow-elegant hover:scale-105",
+        default: "bg-gradient-academic text-white hover:shadow-elegant hover:scale-105",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-border bg-background hover:bg-accent hover:text-accent-foreground hover:shadow-soft",
         secondary: "bg-gradient-elegant text-secondary-foreground hover:shadow-elegant hover:scale-105",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        benenden: "bg-benenden text-primary-foreground hover:bg-benenden/90 hover:shadow-elegant",
-        wycombe: "bg-wycombe text-secondary-foreground hover:bg-wycombe/90 hover:shadow-elegant",
-        flight: "bg-gradient-warm text-accent-foreground hover:shadow-warm hover:scale-105",
+        benenden: "bg-benenden text-white hover:bg-benenden/90 hover:shadow-elegant",
+        wycombe: "bg-wycombe text-white hover:bg-wycombe/90 hover:shadow-elegant",
+        flight: "bg-gradient-warm text-white hover:shadow-warm hover:scale-105",
       },
       size: {
         default: "h-10 px-4 py-2",
