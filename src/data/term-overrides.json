@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-11T03:58:40.419Z",
+  "updatedAt": "2026-02-12T03:55:01.103Z",
   "overrides": [
     {
       "school": "benenden",
@@ -148,6 +148,17 @@
     },
     {
       "school": "wycombe",
+      "id": "wycombe-short-leave-autumn-2025-20252026",
+      "name": "Short Leave Autumn 2025",
+      "academicYear": "2025-2026",
+      "startDate": "2025-09-27",
+      "endDate": "2025-09-29",
+      "type": "short-leave",
+      "notes": "Saturday 27 September – Monday 29 September",
+      "isNew": true
+    },
+    {
+      "school": "wycombe",
       "name": "Long Leave Autumn 2025",
       "academicYear": "2025-2026",
       "startDate": "2025-10-17",
@@ -205,6 +216,17 @@
       "startDate": "2026-04-21",
       "endDate": "2026-06-26",
       "notes": "Term starts Apr 21 after INSET days"
+    },
+    {
+      "school": "wycombe",
+      "id": "wycombe-short-leave-summer-2026-20252026",
+      "name": "Short Leave Summer 2026",
+      "academicYear": "2025-2026",
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-04",
+      "type": "short-leave",
+      "notes": "Friday 1 May – Monday 4 May; * Short Leave starts for UVI after the Clarence Leavers’ Ceremony on Friday 1 May",
+      "isNew": true
     },
     {
       "school": "wycombe",
