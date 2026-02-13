@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-12T03:55:01.103Z",
+  "updatedAt": "2026-02-13T03:51:51.388Z",
   "overrides": [
     {
       "school": "benenden",
@@ -281,6 +281,16 @@
     },
     {
       "school": "wycombe",
+      "id": "wycombe-closed-weekend-20262027",
+      "name": "Closed Weekend",
+      "academicYear": "2026-2027",
+      "startDate": "2026-12-05",
+      "endDate": "2026-12-06",
+      "type": "term",
+      "notes": "Autumn Term closed weekend"
+    },
+    {
+      "school": "wycombe",
       "name": "Spring Term",
       "academicYear": "2026-2027",
       "startDate": "2027-01-05",
@@ -312,17 +322,6 @@
       "startDate": "2027-03-13",
       "endDate": "2027-03-15",
       "notes": "Short Leave"
-    },
-    {
-      "school": "wycombe",
-      "id": "wycombe-closed-weekend-20262027",
-      "name": "Closed Weekend",
-      "academicYear": "2026-2027",
-      "startDate": "2027-03-20",
-      "endDate": "2027-03-21",
-      "type": "term",
-      "notes": "Spring Term closed weekend",
-      "isNew": true
     },
     {
       "school": "wycombe",
