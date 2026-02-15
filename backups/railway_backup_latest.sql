@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Tz4Te8nN0mwhWFO6DUOuQNMefMtmbmsTBstbQCakxT0RhkGhWXG2J9wJopBNmEw
+\restrict WcpnJCC2SEExkIRPxD3yvKKtWMlh0CzUex5SeuQ4qEUWF5BDIAU0eemhzVRAd9f
 
 -- Dumped from database version 17.6 (Debian 17.6-2.pgdg13+1)
 -- Dumped by pg_dump version 17.8
@@ -20,7 +20,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
@@ -33,14 +33,12 @@ END;
 $$;
 
 
-ALTER FUNCTION public.update_updated_at_column() OWNER TO postgres;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: flights; Type: TABLE; Schema: public; Owner: postgres
+-- Name: flights; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.flights (
@@ -63,10 +61,8 @@ CREATE TABLE public.flights (
 );
 
 
-ALTER TABLE public.flights OWNER TO postgres;
-
 --
--- Name: not_travelling; Type: TABLE; Schema: public; Owner: postgres
+-- Name: not_travelling; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.not_travelling (
@@ -79,10 +75,8 @@ CREATE TABLE public.not_travelling (
 );
 
 
-ALTER TABLE public.not_travelling OWNER TO postgres;
-
 --
--- Name: service_providers; Type: TABLE; Schema: public; Owner: postgres
+-- Name: service_providers; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.service_providers (
@@ -102,10 +96,8 @@ CREATE TABLE public.service_providers (
 );
 
 
-ALTER TABLE public.service_providers OWNER TO postgres;
-
 --
--- Name: transport; Type: TABLE; Schema: public; Owner: postgres
+-- Name: transport; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.transport (
@@ -124,17 +116,15 @@ CREATE TABLE public.transport (
 );
 
 
-ALTER TABLE public.transport OWNER TO postgres;
-
 --
--- Name: COLUMN transport.direction; Type: COMMENT; Schema: public; Owner: postgres
+-- Name: COLUMN transport.direction; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON COLUMN public.transport.direction IS 'Direction of travel: outbound (from school) or return (to school)';
 
 
 --
--- Data for Name: flights; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: flights; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.flights (id, term_id, type, airline, flight_number, departure_airport, departure_date, departure_time, arrival_airport, arrival_date, arrival_time, confirmation_code, notes, created_at, updated_at) FROM stdin;
@@ -172,7 +162,7 @@ a4b95c33-53f8-4b49-a148-f26061a4e4a5	wyc-spring-2026	return	Cathay Pacific	CX255
 
 
 --
--- Data for Name: not_travelling; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: not_travelling; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.not_travelling (id, term_id, no_flights, no_transport, created_at, updated_at) FROM stdin;
@@ -197,7 +187,7 @@ e606af8f-ca76-412f-bee1-3a5f2876e9af	wyc-easter-2026	\N	t	2025-12-25 23:20:21.81
 
 
 --
--- Data for Name: service_providers; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: service_providers; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.service_providers (id, name, phone_number, license_number, vehicle_type, email, notes, rating, is_active, created_at, updated_at) FROM stdin;
@@ -207,7 +197,7 @@ e9e2c3b1-8737-4454-9be3-f514cff9d4dd	Tommy Lee	NA	MC15WPD	taxi	\N		\N	t	2026-02-
 
 
 --
--- Data for Name: transport; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: transport; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.transport (id, term_id, type, direction, driver_name, phone_number, license_number, pickup_time, notes, created_at, updated_at) FROM stdin;
@@ -227,7 +217,7 @@ e6f5f117-ef66-4cc8-98bb-2e9e00da5513	ben-autumn-2025	taxi	outbound	Peter Li Kwok
 
 
 --
--- Name: flights flights_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: flights flights_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.flights
@@ -235,7 +225,7 @@ ALTER TABLE ONLY public.flights
 
 
 --
--- Name: not_travelling not_travelling_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: not_travelling not_travelling_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.not_travelling
@@ -243,7 +233,7 @@ ALTER TABLE ONLY public.not_travelling
 
 
 --
--- Name: not_travelling not_travelling_term_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: not_travelling not_travelling_term_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.not_travelling
@@ -251,7 +241,7 @@ ALTER TABLE ONLY public.not_travelling
 
 
 --
--- Name: service_providers service_providers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: service_providers service_providers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.service_providers
@@ -259,7 +249,7 @@ ALTER TABLE ONLY public.service_providers
 
 
 --
--- Name: transport transport_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: transport transport_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.transport
@@ -267,49 +257,49 @@ ALTER TABLE ONLY public.transport
 
 
 --
--- Name: idx_service_providers_is_active; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_service_providers_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_service_providers_is_active ON public.service_providers USING btree (is_active);
 
 
 --
--- Name: idx_service_providers_name; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_service_providers_name; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_service_providers_name ON public.service_providers USING btree (name);
 
 
 --
--- Name: idx_service_providers_vehicle_type; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_service_providers_vehicle_type; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_service_providers_vehicle_type ON public.service_providers USING btree (vehicle_type);
 
 
 --
--- Name: flights update_flights_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: flights update_flights_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER update_flights_updated_at BEFORE UPDATE ON public.flights FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
--- Name: not_travelling update_not_travelling_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: not_travelling update_not_travelling_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER update_not_travelling_updated_at BEFORE UPDATE ON public.not_travelling FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
--- Name: service_providers update_service_providers_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: service_providers update_service_providers_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER update_service_providers_updated_at BEFORE UPDATE ON public.service_providers FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
--- Name: transport update_transport_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: transport update_transport_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER update_transport_updated_at BEFORE UPDATE ON public.transport FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -319,5 +309,5 @@ CREATE TRIGGER update_transport_updated_at BEFORE UPDATE ON public.transport FOR
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Tz4Te8nN0mwhWFO6DUOuQNMefMtmbmsTBstbQCakxT0RhkGhWXG2J9wJopBNmEw
+\unrestrict WcpnJCC2SEExkIRPxD3yvKKtWMlh0CzUex5SeuQ4qEUWF5BDIAU0eemhzVRAd9f
 
