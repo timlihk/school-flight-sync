@@ -30,18 +30,30 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          set -euo pipefail
+
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           BACKUP_FILE="backups/railway_backup_${TIMESTAMP}.sql"
 
           echo "Creating backup: ${BACKUP_FILE}"
 
           # Use PostgreSQL 17 Docker image to run pg_dump
-          # Mount current directory and output directly to file
-          docker run --rm \
-            -v "$(pwd)/backups:/backups" \
-            -e DATABASE_URL="$DATABASE_URL" \
-            postgres:17-alpine \
-            sh -c "pg_dump \$DATABASE_URL -f /backups/railway_backup_${TIMESTAMP}.sql"
+          # Railway can occasionally drop connections; retry with backoff.
+          for attempt in 1 2 3 4 5; do
+            echo "pg_dump attempt ${attempt}/5..."
+            if docker run --rm \
+              -v "$(pwd)/backups:/backups" \
+              -e DATABASE_URL="$DATABASE_URL" \
+              postgres:17-alpine \
+              sh -c "pg_dump --no-owner --no-privileges --format=plain \$DATABASE_URL -f /backups/railway_backup_${TIMESTAMP}.sql"; then
+              break
+            fi
+            if [ "$attempt" -eq 5 ]; then
+              echo "pg_dump failed after 5 attempts" >&2
+              exit 1
+            fi
+            sleep $((attempt * 10))
+          done
 
           # Create a "latest" copy
           cp "$BACKUP_FILE" "backups/railway_backup_latest.sql"
